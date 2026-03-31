@@ -1,0 +1,310 @@
+import React, { Suspense } from 'react';
+import { useNavigate } from 'react-router';
+import { motion } from 'motion/react';
+import { useContent } from "@/app/context/ContentContext";
+import { SectionTheme } from "@/app/components/SectionTheme";
+import { PageHeaderTheme } from "@/app/components/PageHeaderTheme";
+import { PageSkeletonLoader } from "@/app/components/PageSkeletonLoader";
+
+
+// Lazy load sections for better performance
+const NewsCarousel = React.lazy(() => import("@/app/components/NewsCarousel").then(m => ({ default: m.NewsCarousel })));
+const FeaturedHighlightsSection = React.lazy(() => import("@/app/components/FeaturedHighlightsSection").then(m => ({ default: m.FeaturedHighlightsSection })));
+const PublicationsSection = React.lazy(() => import("@/app/components/PublicationsSection").then(m => ({ default: m.PublicationsSection })));
+const PartnersCarousel = React.lazy(() => import("@/app/components/PartnersCarousel").then(m => ({ default: m.PartnersCarousel })));
+const ResearchBayanihanSection = React.lazy(() => import("@/app/components/ResearchBayanihanSection").then(m => ({ default: m.ResearchBayanihanSection })));
+
+// Loading skeleton for sections
+const SectionSkeleton: React.FC = () => (
+  <div className="w-full h-96 flex items-center justify-center">
+    <div className="animate-pulse text-gray-400">Loading...</div>
+  </div>
+);
+
+export const HomePage: React.FC = () => {
+  const { content, loadingStates, fetchNews, fetchHighlights, fetchPublications, fetchPartners, fetchHeroSection } = useContent();
+  const navigate = useNavigate();
+  const [pageLoading, setPageLoading] = React.useState(true);
+
+  // Fetch data when component mounts
+  React.useEffect(() => {
+    const loadPageData = async () => {
+      setPageLoading(true);
+      try {
+        await Promise.all([
+          fetchHeroSection(),
+          fetchNews(),
+          fetchHighlights(),
+          fetchPublications(),
+          fetchPartners(),
+        ]);
+      } catch (error) {
+        console.error('[HomePage] Error fetching page data:', error);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    loadPageData();
+  }, []);
+
+  const navigateAndScroll = (path: string) => {
+    navigate(path);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Show loading state on the page itself
+  const isLoading = pageLoading || loadingStates.hero || loadingStates.news || loadingStates.highlights || loadingStates.publications || loadingStates.partners;
+  
+  if (isLoading) {
+    return <PageSkeletonLoader message="Loading Home..." />;
+  }
+
+  return (
+    <>
+      <PageHeaderTheme
+        theme="transparent"
+        scrollThreshold={700}
+      />
+
+      <SectionTheme
+        theme="transparent"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        id="home"
+      >
+        {/* Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 w-full h-full">
+            <video
+              className="absolute inset-0 w-full h-full"
+              style={{
+                pointerEvents: "none",
+                objectFit: "cover",
+              }}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+            >
+              <source src={new URL('../../assets/vid_hero.mp4', import.meta.url).toString()} type="video/mp4" />
+            </video>
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
+
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `
+                radial-gradient(circle at 30% 50%, rgba(24,135,252,0.3) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(59,130,246,0.2) 0%, transparent 50%)
+              `,
+              animation:
+                "gradientShift 10s ease-in-out infinite alternate",
+            }}
+          />
+
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-white/20 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                bottom: 0,
+              }}
+              animate={{
+                y: [0, -800],
+                x: [0, (Math.random() - 0.5) * 200],
+                opacity: [0, 1, 1, 0],
+              }}
+              transition={{
+                duration: 15 + Math.random() * 10,
+                repeat: Infinity,
+                delay: Math.random() * 5,
+                ease: "linear",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* CONTENT */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="flex flex-col items-center"
+          >
+            {/* LOGO + TAGLINE OVERLAP */}
+            <div className="relative flex flex-col items-center">
+              <motion.img
+                src="/images/logos/impact.png"
+                alt="IMPACT R&D Logo"
+                className="w-full max-w-md sm:max-w-lg lg:max-w-2xl h-auto"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                loading="eager"
+                style={{
+                  filter:
+                    "drop-shadow(0 20px 40px rgba(0,0,0,0.15))",
+                  zIndex: 1,
+                }}
+              />
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
+                className="
+                  absolute
+                  bottom-[-2.5rem]
+                  sm:bottom-[-1rem]
+                  text-xl sm:text-2xl md:text-3xl
+                  text-white font-bold
+                  text-center
+                  max-w-3xl px-4
+                "
+                style={{
+                  textShadow:
+                    "0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)",
+                  letterSpacing: "0.02em",
+                  zIndex: 2,
+                }}
+              >
+                A DOST-certified Science Foundation
+              </motion.p>
+            </div>
+
+            {/* CTA BUTTONS */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="flex flex-wrap gap-4 justify-center mt-14 sm:mt-12 md:mt-10"
+            >
+              <motion.button
+                whileHover={{ scale: 1.08, y: -4 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigateAndScroll("/about")}
+                className="group relative px-8 py-3 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] text-white rounded-2xl font-bold text-base overflow-hidden shadow-2xl hover:shadow-blue-500/50 transition-all duration-200"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Learn More →
+                </span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.08, y: -4 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigateAndScroll("/our-work")}
+                className="group relative px-8 py-3 bg-white/95 text-[#1887FC] rounded-2xl font-bold text-base shadow-2xl transition-all duration-200"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Our Projects →
+                </span>
+              </motion.button>
+            </motion.div>
+
+            {/* Since 2023 Badge - Now below buttons */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+              className="mt-5 sm:mt-5"
+            >
+              <div className="relative inline-flex items-center justify-center">
+                {/* Animated glow effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] blur-2xl opacity-40 rounded-full"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    opacity: [0.4, 0.6, 0.4],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+
+                {/* Badge container */}
+                <div className="relative bg-gradient-to-r from-white/90 via-white/95 to-white/90 backdrop-blur-lg px-8 py-3 rounded-full border-2 border-[#1887FC]/20 shadow-2xl">
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                  <div className="flex items-center gap-3">
+                    {/* Decorative star icon */}
+                    <motion.div
+                      animate={{
+                        rotate: [0, 360],
+                      }}
+                      transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="text-[#1887FC] text-lg"
+                    >
+                      ✦
+                    </motion.div>
+
+                    <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#1887FC] bg-clip-text text-transparent tracking-wide">
+                      Established 2023
+                    </span>
+
+                    {/* Decorative star icon */}
+                    <motion.div
+                      animate={{
+                        rotate: [360, 0],
+                      }}
+                      transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="text-[#1887FC] text-lg"
+                    >
+                      ✦
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </SectionTheme>
+
+      <SectionTheme theme="light" className="py-16 md:py-20">
+        <Suspense fallback={<SectionSkeleton />}>
+          <NewsCarousel />
+        </Suspense>
+      </SectionTheme>
+
+      <SectionTheme theme="light" className="py-16 md:py-20">
+        <Suspense fallback={<SectionSkeleton />}>
+          <PublicationsSection />
+        </Suspense>
+      </SectionTheme>
+
+      <SectionTheme theme="light" className="py-16 md:py-20" id="highlights">
+        <Suspense fallback={<SectionSkeleton />}>
+          <FeaturedHighlightsSection />
+        </Suspense>
+      </SectionTheme>
+
+      <SectionTheme theme="light" className="py-16 md:py-20">
+        <Suspense fallback={<SectionSkeleton />}>
+          <ResearchBayanihanSection />
+        </Suspense>
+      </SectionTheme>
+
+      <SectionTheme theme="light" className="py-16 md:py-20 pb-20">
+        <Suspense fallback={<SectionSkeleton />}>
+          <PartnersCarousel />
+        </Suspense>
+      </SectionTheme>
+    </>
+  );
+};
