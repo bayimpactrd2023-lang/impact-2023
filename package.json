@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "node ./node_modules/vite/bin/vite.js build",
     "verify:r2": "node scripts/verify-r2-setup.js",
     "check:r2": "bash scripts/check-r2-progress.sh",
     "dev": "vite"
