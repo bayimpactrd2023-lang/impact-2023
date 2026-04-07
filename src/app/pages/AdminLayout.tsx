@@ -1,6 +1,5 @@
 import React from 'react';
 import { Outlet, useLocation } from 'react-router';
-import { Footer } from '@/app/components/Footer';
 import { ScrollToTop } from '@/app/components/ScrollToTop';
 import { Toaster } from '@/app/components/ui/sonner';
 import { AuthProvider } from '@/app/context/AuthContext';

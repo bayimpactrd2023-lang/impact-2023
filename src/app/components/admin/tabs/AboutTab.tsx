@@ -4,7 +4,6 @@
  * Tab for managing the About section content.
  */
 
-import React from 'react';
 import { CheckCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Textarea } from '@/app/components/ui/textarea';

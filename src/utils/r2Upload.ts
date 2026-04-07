@@ -19,20 +19,21 @@ function validateR2Config() {
 
 async function getSupabaseAuthHeaders(): Promise<Record<string, string>> {
   // Get current session
-  let { data, error } = await supabase.auth.getSession();
+  const { data: sessionData, error } = await supabase.auth.getSession();
+  let currentData = sessionData;
   
   // If session is missing or potentially expired, try to refresh it
-  if (!data.session || error) {
+  if (!sessionData.session || error) {
     console.log('[R2] Session missing or error, attempting refresh...');
     const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
       console.error('[R2] Session refresh failed:', refreshError);
       throw new Error(`Authentication error: ${refreshError.message}`);
     }
-    data = refreshData;
+    currentData = refreshData;
   }
   
-  const token = data.session?.access_token;
+  const token = currentData.session?.access_token;
   if (!token) {
     console.error('[R2] No active session or access token found after refresh attempt');
     throw new Error('Not authenticated: No active session');
@@ -48,7 +49,7 @@ async function getSupabaseAuthHeaders(): Promise<Record<string, string>> {
       expired: payload.exp < now,
       sub: payload.sub
     });
-  } catch (e) {
+  } catch (e: unknown) {
     console.error('[R2] Failed to parse JWT payload for debugging');
   }
   
@@ -113,8 +114,8 @@ export async function uploadImageToR2(
     console.log(`[R2] Upload successful:`, normalizedUrl);
 
     return normalizedUrl;
-  } catch (error) {
-    console.error('[R2] Upload error:', error);
+  } catch (error: unknown) {
+    console.error('[R2] Upload error:', error instanceof Error ? error.message : error);
     throw new Error(`Failed to upload image to R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -151,8 +152,8 @@ export async function deleteImageFromR2(url: string): Promise<void> {
     }
 
     console.log(`[R2] Delete successful:`, key);
-  } catch (error) {
-    console.error('[R2] Delete error:', error);
+  } catch (error: unknown) {
+    console.error('[R2] Delete error:', error instanceof Error ? error.message : error);
     // Don't throw - deletion failures shouldn't block operations
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Highlight } from '@/app/context/ContentContext';
+import { Highlight, HighlightForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -15,6 +15,7 @@ import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmat
 import { invalidateHighlightsCache } from '@/utils/cacheInvalidation';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { getImageUrl } from '@/utils/r2Upload';
+import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
 import {
   createHighlight,
   updateHighlight as updateHighlightInDb,
@@ -22,6 +23,7 @@ import {
   getHighlightsPaginated,
   getAllHighlights,
 } from '@/services/supabaseService';
+import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 
@@ -31,9 +33,9 @@ interface HighlightsManagerProps {
   refreshContent?: () => Promise<void>;
 }
 
-export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights, onUpdate, refreshContent }) => {
+export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights: _highlights, onUpdate: _onUpdate, refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingHighlight, setEditingHighlight] = useState<Highlight | null>(null);
+  const [editingHighlight, setEditingHighlight] = useState<HighlightForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
   const [featuredHighlights, setFeaturedHighlights] = useState<Highlight[]>([]);
@@ -76,6 +78,20 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
 
     try {
       if (!id.startsWith('temp-') && !id.match(/^\d{13}$/)) {
+        // Find the highlight to get its image URLs for storage cleanup
+        const highlightToDelete = pagination.data.find(h => h.id === id);
+        if (highlightToDelete) {
+          // Delete main image
+          if (highlightToDelete.imageUrl) {
+            await deleteStorageFile(highlightToDelete.imageUrl, 'highlights');
+          }
+          // Delete gallery images
+          if (highlightToDelete.images && highlightToDelete.images.length > 0) {
+            for (const imgUrl of highlightToDelete.images) {
+              await deleteStorageFile(imgUrl, 'highlights');
+            }
+          }
+        }
         await deleteHighlightFromDb(id);
       }
       
@@ -92,6 +108,12 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
 
   const handleSave = async () => {
     if (!editingHighlight || isSaving) return;
+
+    const validation = EntityValidator.validateHighlight(editingHighlight);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
+      return;
+    }
     
     // Validation: Ensure required fields are filled
     if (!editingHighlight.title.trim()) {
@@ -105,7 +127,11 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
     }
 
     // Validation: Ensure at least one image is uploaded
-    if (!editingHighlight.imageUrl || editingHighlight.imageUrl.trim() === '') {
+    const hasImage = editingHighlight.imageUrl && 
+      (typeof editingHighlight.imageUrl === 'string' 
+        ? editingHighlight.imageUrl.trim() !== '' 
+        : editingHighlight.imageUrl instanceof File);
+    if (!hasImage) {
       toast.error('Please upload at least one image for the highlight.');
       return;
     }
@@ -127,12 +153,31 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
     
     setIsSaving(true);
     try {
+      // Handle Image Uploads before saving to database
+      let finalImageUrl = editingHighlight.imageUrl;
+      if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
+        finalImageUrl = await uploadImage(finalImageUrl, 'highlights');
+      }
+
+      let finalImages = editingHighlight.images || [];
+      if (editingHighlight.images && editingHighlight.images.some(img => typeof img === 'object')) {
+        const filesToUpload = editingHighlight.images.filter(img => typeof img === 'object') as File[];
+        const uploadedUrls = await uploadImages(filesToUpload, 'highlights');
+        let uploadIdx = 0;
+        finalImages = editingHighlight.images.map(img => {
+          if (typeof img === 'object') {
+            return uploadedUrls[uploadIdx++];
+          }
+          return img as string;
+        });
+      }
+
       const highlightData = {
         title: editingHighlight.title,
         description: editingHighlight.description,
-        image_url: editingHighlight.imageUrl,
-        images: editingHighlight.images || null,
-        icon_name: editingHighlight.iconName || 'star', // Include icon_name with default fallback
+        image_url: (finalImageUrl as string) || '',
+        images: (finalImages as string[]) || null,
+        icon_name: editingHighlight.iconName || 'star',
         featured: editingHighlight.featured || false,
       };
 

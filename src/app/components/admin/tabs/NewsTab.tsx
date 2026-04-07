@@ -4,7 +4,6 @@
  * Tab for managing news items.
  */
 
-import React from 'react';
 import { FileText } from 'lucide-react';
 import { ContentGridTab } from './ContentGridTab';
 import { NewsItem } from '../types/admin.types';

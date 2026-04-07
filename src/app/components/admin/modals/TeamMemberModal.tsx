@@ -5,7 +5,6 @@
  * Extends BaseEditModal with team member-specific form fields.
  */
 
-import React from 'react';
 import { BaseEditModal } from './BaseEditModal';
 import { TeamMember } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';

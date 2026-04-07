@@ -5,7 +5,6 @@
  * Extends BaseEditModal with highlight-specific form fields.
  */
 
-import React from 'react';
 import { BaseEditModal } from './BaseEditModal';
 import { Highlight } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';
@@ -143,7 +142,7 @@ export function HighlightModal({
               images={item.images || []}
               onChange={images => {
                 updateField('images', images);
-                onUpdateImages(item.id, images);
+                onUpdateImages(item.id, images.filter((img): img is string => typeof img === 'string'));
               }}
               label="Highlight Gallery Images"
             />

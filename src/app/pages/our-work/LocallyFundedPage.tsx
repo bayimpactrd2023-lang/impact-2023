@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Project } from '@/app/context/ContentContext';
 import { PageSkeletonLoader } from '@/app/components/PageSkeletonLoader';
 import { ProjectList } from '@/app/components/ProjectList';

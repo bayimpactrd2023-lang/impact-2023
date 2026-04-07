@@ -1,7 +1,17 @@
+// @ts-ignore - Deno resolves npm: specifiers; TS language server may not be configured for Deno.
 import { Hono } from "npm:hono";
+// @ts-ignore - Deno resolves npm: specifiers; TS language server may not be configured for Deno.
 import { cors } from "npm:hono/cors";
+// @ts-ignore - Deno resolves npm: specifiers; TS language server may not be configured for Deno.
 import { logger } from "npm:hono/logger";
+// @deno-types="https://esm.sh/@supabase/supabase-js@2?dts"
+// @ts-ignore - Remote URL imports are resolved by Deno; TS language server may not be configured for them.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+declare const Deno: {
+  env: { get(key: string): string | undefined };
+  serve: (handler: (req: Request) => Response | Promise<Response>) => void;
+};
 const app = new Hono();
 
 // Enable logger
@@ -34,7 +44,7 @@ app.use(
 app.options("/server/r2/*", (c: any) => c.text("", 204));
 
 // Health check endpoint
-app.get("/health", (c) => {
+app.get("/health", (c: any) => {
   return c.json({ status: "ok" });
 });
 

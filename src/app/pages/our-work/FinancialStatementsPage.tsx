@@ -241,7 +241,7 @@ export const FinancialStatementsPage: React.FC = () => {
                                     <Eye className="w-4 h-4" />
                                     View PDF
                                   </button>
-                                  {statement.pdfAccessType === 'downloadable' && (
+                                  {statement.pdfAccessType === 'download' && (
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();

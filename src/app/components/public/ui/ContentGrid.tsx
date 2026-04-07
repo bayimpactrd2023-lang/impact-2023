@@ -5,12 +5,12 @@
  * Handles responsive columns and empty states.
  */
 
-import React from 'react';
+import type { ReactNode } from 'react';
 import { FileText } from 'lucide-react';
 
 export interface ContentGridProps {
   /** Items to display */
-  children: React.ReactNode;
+  children: ReactNode;
   
   /** Number of columns for different screen sizes */
   columns?: {

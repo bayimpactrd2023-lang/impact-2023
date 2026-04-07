@@ -11,7 +11,80 @@ import {
   TeamMember,
   Partner,
   Publication,
-} from '../types/admin.types';
+  NewsItemForm,
+  HighlightForm,
+  TeamMemberForm,
+  PartnerForm,
+  PublicationForm,
+} from '@/app/context/ContentContext';
+
+export const AdminValidationRules = {
+  shortTitleMaxChars: 150,
+  shortTitleMaxWords: 25,
+  shortTextMaxChars: 300,
+  shortTextMaxWords: 60,
+  nameMaxChars: 80,
+  nameMaxWords: 10,
+  roleMaxChars: 80,
+  roleMaxWords: 12,
+  authorsMaxChars: 200,
+  authorsMaxWords: 35,
+  contentMaxChars: 20000,
+} as const;
+
+const digitsRegex = /\d/;
+
+export function countWords(value: string): number {
+  const trimmed = value.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).filter(Boolean).length;
+}
+
+export function validateMaxChars(value: string, maxChars: number, fieldLabel: string) {
+  if (value.length > maxChars) {
+    return {
+      isValid: false,
+      error: `${fieldLabel} must be ${maxChars} characters or fewer`,
+    };
+  }
+  return { isValid: true };
+}
+
+export function validateMaxWords(value: string, maxWords: number, fieldLabel: string) {
+  if (countWords(value) > maxWords) {
+    return {
+      isValid: false,
+      error: `${fieldLabel} must be ${maxWords} words or fewer`,
+    };
+  }
+  return { isValid: true };
+}
+
+export function validateNoDigits(value: string, fieldLabel: string) {
+  if (digitsRegex.test(value)) {
+    return {
+      isValid: false,
+      error: `${fieldLabel} must not contain numbers`,
+    };
+  }
+  return { isValid: true };
+}
+
+export function validateRequiredTrimmed(value: string, fieldLabel: string) {
+  if (!value.trim()) {
+    return { isValid: false, error: `${fieldLabel} is required` };
+  }
+  return { isValid: true };
+}
+
+export function mergeValidationResults(
+  ...results: Array<{ isValid: boolean; error?: string }>
+): { isValid: boolean; error?: string } {
+  for (const r of results) {
+    if (!r.isValid) return r;
+  }
+  return { isValid: true };
+}
 
 /**
  * Factory class for creating empty entities
@@ -110,65 +183,79 @@ export class EntityFactory {
  */
 export class EntityValidator {
   /**
-   * Validate NewsItem before saving
+   * Validate NewsItem before saving (accepts Form type with File support)
    */
-  static validateNewsItem(item: NewsItem): { isValid: boolean; error?: string } {
-    if (!item.title.trim()) {
-      return { isValid: false, error: 'Title is required' };
-    }
-    if (!item.content.trim()) {
-      return { isValid: false, error: 'Content is required' };
-    }
-    return { isValid: true };
+  static validateNewsItem(item: NewsItem | NewsItemForm): { isValid: boolean; error?: string } {
+    return mergeValidationResults(
+      validateRequiredTrimmed(item.title, 'Title'),
+      validateMaxChars(item.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
+      validateMaxWords(item.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
+      validateRequiredTrimmed(item.content, 'Content'),
+      validateMaxChars(item.content.trim(), AdminValidationRules.contentMaxChars, 'Content')
+    );
   }
 
   /**
-   * Validate Highlight before saving
+   * Validate Highlight before saving (accepts Form type with File support)
    */
-  static validateHighlight(item: Highlight): { isValid: boolean; error?: string } {
-    if (!item.title.trim()) {
-      return { isValid: false, error: 'Title is required' };
-    }
-    if (!item.description.trim()) {
-      return { isValid: false, error: 'Description is required' };
-    }
-    return { isValid: true };
+  static validateHighlight(item: Highlight | HighlightForm): { isValid: boolean; error?: string } {
+    return mergeValidationResults(
+      validateRequiredTrimmed(item.title, 'Title'),
+      validateMaxChars(item.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
+      validateMaxWords(item.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
+      validateRequiredTrimmed(item.description, 'Description'),
+      validateMaxChars(item.description.trim(), AdminValidationRules.shortTextMaxChars, 'Description'),
+      validateMaxWords(item.description.trim(), AdminValidationRules.shortTextMaxWords, 'Description'),
+      validateMaxChars((item.content || '').trim(), AdminValidationRules.contentMaxChars, 'Detailed content')
+    );
   }
 
   /**
-   * Validate TeamMember before saving
+   * Validate TeamMember before saving (accepts Form type with File support)
    */
-  static validateTeamMember(item: TeamMember): { isValid: boolean; error?: string } {
-    if (!item.name.trim()) {
-      return { isValid: false, error: 'Name is required' };
-    }
-    if (!item.role.trim()) {
-      return { isValid: false, error: 'Role is required' };
-    }
-    return { isValid: true };
+  static validateTeamMember(item: TeamMember | TeamMemberForm): { isValid: boolean; error?: string } {
+    return mergeValidationResults(
+      validateRequiredTrimmed(item.name, 'Name'),
+      validateNoDigits(item.name, 'Name'),
+      validateMaxChars(item.name.trim(), AdminValidationRules.nameMaxChars, 'Name'),
+      validateMaxWords(item.name.trim(), AdminValidationRules.nameMaxWords, 'Name'),
+      validateRequiredTrimmed(item.role, 'Role'),
+      validateNoDigits(item.role, 'Role'),
+      validateMaxChars(item.role.trim(), AdminValidationRules.roleMaxChars, 'Role'),
+      validateMaxWords(item.role.trim(), AdminValidationRules.roleMaxWords, 'Role'),
+      validateMaxChars((item.description || '').trim(), AdminValidationRules.contentMaxChars, 'Biography')
+    );
   }
 
   /**
-   * Validate Partner before saving
+   * Validate Partner before saving (accepts Form type with File support)
    */
-  static validatePartner(item: Partner): { isValid: boolean; error?: string } {
-    if (!item.name.trim()) {
-      return { isValid: false, error: 'Name is required' };
-    }
-    return { isValid: true };
+  static validatePartner(item: Partner | PartnerForm): { isValid: boolean; error?: string } {
+    return mergeValidationResults(
+      validateRequiredTrimmed(item.name, 'Name'),
+      validateMaxChars(item.name.trim(), AdminValidationRules.nameMaxChars, 'Name'),
+      validateMaxWords(item.name.trim(), AdminValidationRules.nameMaxWords, 'Name')
+    );
   }
 
   /**
-   * Validate Publication before saving
+   * Validate Publication before saving (accepts Form type with File support)
    */
-  static validatePublication(item: Publication): { isValid: boolean; error?: string } {
-    if (!item.title.trim()) {
-      return { isValid: false, error: 'Title is required' };
-    }
-    if (!item.authors.trim()) {
-      return { isValid: false, error: 'Authors are required' };
-    }
-    return { isValid: true };
+  static validatePublication(item: Publication | PublicationForm): { isValid: boolean; error?: string } {
+    return mergeValidationResults(
+      validateRequiredTrimmed(item.title, 'Title'),
+      validateMaxChars(item.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
+      validateMaxWords(item.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
+      validateRequiredTrimmed(item.authors, 'Authors'),
+      validateNoDigits(item.authors, 'Authors'),
+      validateMaxChars(item.authors.trim(), AdminValidationRules.authorsMaxChars, 'Authors'),
+      validateMaxWords(item.authors.trim(), AdminValidationRules.authorsMaxWords, 'Authors'),
+      validateMaxChars((item.content || '').trim(), AdminValidationRules.contentMaxChars, 'Abstract/Description'),
+      validateMaxChars((item.excerpt || '').trim(), AdminValidationRules.shortTextMaxChars, 'Excerpt'),
+      validateMaxWords((item.excerpt || '').trim(), AdminValidationRules.shortTextMaxWords, 'Excerpt'),
+      validateMaxChars((item.sentence || '').trim(), AdminValidationRules.shortTextMaxChars, 'Sentence'),
+      validateMaxWords((item.sentence || '').trim(), AdminValidationRules.shortTextMaxWords, 'Sentence')
+    );
   }
 }
 

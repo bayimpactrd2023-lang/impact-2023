@@ -8,6 +8,14 @@ import { toast } from 'sonner';
 import { Publication } from '@/app/context/ContentContext';
 import { createPublication } from '@/services/supabaseService';
 import {
+  AdminValidationRules,
+  mergeValidationResults,
+  validateMaxChars,
+  validateMaxWords,
+  validateRequiredTrimmed,
+  validateNoDigits,
+} from '@/app/components/admin/utils/adminHelpers';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -51,12 +59,22 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
   const handlePublish = async () => {
     if (isSaving) return;
 
-    if (!draft.title.trim()) {
-      toast.error('Please enter a title.');
-      return;
-    }
-    if (!draft.content.trim()) {
-      toast.error('Please enter some content.');
+    const validation = mergeValidationResults(
+      validateRequiredTrimmed(draft.title, 'Title'),
+      validateMaxChars(draft.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
+      validateMaxWords(draft.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
+      validateRequiredTrimmed(draft.content || '', 'Content'),
+      validateMaxChars((draft.content || '').trim(), AdminValidationRules.contentMaxChars, 'Content'),
+      validateMaxChars((draft.authors || '').trim(), AdminValidationRules.authorsMaxChars, 'Authors'),
+      validateMaxWords((draft.authors || '').trim(), AdminValidationRules.authorsMaxWords, 'Authors'),
+      validateNoDigits(draft.authors || '', 'Authors'),
+      validateMaxChars((draft.excerpt || '').trim(), AdminValidationRules.shortTextMaxChars, 'Excerpt'),
+      validateMaxWords((draft.excerpt || '').trim(), AdminValidationRules.shortTextMaxWords, 'Excerpt'),
+      validateMaxChars((draft.sentence || '').trim(), AdminValidationRules.shortTextMaxChars, 'Sentence'),
+      validateMaxWords((draft.sentence || '').trim(), AdminValidationRules.shortTextMaxWords, 'Sentence')
+    );
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
       return;
     }
 

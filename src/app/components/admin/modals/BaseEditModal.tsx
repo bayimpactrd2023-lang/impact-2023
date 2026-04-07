@@ -6,8 +6,8 @@
  * allows subclasses to override specific steps.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ReactNode } from 'react';
+import { X, CheckCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import {
   Dialog,
@@ -49,7 +49,7 @@ export interface BaseEditModalProps<T extends { id: string }> {
   children: (
     item: T,
     updateField: (field: keyof T, value: any) => void
-  ) => React.ReactNode;
+  ) => ReactNode;
   
   /** Optional validation function */
   validate?: (item: T) => { isValid: boolean; error?: string };
@@ -84,16 +84,7 @@ export function BaseEditModal<T extends { id: string }>({
 }: BaseEditModalProps<T>) {
   // Track unsaved changes
   const { hasUnsavedChanges, markAsChanged, markAsSaved } = useUnsavedChanges(editingItem);
-  const [originalData, setOriginalData] = useState<T | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const { showConfirm, ConfirmDialog } = useConfirm();
-
-  // Store original data when modal opens
-  useEffect(() => {
-    if (isOpen && editingItem) {
-      setOriginalData(JSON.parse(JSON.stringify(editingItem)));
-    }
-  }, [isOpen, editingItem]);
 
   /**
    * Handle field updates

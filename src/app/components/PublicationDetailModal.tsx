@@ -7,20 +7,19 @@ import {
   DialogDescription,
 } from "@/app/components/ui/dialog";
 import {
-  X,
   Calendar,
   User,
   ExternalLink,
   ChevronLeft,
   ChevronRight,
   Mail,
-  Phone,
   Download,
   Eye,
 } from "lucide-react";
 import { Publication } from "@/app/context/ContentContext";
 import { Button } from "@/app/components/ui/button";
 import useEmblaCarousel from "embla-carousel-react";
+import type { EmblaCarouselType } from "embla-carousel";
 import { downloadPDF } from "@/utils/downloadHelpers";
 
 interface PublicationDetailModalProps {
@@ -45,9 +44,9 @@ export const PublicationDetailModal: React.FC<
     if (emblaApi) emblaApi.scrollNext();
   }, [emblaApi]);
 
-  const onInit = useCallback((emblaApi: any) => {
-    emblaApi.on("select", () => {
-      setSelectedIndex(emblaApi.selectedScrollSnap());
+  const onInit = useCallback((api: EmblaCarouselType) => {
+    api.on("select", () => {
+      setSelectedIndex(api.selectedScrollSnap());
     });
   }, []);
 
@@ -254,15 +253,17 @@ export const PublicationDetailModal: React.FC<
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-              {publication.pdfUrl && (
-                publication.pdfAccessType === 'view' ? (
+              {(() => {
+                const pdfUrl = publication.pdfUrl;
+                if (!pdfUrl) return null;
+                return publication.pdfAccessType === 'view' ? (
                   // View Only - Open in modal viewer
                   <>
                     <Button
                       onClick={(e) => {
                         e.preventDefault();
                         if (onViewPDF) {
-                          onViewPDF(publication.pdfUrl, publication.title);
+                          onViewPDF(pdfUrl, publication.title);
                         }
                       }}
                       className="bg-[#1887FC] hover:bg-[#0b5ab8] text-white font-medium shadow-md hover:shadow-lg transition-all"
@@ -281,7 +282,7 @@ export const PublicationDetailModal: React.FC<
                       onClick={(e) => {
                         e.preventDefault();
                         if (onViewPDF) {
-                          onViewPDF(publication.pdfUrl, publication.title);
+                          onViewPDF(pdfUrl, publication.title);
                         }
                       }}
                       variant="outline"
@@ -293,7 +294,7 @@ export const PublicationDetailModal: React.FC<
                     <Button
                       onClick={(e) => {
                         e.preventDefault();
-                        downloadPDF(publication.pdfUrl, publication.title);
+                        downloadPDF(pdfUrl, publication.title);
                       }}
                       className="bg-[#1887FC] hover:bg-[#0b5ab8] text-white font-medium shadow-md hover:shadow-lg transition-all"
                     >
@@ -301,8 +302,8 @@ export const PublicationDetailModal: React.FC<
                       Download PDF
                     </Button>
                   </>
-                )
-              )}
+                );
+              })()}
             </div>
           </div>
         </div>

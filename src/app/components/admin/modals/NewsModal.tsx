@@ -5,7 +5,6 @@
  * Extends BaseEditModal with news-specific form fields.
  */
 
-import React from 'react';
 import { BaseEditModal } from './BaseEditModal';
 import { NewsItem } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';
@@ -105,7 +104,7 @@ export function NewsModal({
               images={item.images || []}
               onChange={images => {
                 updateField('images', images);
-                onUpdateImages(item.id, images);
+                onUpdateImages(item.id, images.filter((img): img is string => typeof img === 'string'));
               }}
               label="News Gallery Images"
             />

@@ -5,7 +5,7 @@
  * Implements the Template Method Pattern for common tab layouts.
  */
 
-import React from 'react';
+import type { ReactNode, MouseEvent } from 'react';
 import { Plus, Trash2, Edit, FileText } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
@@ -31,7 +31,7 @@ interface ContentGridTabProps<T extends { id: string }> {
   onDelete: (id: string) => void;
   
   /** Render function for each card */
-  renderCard: (item: T) => React.ReactNode;
+  renderCard: (item: T) => ReactNode;
   
   /** Optional: Number of columns for different screen sizes */
   gridCols?: {
@@ -65,7 +65,7 @@ export function ContentGridTab<T extends { id: string }>({
   /**
    * Handle delete confirmation
    */
-  const handleDelete = async (e: React.MouseEvent, id: string, itemName: string) => {
+  const handleDelete = async (e: MouseEvent, id: string, itemName: string) => {
     e.stopPropagation();
     const confirmed = await confirmDelete({ itemName: itemName.toLowerCase() });
     if (confirmed) {

@@ -2,6 +2,8 @@
  * Initialize Sentry
  * Only runs in production to avoid cluttering error logs in development
  */
+import * as Sentry from '@sentry/react';
+
 export const initSentry = () => {
   // Only initialize in production
   if (import.meta.env.MODE !== 'production') {

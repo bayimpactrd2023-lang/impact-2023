@@ -10,7 +10,7 @@ import { useCacheManagement } from '@/hooks/useCacheManagement';
 import { Database, Trash2, RefreshCw, HardDrive, Zap } from 'lucide-react';
 
 export const CacheMonitor: React.FC = () => {
-  const { stats, refreshStats, clearAllCaches, invalidateSpecificCache } = useCacheManagement();
+  const { stats, refreshStats, clearAllCaches } = useCacheManagement();
 
   const formatBytes = (kb: number) => {
     if (kb < 1024) return `${kb} KB`;

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
-import { X, Calendar, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BlogPost } from '@/app/context/ContentContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';

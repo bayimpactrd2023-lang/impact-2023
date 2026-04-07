@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState, FC } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { ProjectManager } from '@/app/components/admin/ProjectManager';
 import { FinancialStatementManager } from '@/app/components/admin/FinancialStatementManager';
@@ -11,22 +11,17 @@ interface OurWorkTabsProps {
   refreshContent: () => Promise<void>;
 }
 
-export const OurWorkTabs: React.FC<OurWorkTabsProps> = ({ refreshContent }) => {
+export const OurWorkTabs: FC<OurWorkTabsProps> = ({ refreshContent }) => {
   const {
     content,
-    loadingStates,
     updateInternationallyFundedProjects,
     updateLocallyFundedProjects,
     updateCommunityTransformationProjects,
-    updateInternshipPrograms,
     updateFinancialStatements,
-    updateStudyFindings,
     updateInternshipTestimonials,
     fetchInternationallyFundedProjects,
     fetchLocallyFundedProjects,
     fetchCommunityTransformationProjects,
-    fetchInternshipPrograms,
-    fetchStudyFindings,
     fetchFinancialStatements,
     fetchInternshipTestimonials,
   } = useContent();
@@ -38,7 +33,7 @@ export const OurWorkTabs: React.FC<OurWorkTabsProps> = ({ refreshContent }) => {
   const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set(['internationally-funded']));
 
   // Fetch initial data for the first tab on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const loadInitialData = async () => {
       setIsSubTabLoading(true);
       try {
@@ -54,7 +49,7 @@ export const OurWorkTabs: React.FC<OurWorkTabsProps> = ({ refreshContent }) => {
     if (!loadedTabs.has('internationally-funded')) {
       loadInitialData();
     }
-  }, []);
+  }, [fetchInternationallyFundedProjects, loadedTabs]);
 
   const handleSubTabChange = async (value: string) => {
     if (value === activeSubTab) return;
@@ -80,13 +75,12 @@ export const OurWorkTabs: React.FC<OurWorkTabsProps> = ({ refreshContent }) => {
           await fetchCommunityTransformationProjects();
           break;
         case 'internship':
-          await Promise.all([fetchInternshipPrograms(), fetchInternshipTestimonials()]);
+          await fetchInternshipTestimonials();
           break;
         case 'financial':
           await fetchFinancialStatements();
           break;
         case 'findings':
-          await fetchStudyFindings();
           break;
       }
       
@@ -120,7 +114,7 @@ export const OurWorkTabs: React.FC<OurWorkTabsProps> = ({ refreshContent }) => {
             <TabsContent value="internationally-funded">
               <ProjectManager 
                 projects={content.internationallyFundedProjects} 
-                onUpdate={updateInternationallyFundedProjects} 
+                onUpdate={updateInternationallyFundedProjects}
                 title="Internationally Funded Projects" 
                 category="internationally_funded" 
                 refreshContent={refreshContent} 
@@ -129,7 +123,7 @@ export const OurWorkTabs: React.FC<OurWorkTabsProps> = ({ refreshContent }) => {
             <TabsContent value="locally-funded">
               <ProjectManager 
                 projects={content.locallyFundedProjects} 
-                onUpdate={updateLocallyFundedProjects} 
+                onUpdate={updateLocallyFundedProjects}
                 title="Locally Funded Projects" 
                 category="locally_funded" 
                 refreshContent={refreshContent} 
@@ -138,7 +132,7 @@ export const OurWorkTabs: React.FC<OurWorkTabsProps> = ({ refreshContent }) => {
             <TabsContent value="community">
               <ProjectManager 
                 projects={content.communityTransformationProjects} 
-                onUpdate={updateCommunityTransformationProjects} 
+                onUpdate={updateCommunityTransformationProjects}
                 title="Community Transformation" 
                 category="community_transformation" 
                 refreshContent={refreshContent} 
@@ -147,14 +141,14 @@ export const OurWorkTabs: React.FC<OurWorkTabsProps> = ({ refreshContent }) => {
             <TabsContent value="internship">
               <InternshipTestimonialManager 
                 testimonials={content.internshipTestimonials} 
-                onUpdate={updateInternshipTestimonials} 
+                onUpdate={updateInternshipTestimonials}
                 refreshContent={refreshContent} 
               />
             </TabsContent>
             <TabsContent value="financial">
               <FinancialStatementManager 
                 statements={content.financialStatements} 
-                onUpdate={updateFinancialStatements} 
+                onUpdate={updateFinancialStatements}
                 refreshContent={refreshContent} 
               />
             </TabsContent>

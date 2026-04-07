@@ -5,7 +5,7 @@
  * Used across blog, publications, highlights, etc.
  */
 
-import React from 'react';
+import type { ReactNode } from 'react';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { FileText } from 'lucide-react';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
@@ -21,10 +21,10 @@ export interface ContentCardProps {
   imageUrl?: string;
   
   /** Additional metadata (date, author, etc.) */
-  metadata?: React.ReactNode;
+  metadata?: ReactNode;
   
   /** Footer content (actions, tags, etc.) */
-  footer?: React.ReactNode;
+  footer?: ReactNode;
   
   /** Click handler */
   onClick?: () => void;

@@ -49,9 +49,11 @@ export const useLoginThrottle = () => {
       return;
     }
 
+    const lockedUntil = state.lockedUntil;  // Capture non-null value
+
     const updateTimer = () => {
       const now = Date.now();
-      const remaining = Math.max(0, state.lockedUntil - now);
+      const remaining = Math.max(0, lockedUntil - now);
       
       if (remaining === 0) {
         // Lock expired, reset state

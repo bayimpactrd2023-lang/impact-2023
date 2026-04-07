@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/app/context/AuthContext';
-import { User, LogOut, AlertTriangle } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NewsItem } from '@/app/context/ContentContext';
+import { NewsItem, NewsItemForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -14,14 +14,16 @@ import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmat
 import { invalidateNewsCache } from '@/utils/cacheInvalidation';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { getImageUrl } from '@/utils/r2Upload';
-import {
-  createNews,
-  updateNews as updateNewsInDb,
-  deleteNews as deleteNewsFromDb,
-  getNewsPaginated,
+import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
+import { 
+  createNews, 
+  updateNews as updateNewsInDb, 
+  deleteNews as deleteNewsFromDb, 
+  getNewsPaginated 
 } from '@/services/supabaseService';
+import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
-import { AdminGridSkeleton, AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
+import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 
 interface NewsManagerProps {
   news: NewsItem[];
@@ -29,9 +31,9 @@ interface NewsManagerProps {
   refreshContent?: () => Promise<void>;
 }
 
-export const NewsManager: React.FC<NewsManagerProps> = ({ news, onUpdate, refreshContent }) => {
+export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate: _onUpdate, refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+  const [editingNews, setEditingNews] = useState<NewsItemForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
@@ -43,7 +45,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news, onUpdate, refres
   });
 
   const addNews = () => {
-    const newItem: NewsItem = {
+    const newItem: NewsItemForm = {
       id: `temp-${Date.now()}`,
       title: '',
       content: '',
@@ -56,7 +58,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news, onUpdate, refres
   };
 
   const handleEdit = (item: NewsItem) => {
-    setEditingNews({ ...item });
+    setEditingNews({ ...item } as NewsItemForm);
     setIsModalOpen(true);
   };
 
@@ -70,7 +72,21 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news, onUpdate, refres
     if (!confirmed) return;
 
     try {
-      if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+      if (!id.startsWith('temp-') && !id.match(/^\d{13}$/)) {
+        // Find the news item to get its image URLs for storage cleanup
+        const newsToDelete = pagination.data.find(n => n.id === id);
+        if (newsToDelete) {
+          // Delete main image
+          if (newsToDelete.imageUrl) {
+            await deleteStorageFile(newsToDelete.imageUrl, 'news');
+          }
+          // Delete gallery images
+          if (newsToDelete.images && newsToDelete.images.length > 0) {
+            for (const imgUrl of newsToDelete.images) {
+              await deleteStorageFile(imgUrl, 'news');
+            }
+          }
+        }
         await deleteNewsFromDb(id);
       }
       
@@ -94,15 +110,41 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news, onUpdate, refres
 
   const handleSave = async () => {
     if (!editingNews || isSaving) return;
+
+    const validation = EntityValidator.validateNewsItem(editingNews);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
+      return;
+    }
     
     setIsSaving(true);
     try {
+      // Handle Image Uploads before saving to database
+      let finalImageUrl = editingNews.imageUrl;
+      if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
+        finalImageUrl = await uploadImage(finalImageUrl, 'news');
+      }
+
+      let finalImages = editingNews.images || [];
+      if (editingNews.images && editingNews.images.some(img => typeof img === 'object')) {
+        const filesToUpload = editingNews.images.filter(img => typeof img === 'object') as File[];
+        const uploadedUrls = await uploadImages(filesToUpload, 'news');
+        
+        let uploadIdx = 0;
+        finalImages = editingNews.images.map(img => {
+          if (typeof img === 'object') {
+            return uploadedUrls[uploadIdx++];
+          }
+          return img as string;
+        });
+      }
+
       const newsData = {
         title: editingNews.title,
         content: editingNews.content,
         date: editingNews.date,
-        image_url: editingNews.imageUrl || null,
-        images: editingNews.images || null,
+        image_url: (finalImageUrl as string) || null,
+        images: (finalImages as string[]) || null,
       };
 
       if (editingNews.id && !editingNews.id.startsWith('temp-') && !editingNews.id.match(/^\\d{13}$/)) {

@@ -1,11 +1,10 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import type { FC, MouseEvent } from 'react';
+import { useNavigate } from 'react-router';
 import { MapPin, Phone, Mail, Facebook, Linkedin } from 'lucide-react';
 
 
-export const Footer: React.FC = () => {
+export const Footer: FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const socialLinks = [
     {
@@ -22,7 +21,7 @@ export const Footer: React.FC = () => {
     },
   ];
 
-  const handleAdminClick = (e: React.MouseEvent) => {
+  const handleAdminClick = (e: MouseEvent) => {
     e.preventDefault();
     // Navigate immediately without checking current location
     navigate('/admin');

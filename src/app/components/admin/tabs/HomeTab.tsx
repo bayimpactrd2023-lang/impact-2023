@@ -4,7 +4,6 @@
  * The main dashboard view showing tips, content overview, and quick actions.
  */
 
-import React from 'react';
 import {
   FileText,
   Newspaper,

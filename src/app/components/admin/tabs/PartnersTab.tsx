@@ -4,7 +4,6 @@
  * Tab for managing partners.
  */
 
-import React from 'react';
 import { FileText } from 'lucide-react';
 import { ContentGridTab } from './ContentGridTab';
 import { Partner } from '../types/admin.types';

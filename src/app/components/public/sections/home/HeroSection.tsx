@@ -4,7 +4,6 @@
  * Main hero section for the homepage.
  */
 
-import React from 'react';
 import { PageHero } from '../../ui/PageHero';
 import { useContent } from '@/app/context/ContentContext';
 

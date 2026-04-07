@@ -22,6 +22,46 @@ import { getImageUrl } from "@/utils/r2Upload";
 // Import ResearchBayanihan image (keeping this as a static asset)
 const researchBayanihanImg = '/images/backgrounds/research-bayanihan.png'; // Updated to use local image
 
+// Extended interfaces that support File objects for form handling
+export interface NewsItemForm extends Omit<NewsItem, 'imageUrl' | 'images'> {
+  imageUrl?: string | File;
+  images?: (string | File)[];
+}
+
+export interface HighlightForm extends Omit<Highlight, 'imageUrl' | 'images'> {
+  imageUrl?: string | File;
+  images?: (string | File)[];
+}
+
+export interface TeamMemberForm extends Omit<TeamMember, 'imageUrl'> {
+  imageUrl?: string | File;
+}
+
+export interface PartnerForm extends Omit<Partner, 'logoUrl'> {
+  logoUrl?: string | File;
+}
+
+export interface ProjectForm extends Omit<Project, 'imageUrl' | 'images'> {
+  imageUrl?: string | File;
+  images?: (string | File)[];
+}
+
+export interface BlogPostForm extends Omit<BlogPost, 'imageUrl' | 'images'> {
+  imageUrl?: string | File;
+  images?: (string | File)[];
+}
+
+export interface PublicationForm extends Omit<Publication, 'imageUrl' | 'galleryImages'> {
+  imageUrl?: string | File;
+  galleryImages?: (string | File)[];
+}
+
+export interface InternshipTestimonialForm extends Omit<InternshipTestimonial, 'imageUrl' | 'images'> {
+  imageUrl?: string | File;
+  images?: (string | File)[];
+}
+
+// Original database interfaces (unchanged)
 export interface NewsItem {
   id: string;
   title: string;

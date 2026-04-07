@@ -24,8 +24,8 @@ export const useInactivityLogout = ({
   onWarning,
   enabled = true,
 }: UseInactivityLogoutOptions) => {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * Clear all timers

@@ -1,10 +1,9 @@
 /**
  * Search Bar Component
  * 
- * Reusable search input with clear button.
+ * Reusable search input for content pages.
  */
 
-import React from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';

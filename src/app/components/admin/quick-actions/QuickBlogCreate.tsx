@@ -8,6 +8,14 @@ import { toast } from 'sonner';
 import { BlogPost } from '@/app/context/ContentContext';
 import { createBlogPost } from '@/services/supabaseService';
 import {
+  AdminValidationRules,
+  mergeValidationResults,
+  validateMaxChars,
+  validateMaxWords,
+  validateRequiredTrimmed,
+  validateNoDigits,
+} from '@/app/components/admin/utils/adminHelpers';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -48,12 +56,22 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
   const handlePublish = async () => {
     if (isSaving) return;
 
-    if (!draft.title.trim()) {
-      toast.error('Please enter a title.');
-      return;
-    }
-    if (!draft.content.trim()) {
-      toast.error('Please enter some content.');
+    const validation = mergeValidationResults(
+      validateRequiredTrimmed(draft.title, 'Title'),
+      validateMaxChars(draft.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
+      validateMaxWords(draft.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
+      validateRequiredTrimmed(draft.content, 'Content'),
+      validateMaxChars(draft.content.trim(), AdminValidationRules.contentMaxChars, 'Content'),
+      validateRequiredTrimmed(draft.author, 'Author'),
+      validateNoDigits(draft.author, 'Author'),
+      validateMaxChars(draft.author.trim(), AdminValidationRules.nameMaxChars, 'Author'),
+      validateMaxWords(draft.author.trim(), AdminValidationRules.nameMaxWords, 'Author'),
+      validateMaxChars((draft.authorRole || '').trim(), AdminValidationRules.roleMaxChars, 'Author role'),
+      validateMaxWords((draft.authorRole || '').trim(), AdminValidationRules.roleMaxWords, 'Author role'),
+      validateNoDigits(draft.authorRole || '', 'Author role')
+    );
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
       return;
     }
 

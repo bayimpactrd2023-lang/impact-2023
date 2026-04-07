@@ -5,7 +5,6 @@
  * Extends BaseEditModal with partner-specific form fields.
  */
 
-import React from 'react';
 import { BaseEditModal } from './BaseEditModal';
 import { Partner } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';

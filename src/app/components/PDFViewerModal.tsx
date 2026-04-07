@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from "@/app/components/ui/dialog";
 import { Button } from "@/app/components/ui/button";
-import { X, ChevronDown, ChevronUp, AlertCircle, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { X, ChevronDown, ChevronUp, ZoomIn, ZoomOut } from "lucide-react";
 import { motion } from "motion/react";
 import { Document, Page, pdfjs } from 'react-pdf';
 
@@ -47,9 +47,6 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageWidth, setPageWidth] = useState<number>(0);
   const [basePageWidth, setBasePageWidth] = useState<number>(0);
-  const [containerWidth, setContainerWidth] = useState<number>(0);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 
   // Zoom controls
@@ -76,7 +73,6 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
       if (mobile) {
         // Mobile: 95vw modal width minus padding, with extra margin for safety
         const modalWidth = window.innerWidth * 0.95;
-        setContainerWidth(modalWidth);
         setBasePageWidth((modalWidth - 60) * 0.92);
       } else {
         // Desktop: Modal is 90vw/85vw with max 1152px, minus padding
@@ -91,8 +87,6 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           // md breakpoint: 90vw
           modalWidth = viewportWidth * 0.90;
         }
-        
-        setContainerWidth(modalWidth);
         
         // Calculate width that ensures the page fits both horizontally and vertically
         // Standard PDF aspect ratio is ~1.414 (A4: 210x297mm)
@@ -124,16 +118,16 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
-    setLoading(false);
   }
 
-  function onDocumentLoadError(error: any) {
-    setError(error.message);
-    setLoading(false);
+  function onDocumentLoadError(err: Error) {
+    console.error('[PDFViewerModal] Failed to load PDF:', err);
   }
 
-  // Convert base64 to blob URL if needed
-  const getPdfUrl = () => {
+  const [displayUrl, setDisplayUrl] = useState<string>(pdfUrl);
+
+  // Convert base64 to blob URL if needed, with cleanup
+  useEffect(() => {
     if (pdfUrl.startsWith('data:')) {
       try {
         const base64Data = pdfUrl.split(',')[1];
@@ -144,16 +138,21 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
         }
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: 'application/pdf' });
-        return URL.createObjectURL(blob);
+        const blobUrl = URL.createObjectURL(blob);
+        setDisplayUrl(blobUrl);
+        
+        // Cleanup: revoke the blob URL when component unmounts or pdfUrl changes
+        return () => {
+          URL.revokeObjectURL(blobUrl);
+        };
       } catch (error) {
         console.error('Error converting base64 to blob:', error);
-        return pdfUrl;
+        setDisplayUrl(pdfUrl);
       }
+    } else {
+      setDisplayUrl(pdfUrl);
     }
-    return pdfUrl;
-  };
-
-  const displayUrl = getPdfUrl();
+  }, [pdfUrl]);
 
   // Prevent context menu (right-click) on the viewer
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -255,7 +254,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                 }
                 className="w-full flex flex-col items-center"
               >
-                {numPages && Array.from(new Array(numPages), (el, index) => (
+                {numPages && Array.from(new Array(numPages), (_, index) => (
                   <div key={`page_${index + 1}`} className="mb-4 shadow-2xl w-full flex flex-col items-center">
                     <div className="w-full flex justify-center px-2 md:px-4">
                       <Page

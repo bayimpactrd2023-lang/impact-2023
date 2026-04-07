@@ -21,6 +21,16 @@ import {
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateTestimonialsCache } from '@/utils/cacheInvalidation';
+import { deleteStorageFile } from '@/utils/storageUpload';
+
+import {
+  AdminValidationRules,
+  mergeValidationResults,
+  validateMaxChars,
+  validateMaxWords,
+  validateNoDigits,
+  validateRequiredTrimmed,
+} from '@/app/components/admin/utils/adminHelpers';
 
 interface InternshipTestimonialManagerProps {
   testimonials: InternshipTestimonial[];
@@ -28,7 +38,7 @@ interface InternshipTestimonialManagerProps {
   refreshContent?: () => Promise<void>;
 }
 
-export const InternshipTestimonialManager: React.FC<InternshipTestimonialManagerProps> = ({ testimonials, onUpdate, refreshContent }) => {
+export const InternshipTestimonialManager: React.FC<InternshipTestimonialManagerProps> = ({ testimonials: _testimonials, onUpdate: _onUpdate, refreshContent: _refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<InternshipTestimonial | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -73,6 +83,13 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
 
     try {
       if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+        // Find the testimonial to get its image URLs for storage cleanup
+        const testimonialToDelete = pagination.data.find(t => t.id === id);
+        if (testimonialToDelete && testimonialToDelete.images && testimonialToDelete.images.length > 0) {
+          for (const imgUrl of testimonialToDelete.images) {
+            await deleteStorageFile(imgUrl, 'testimonials');
+          }
+        }
         await deleteTestimonialFromDb(id);
       }
       
@@ -89,9 +106,82 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
 
   const handleSave = async () => {
     if (!editingTestimonial || isSaving) return;
+
+     const validation = mergeValidationResults(
+       validateRequiredTrimmed(editingTestimonial.name, 'Name'),
+       validateNoDigits(editingTestimonial.name, 'Name'),
+       validateMaxChars(
+         editingTestimonial.name.trim(),
+         AdminValidationRules.nameMaxChars,
+         'Name'
+       ),
+       validateMaxWords(
+         editingTestimonial.name.trim(),
+         AdminValidationRules.nameMaxWords,
+         'Name'
+       ),
+       validateRequiredTrimmed(editingTestimonial.degree, 'Degree'),
+       validateMaxChars(
+         editingTestimonial.degree.trim(),
+         AdminValidationRules.shortTitleMaxChars,
+         'Degree'
+       ),
+       validateMaxWords(
+         editingTestimonial.degree.trim(),
+         AdminValidationRules.shortTitleMaxWords,
+         'Degree'
+       ),
+       validateRequiredTrimmed(editingTestimonial.institution, 'Institution'),
+       validateMaxChars(
+         editingTestimonial.institution.trim(),
+         AdminValidationRules.shortTitleMaxChars,
+         'Institution'
+       ),
+       validateMaxWords(
+         editingTestimonial.institution.trim(),
+         AdminValidationRules.shortTitleMaxWords,
+         'Institution'
+       ),
+       validateRequiredTrimmed(editingTestimonial.quote, 'Quote/Short testimonial'),
+       validateMaxChars(
+         editingTestimonial.quote.trim(),
+         AdminValidationRules.shortTextMaxChars,
+         'Quote/Short testimonial'
+       ),
+       validateMaxWords(
+         editingTestimonial.quote.trim(),
+         AdminValidationRules.shortTextMaxWords,
+         'Quote/Short testimonial'
+       ),
+       validateMaxChars(
+         (editingTestimonial.fullText || '').trim(),
+         AdminValidationRules.contentMaxChars,
+         'Full testimonial'
+       ),
+       validateRequiredTrimmed(editingTestimonial.year, 'Year'),
+       validateMaxChars(editingTestimonial.year.trim(), 4, 'Year')
+     );
+     if (!validation.isValid) {
+       toast.error(validation.error || 'Validation failed');
+       return;
+     }
     
     setIsSaving(true);
     try {
+      // Handle image uploads before saving to database
+      let finalImages = editingTestimonial.images || [];
+      if (editingTestimonial.images && editingTestimonial.images.some(img => typeof img === 'object')) {
+        const filesToUpload = editingTestimonial.images.filter(img => typeof img === 'object') as File[];
+        const uploadedUrls = await uploadImages(filesToUpload, 'testimonials');
+        let uploadIdx = 0;
+        finalImages = editingTestimonial.images.map(img => {
+          if (typeof img === 'object') {
+            return uploadedUrls[uploadIdx++];
+          }
+          return img as string;
+        });
+      }
+
       const testimonialData = {
         name: editingTestimonial.name,
         degree: editingTestimonial.degree,
@@ -100,7 +190,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
         full_text: editingTestimonial.fullText,
         published_date: editingTestimonial.publishedDate,
         year: editingTestimonial.year,
-        images: editingTestimonial.images || null,
+        images: (finalImages as string[]) || null,
       };
 
       if (editingTestimonial.id && !editingTestimonial.id.startsWith('temp-') && !editingTestimonial.id.match(/^\\d{13}$/)) {
@@ -176,10 +266,10 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   </Button>
                 </div>
 
-                {testimonial.imageUrl ? (
+                {testimonial.images && testimonial.images.length > 0 ? (
                   <div className="w-full h-48 overflow-hidden rounded-t-lg">
                     <img
-                      src={testimonial.imageUrl}
+                      src={testimonial.images[0]}
                       alt={testimonial.name}
                       className="w-full h-full object-cover"
                     />

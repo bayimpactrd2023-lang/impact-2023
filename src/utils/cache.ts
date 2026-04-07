@@ -45,7 +45,7 @@ const DEFAULT_CONFIG: Required<CacheConfig> = {
 /**
  * Generate a cache key from a function name and arguments
  */
-export function generateCacheKey(prefix: string, ...args: any[]): string {
+export function generateCacheKey(prefix: string, ...args: unknown[]): string {
   const argsKey = args.length > 0 ? JSON.stringify(args) : '';
   return `cache:${prefix}:${argsKey}`;
 }
@@ -87,7 +87,7 @@ function getFromLocalStorage<T>(key: string): CacheEntry<T> | null {
 
     // Decompress if needed
     if (parsed.compressed && typeof parsed.data === 'string') {
-      const decompressed = LZString.decompress(parsed.data as any);
+      const decompressed = LZString.decompress(parsed.data);
       parsed.data = decompressed ? JSON.parse(decompressed) : null;
       parsed.compressed = false;
     }
@@ -124,7 +124,7 @@ function setInLocalStorage<T>(key: string, entry: CacheEntry<T>, config: Require
     if (config.compress) {
       const jsonStr = JSON.stringify(dataToStore);
       if (jsonStr.length > config.maxSize) {
-        dataToStore = LZString.compress(jsonStr) as any;
+        dataToStore = LZString.compress(jsonStr) as unknown as T;
         compressed = true;
       }
     }

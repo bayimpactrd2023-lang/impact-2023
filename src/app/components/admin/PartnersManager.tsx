@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Partner } from '@/app/context/ContentContext';
+import { Partner, PartnerForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -10,12 +10,14 @@ import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { useServerPagination } from '@/hooks/useServerPagination';
+import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
 import {
   createPartner,
   updatePartner as updatePartnerInDb,
   deletePartner as deletePartnerFromDb,
   getPartnersPaginated,
 } from '@/services/supabaseService';
+import { uploadImage, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidatePartnersCache } from '@/utils/cacheInvalidation';
@@ -26,9 +28,9 @@ interface PartnersManagerProps {
   refreshContent?: () => Promise<void>;
 }
 
-export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners, onUpdate, refreshContent }) => {
+export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _partners, onUpdate: _onUpdate, refreshContent: _refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
+  const [editingPartner, setEditingPartner] = useState<PartnerForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
@@ -40,7 +42,7 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners, onUp
   });
 
   const addPartner = () => {
-    const newPartner: Partner = {
+    const newPartner: PartnerForm = {
       id: `temp-${Date.now()}`,
       name: '',
       logoUrl: '',
@@ -50,7 +52,7 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners, onUp
   };
 
   const handleEdit = (partner: Partner) => {
-    setEditingPartner({ ...partner });
+    setEditingPartner({ ...partner } as PartnerForm);
     setIsModalOpen(true);
   };
 
@@ -65,6 +67,11 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners, onUp
 
     try {
       if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+        // Find the partner to get its logo URL for storage cleanup
+        const partnerToDelete = pagination.data.find(p => p.id === id);
+        if (partnerToDelete?.logoUrl) {
+          await deleteStorageFile(partnerToDelete.logoUrl, 'partners');
+        }
         await deletePartnerFromDb(id);
       }
       
@@ -81,15 +88,27 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners, onUp
 
   const handleSave = async () => {
     if (!editingPartner || isSaving) return;
+
+    const validation = EntityValidator.validatePartner(editingPartner);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
+      return;
+    }
     
     setIsSaving(true);
     try {
+      // Handle Image Upload before saving to database
+      let finalLogoUrl = editingPartner.logoUrl;
+      if (typeof finalLogoUrl === 'object' && finalLogoUrl instanceof File) {
+        finalLogoUrl = await uploadImage(finalLogoUrl, 'partners');
+      }
+
       const partnerData = {
         name: editingPartner.name,
-        logo_url: editingPartner.logoUrl || null,
+        logo_url: (finalLogoUrl as string) || '',
       };
 
-      if (editingPartner.id && !editingPartner.id.startsWith('temp-') && !editingPartner.id.match(/^\d{13}$/)) {
+      if (editingPartner.id && !editingPartner.id.startsWith('temp-') && !editingPartner.id.match(/^\\d{13}$/)) {
         await updatePartnerInDb(editingPartner.id, partnerData);
         toast.success('Partner updated!');
       } else {

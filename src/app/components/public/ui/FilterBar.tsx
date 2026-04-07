@@ -4,7 +4,6 @@
  * Reusable filter/tab navigation for content pages.
  */
 
-import React from 'react';
 import { Button } from '@/app/components/ui/button';
 import { FilterConfig } from '../types/page.types';
 

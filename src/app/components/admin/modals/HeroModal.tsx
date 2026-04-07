@@ -4,7 +4,6 @@
  * Specialized modal for editing the hero section.
  */
 
-import React from 'react';
 import { X, CheckCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';

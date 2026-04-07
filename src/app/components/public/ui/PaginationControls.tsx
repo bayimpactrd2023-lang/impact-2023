@@ -1,10 +1,10 @@
 /**
  * Pagination Controls Component
  * 
- * Reusable pagination UI for navigating through pages.
+ * Reusable pagination for content pages.
  */
 
-import React from 'react';
+import type { JSX } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 

@@ -1,9 +1,9 @@
-import React from 'react';
+import type { FC } from 'react';
 import { motion } from 'motion/react';
 import { useContent } from '@/app/context/ContentContext';
 import { Target, Users, Lightbulb, Award } from 'lucide-react';
 
-export const About: React.FC = () => {
+export const About: FC = () => {
   const { content } = useContent();
 
   const values = [

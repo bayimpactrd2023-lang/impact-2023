@@ -15,6 +15,8 @@
 import * as originalService from './supabaseService';
 import { cachedFetch, generateCacheKey, invalidateByPrefix, CacheConfig } from '@/utils/cache';
 import { supabase } from '@/lib/supabase';
+import { Highlight, BlogPost, Project, InternshipTestimonial, FinancialStatement, Partner, NewsItem, Publication, TeamMember } from '@/app/context/ContentContext';
+import { getImageUrl as getR2ImageUrl } from '@/utils/r2Upload';
 
 // Field Selection Patterns - Only fetch what we need
 const FIELD_SELECTIONS = {
@@ -85,25 +87,30 @@ export function optimizeImageUrl(url: string | null | undefined, options?: {
   width?: number;
   height?: number;
   quality?: number;
-  format?: 'webp' | 'avif' | 'jpeg';
+  format?: 'webp' | 'avif' | 'origin';
 }): string {
   if (!url) return '';
 
-  // If it's a Supabase storage URL, add transformation params
-  if (url.includes('.supabase.co/storage/v1/object')) {
-    const { width, height, quality = 80, format = 'webp' } = options || {};
+  // If it's already a worker/optimized URL, return as-is
+  const optimizedUrl = getR2ImageUrl(url);
+  if (optimizedUrl !== url) return optimizedUrl || url;
 
-    const params = new URLSearchParams();
-    if (width) params.append('width', width.toString());
-    if (height) params.append('height', height.toString());
-    params.append('quality', quality.toString());
-    params.append('format', format);
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl || !url.includes(supabaseUrl)) return url;
 
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}${params.toString()}`;
+  try {
+    // Basic Supabase transformation support
+    const u = new URL(url);
+    if (options) {
+      if (options.width) u.searchParams.set('width', options.width.toString());
+      if (options.height) u.searchParams.set('height', options.height.toString());
+      if (options.quality) u.searchParams.set('quality', options.quality.toString());
+      if (options.format) u.searchParams.set('format', options.format);
+    }
+    return u.toString();
+  } catch {
+    return url;
   }
-
-  return url;
 }
 
 /**
@@ -180,11 +187,15 @@ export const getAllNews = async () => {
       if (error) throw error;
 
       // Optimize images
-      return (data || []).map(item => ({
-        ...item,
-        image_url: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
+      const mappedData: NewsItem[] = (data || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        date: item.date,
+        imageUrl: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
         images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
       }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.content }
   );
@@ -205,11 +216,15 @@ export const getNewsById = async (id: string) => {
       if (error) throw error;
 
       // Optimize images
-      return {
-        ...data,
-        image_url: optimizeImageUrl(data.image_url, { width: 1200, quality: 80 }),
-        images: optimizeImageArray(data.images, { width: 1200, quality: 80 }),
+      const mappedItem: NewsItem = {
+        id: (data as any).id,
+        title: (data as any).title,
+        content: (data as any).content,
+        date: (data as any).date,
+        imageUrl: optimizeImageUrl((data as any).image_url, { width: 1200, quality: 80 }),
+        images: optimizeImageArray((data as any).images, { width: 1200, quality: 80 }),
       };
+      return mappedItem;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.content }
   );
@@ -233,10 +248,17 @@ export const getAllHighlights = async () => {
       if (error) throw error;
 
       // Optimize images
-      return (data || []).map(item => ({
-        ...item,
-        image_url: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
+      const mappedData: Highlight[] = (data || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        imageUrl: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
+        images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
+        iconName: item.icon_name,
+        publishedDate: item.published_date,
+        featured: item.featured,
       }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.content }
   );
@@ -266,12 +288,12 @@ export const getHighlightsPaginated = async (page: number, limit: number) => {
       if (countResponse.error) throw countResponse.error;
 
       // Optimize images and transform snake_case to camelCase
-      const optimizedData = (dataResponse.data || []).map(item => ({
+      const optimizedData: Highlight[] = (dataResponse.data || []).map((item: any) => ({
         id: item.id,
         title: item.title,
         description: item.description,
-        imageUrl: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
-        images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
+        imageUrl: optimizeImageUrl(item.image_url),
+        images: optimizeImageArray(item.images),
         iconName: item.icon_name,
         publishedDate: item.published_date,
         featured: item.featured,
@@ -310,7 +332,7 @@ export const getAllPublications = async () => {
       if (error) throw error;
 
       // Transform snake_case to camelCase
-      return (data || []).map(item => ({
+      const mappedData: Publication[] = (data || []).map((item: any) => ({
         id: item.id,
         title: item.title,
         authors: item.authors,
@@ -323,12 +345,13 @@ export const getAllPublications = async () => {
         excerpt: item.excerpt,
         content: item.content,
       }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.content }
   );
 };
 
-export const getPublicationsPaginated = async (page: number, limit: number) => {
+export const getPublicationsPaginated = async (page: number, limit: number): Promise<{ data: Publication[]; totalCount: number; page: number; itemsPerPage: number; totalPages: number; }> => {
   const cacheKey = generateCacheKey('publications', 'page', page, limit);
 
   return cachedFetch(
@@ -352,18 +375,18 @@ export const getPublicationsPaginated = async (page: number, limit: number) => {
       if (countResponse.error) throw countResponse.error;
 
       // Transform snake_case to camelCase
-      const transformedData = (dataResponse.data || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        authors: item.authors,
-        publishedDate: item.published_date,
-        featured: item.featured,
-        sentence: item.sentence,
-        pdfUrl: item.pdf_url,
-        pdfAccessType: item.pdf_access_type,
-        link: item.link,
-        excerpt: item.excerpt,
-        content: item.content,
+      const transformedData: Publication[] = (dataResponse.data || []).map((item: any) => ({
+        id: item.id as string,
+        title: item.title as string,
+        authors: item.authors as string,
+        publishedDate: item.published_date as string | undefined,
+        featured: item.featured as boolean | undefined,
+        sentence: item.sentence as string | undefined,
+        pdfUrl: item.pdf_url as string | undefined,
+        pdfAccessType: item.pdf_access_type as 'view' | 'download' | undefined,
+        link: item.link as string,
+        excerpt: item.excerpt as string | undefined,
+        content: item.content as string | undefined,
       }));
 
       const totalCount = countResponse.count || 0;
@@ -399,10 +422,12 @@ export const getAllPartners = async () => {
       if (error) throw error;
 
       // Optimize logo images
-      return (data || []).map(item => ({
-        ...item,
-        logo_url: optimizeImageUrl(item.logo_url, { width: 400, quality: 85, format: 'webp' }),
+      const mappedData: Partner[] = (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        logoUrl: optimizeImageUrl(item.logo_url),
       }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.static }
   );
@@ -426,10 +451,14 @@ export const getAllTeamMembers = async () => {
       if (error) throw error;
 
       // Optimize images
-      return (data || []).map(item => ({
-        ...item,
-        image_url: optimizeImageUrl(item.image_url, { width: 400, height: 400, quality: 85 }),
+      const mappedData: TeamMember[] = (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        role: item.role,
+        description: item.description,
+        imageUrl: optimizeImageUrl(item.image_url, { width: 400, height: 400, quality: 85 }),
       }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.static }
   );
@@ -453,11 +482,18 @@ export const getAllBlogPosts = async () => {
       if (error) throw error;
 
       // Optimize images
-      return (data || []).map(item => ({
-        ...item,
-        image_url: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
+      const mappedData: BlogPost[] = (data || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        author: item.author,
+        authorRole: item.author_role,
+        date: item.date,
+        imageUrl: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
         images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
+        likes: item.likes || 0,
       }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.content }
   );
@@ -487,7 +523,7 @@ export const getBlogPostsPaginated = async (page: number, limit: number) => {
       if (countResponse.error) throw countResponse.error;
 
       // Optimize images and transform snake_case to camelCase
-      const optimizedData = (dataResponse.data || []).map(item => ({
+      const optimizedData: BlogPost[] = (dataResponse.data || []).map((item: any) => ({
         id: item.id,
         title: item.title,
         author: item.author,
@@ -495,7 +531,7 @@ export const getBlogPostsPaginated = async (page: number, limit: number) => {
         date: item.date,
         imageUrl: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
         images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
-        likes: item.likes,
+        likes: item.likes || 0,
         content: item.content,
       }));
 
@@ -533,7 +569,7 @@ export const getProjectsByCategory = async (category: string) => {
       if (error) throw error;
 
       // Optimize images and transform to camelCase
-      return (data || []).map(item => ({
+      const mappedData: Project[] = (data || []).map((item: any) => ({
         id: item.id,
         title: item.title,
         description: item.description,
@@ -545,6 +581,7 @@ export const getProjectsByCategory = async (category: string) => {
         objectives: item.objectives,
         methodology: item.methodology,
       }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.content }
   );
@@ -576,7 +613,7 @@ export const getProjectsPaginated = async (category: string, page: number, limit
       if (countResponse.error) throw countResponse.error;
 
       // Optimize images (both cover and gallery) and transform to camelCase
-      const optimizedData = (dataResponse.data || []).map(item => ({
+      const optimizedData: Project[] = (dataResponse.data || []).map((item: any) => ({
         id: item.id,
         title: item.title,
         description: item.description,
@@ -620,7 +657,15 @@ export const getAllFinancialStatements = async () => {
         .order('year', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      const mappedData: FinancialStatement[] = (data || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        year: String(item.year),
+        pdfUrl: item.pdf_url,
+        description: item.description,
+        pdfAccessType: item.pdf_access_type as 'view' | 'download' | undefined,
+      }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.content }
   );
@@ -649,11 +694,20 @@ export const getFinancialStatementsPaginated = async (page: number, limit: numbe
       if (dataResponse.error) throw dataResponse.error;
       if (countResponse.error) throw countResponse.error;
 
+      const mappedData: FinancialStatement[] = (dataResponse.data || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        year: String(item.year),
+        pdfUrl: item.pdf_url,
+        description: item.description,
+        pdfAccessType: item.pdf_access_type as 'view' | 'download' | undefined,
+      }));
+
       const totalCount = countResponse.count || 0;
       const totalPages = Math.ceil(totalCount / limit);
 
       return {
-        data: dataResponse.data || [],
+        data: mappedData,
         totalCount,
         page,
         itemsPerPage: limit,
@@ -682,17 +736,18 @@ export const getAllInternshipTestimonials = async () => {
       if (error) throw error;
 
       // Optimize images and transform snake_case to camelCase
-      return (data || []).map(item => ({
+      const mappedData: InternshipTestimonial[] = (data || []).map((item: any) => ({
         id: item.id,
         name: item.name,
         degree: item.degree,
         institution: item.institution,
         quote: item.quote,
         fullText: item.full_text,
-        year: item.year,
+        year: String(item.year),
         publishedDate: item.published_date,
         images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
       }));
+      return mappedData;
     },
     { ...defaultCacheConfig, ttl: CACHE_TTL.content }
   );
@@ -722,14 +777,14 @@ export const getInternshipTestimonialsPaginated = async (page: number, limit: nu
       if (countResponse.error) throw countResponse.error;
 
       // Optimize images and transform snake_case to camelCase
-      const optimizedData = (dataResponse.data || []).map(item => ({
+      const optimizedData: InternshipTestimonial[] = (dataResponse.data || []).map((item: any) => ({
         id: item.id,
         name: item.name,
         degree: item.degree,
         institution: item.institution,
         quote: item.quote,
         fullText: item.full_text,
-        year: item.year,
+        year: String(item.year),
         publishedDate: item.published_date,
         images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
       }));

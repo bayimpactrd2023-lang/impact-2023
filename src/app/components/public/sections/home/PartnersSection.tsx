@@ -4,7 +4,6 @@
  * Displays partner organizations' logos.
  */
 
-import React from 'react';
 import { useContent } from '@/app/context/ContentContext';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 

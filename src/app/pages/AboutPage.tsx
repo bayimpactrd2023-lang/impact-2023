@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useContent } from '@/app/context/ContentContext';
 import { TeamMember } from '@/app/types/content';
-import { Eye, Target, Award, Lightbulb, BookOpen, Users } from 'lucide-react';
+import { Target, Lightbulb, BookOpen, Users } from 'lucide-react';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { PageHeaderTheme } from "@/app/components/PageHeaderTheme";
 import { SectionTheme } from "@/app/components/SectionTheme";
@@ -35,6 +35,7 @@ export const AboutPage: React.FC = () => {
     };
 
     loadPageData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleTeamMemberClick = (member: TeamMember) => {

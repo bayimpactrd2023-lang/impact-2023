@@ -21,6 +21,14 @@ import {
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateFinancialCache } from '@/utils/cacheInvalidation';
+import { deleteStorageFile } from '@/utils/storageUpload';
+import {
+  AdminValidationRules,
+  mergeValidationResults,
+  validateMaxChars,
+  validateMaxWords,
+  validateRequiredTrimmed,
+} from '@/app/components/admin/utils/adminHelpers';
 
 interface FinancialStatementManagerProps {
   statements: FinancialStatement[];
@@ -28,7 +36,7 @@ interface FinancialStatementManagerProps {
   refreshContent?: () => Promise<void>;
 }
 
-export const FinancialStatementManager: React.FC<FinancialStatementManagerProps> = ({ statements, onUpdate, refreshContent }) => {
+export const FinancialStatementManager: React.FC<FinancialStatementManagerProps> = ({ statements: _statements, onUpdate: _onUpdate, refreshContent: _refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStatement, setEditingStatement] = useState<FinancialStatement | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,6 +82,11 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
 
     try {
       if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+        // Find the statement to get its PDF URL for storage cleanup
+        const statementToDelete = pagination.data.find(s => s.id === id);
+        if (statementToDelete?.pdfUrl) {
+          await deleteStorageFile(statementToDelete.pdfUrl, 'pdfs');
+        }
         await deleteStatementFromDb(id);
       }
       
@@ -91,13 +104,27 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
   const handleSave = async () => {
     if (!editingStatement || isSaving) return;
     
-    // Validation: Ensure required fields are filled
-    if (!editingStatement.title || !editingStatement.year) {
-      toast.error('Please fill in all required fields (Title and Year)');
+    const validation = mergeValidationResults(
+      validateRequiredTrimmed(editingStatement.title, 'Title'),
+      validateMaxChars(
+        editingStatement.title.trim(),
+        AdminValidationRules.shortTitleMaxChars,
+        'Title'
+      ),
+      validateMaxWords(
+        editingStatement.title.trim(),
+        AdminValidationRules.shortTitleMaxWords,
+        'Title'
+      ),
+      validateRequiredTrimmed(editingStatement.year, 'Year'),
+      validateMaxChars((editingStatement.description || '').trim(), AdminValidationRules.shortTextMaxChars, 'Description'),
+      validateMaxWords((editingStatement.description || '').trim(), AdminValidationRules.shortTextMaxWords, 'Description')
+    );
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
       return;
     }
 
-    // Validation: Ensure PDF is uploaded
     if (!editingStatement.pdfUrl || editingStatement.pdfUrl.trim() === '') {
       toast.error('Please upload a PDF file for the financial statement');
       return;
@@ -105,10 +132,16 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
     
     setIsSaving(true);
     try {
+      // Handle PDF Upload before saving to database
+      let finalPdfUrl = editingStatement.pdfUrl;
+      if (typeof finalPdfUrl === 'object' && finalPdfUrl instanceof File) {
+        finalPdfUrl = await uploadImage(finalPdfUrl, 'pdfs');
+      }
+
       const statementData = {
         title: editingStatement.title,
         year: editingStatement.year,
-        pdf_url: editingStatement.pdfUrl,
+        pdf_url: (finalPdfUrl as string) || '',
         description: editingStatement.description || '',
         pdf_access_type: editingStatement.pdfAccessType || 'download',
       };
@@ -255,7 +288,6 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
               <div>
                 <Label htmlFor="statement-year">Year *</Label>
                 <Select
-                  id="statement-year"
                   value={editingStatement.year.toString()}
                   onValueChange={(value) =>
                     setEditingStatement({ ...editingStatement, year: value })
@@ -302,7 +334,6 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
               <div>
                 <Label htmlFor="pdf-access-type">PDF Access Type *</Label>
                 <Select
-                  id="pdf-access-type"
                   value={editingStatement.pdfAccessType || 'download'}
                   onValueChange={(value: 'view' | 'download') =>
                     setEditingStatement({ ...editingStatement, pdfAccessType: value })

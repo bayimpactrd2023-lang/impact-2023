@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Project } from '@/app/context/ContentContext';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/app/components/ui/dialog';
-import { X, Calendar, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { X, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 
 interface FindingDetailModalProps {

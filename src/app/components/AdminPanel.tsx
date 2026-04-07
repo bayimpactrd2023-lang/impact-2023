@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // Admin Panel - Fixed all function references (updateTeamMembers, etc.)
-import { useContent, NewsItem, Publication, Partner, Highlight, TeamMember, BlogPost } from '@/app/context/ContentContext';
-import { Plus, Trash2, Save, Edit, FileText, Newspaper, Sparkles, Users, Info, Briefcase, BookOpen, Handshake, Layout, Home, X, CheckCircle, ChevronLeft, ChevronRight, Star, AlertCircle } from 'lucide-react';
+import { useContent, NewsItem, Publication, Partner, Highlight, TeamMember, BlogPost, NewsItemForm, HighlightForm, TeamMemberForm, PartnerForm, BlogPostForm, Project, InternshipTestimonial, FinancialStatement } from '@/app/context/ContentContext';
+import { Plus, Trash2, Save, Edit, FileText, Newspaper, Sparkles, Users, Info, Briefcase, BookOpen, Handshake, Home, X, CheckCircle, Star, AlertCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -28,6 +28,14 @@ import { OurWorkTabs } from '@/app/components/admin/OurWorkTabs';
 import { AdminSkeletonLoader } from '@/app/components/AdminSkeletonLoader';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import {
+  AdminValidationRules,
+  mergeValidationResults,
+  validateMaxChars,
+  validateMaxWords,
+  validateRequiredTrimmed,
+  validateNoDigits,
+} from '@/app/components/admin/utils/adminHelpers';
+import {
   updateHeroSection,
   updateAboutSection,
   createPartner,
@@ -49,6 +57,7 @@ import {
   getProjectsByCategory,
   getAllInternshipTestimonials
 } from '@/services/supabaseService';
+import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 
 /**
  * AdminPanel Component
@@ -79,13 +88,10 @@ export const AdminPanel: React.FC = () => {
     updatePartners,
     updateHighlights,
     updateTeamMembers,
-    updateHero,
     updateAbout,
-    updateHeroBackground,
     updateInternationallyFundedProjects,
     updateLocallyFundedProjects,
     updateCommunityTransformationProjects,
-    updateInternshipPrograms,
     updateFinancialStatements,
     updateStudyFindings,
     updateInternshipTestimonials,
@@ -100,13 +106,6 @@ export const AdminPanel: React.FC = () => {
     fetchBlogPosts,
     fetchHeroSection,
     fetchAboutSection,
-    fetchInternationallyFundedProjects,
-    fetchLocallyFundedProjects,
-    fetchCommunityTransformationProjects,
-    fetchInternshipPrograms,
-    fetchStudyFindings,
-    fetchFinancialStatements,
-    fetchInternshipTestimonials,
   } = useContent();
   
   const [newsItems, setNewsItems] = useState<NewsItem[]>(content.newsItems);
@@ -124,7 +123,7 @@ export const AdminPanel: React.FC = () => {
 
   // ── Quick Create Blog modal ───────────────────────────────────────────────
   const [isQuickBlogOpen, setIsQuickBlogOpen] = useState(false);
-  const [draft, setDraft] = useState<BlogPost>({
+  const [draft, setDraft] = useState<BlogPostForm>({
     id: '',
     title: '',
     content: '',
@@ -155,20 +154,20 @@ export const AdminPanel: React.FC = () => {
   });
 
   // News modal state
-  const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+  const [editingNews, setEditingNews] = useState<NewsItemForm | null>(null);
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
 
   // Highlights modal state
-  const [editingHighlight, setEditingHighlight] = useState<Highlight | null>(null);
+  const [editingHighlight, setEditingHighlight] = useState<HighlightForm | null>(null);
   const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
   const [showMigrationWarning, setShowMigrationWarning] = useState(false);
 
   // Team modal state
-  const [editingTeamMember, setEditingTeamMember] = useState<TeamMember | null>(null);
+  const [editingTeamMember, setEditingTeamMember] = useState<TeamMemberForm | null>(null);
   const [isTeamMemberModalOpen, setIsTeamMemberModalOpen] = useState(false);
 
   // Partners modal state
-  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
+  const [editingPartner, setEditingPartner] = useState<PartnerForm | null>(null);
   const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
 
 
@@ -227,7 +226,8 @@ export const AdminPanel: React.FC = () => {
     };
 
     loadInitialData();
-  }, []); // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount - intentionally omitting fetch functions to prevent re-fetch loops
 
   // Sync with context when it changes externally
   useEffect(() => {
@@ -321,17 +321,46 @@ export const AdminPanel: React.FC = () => {
   const publishQuickBlog = async () => {
     if (isSavingQuickBlog) return; // Prevent multiple submissions
 
-    if (!draft.title.trim()) {
-      toast.error('Please enter a title.');
-      return;
-    }
-    if (!draft.content.trim()) {
-      toast.error('Please enter some content.');
+    const validation = mergeValidationResults(
+      validateRequiredTrimmed(draft.title, 'Title'),
+      validateMaxChars(draft.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
+      validateMaxWords(draft.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
+      validateRequiredTrimmed(draft.content, 'Content'),
+      validateMaxChars(draft.content.trim(), AdminValidationRules.contentMaxChars, 'Content'),
+      validateRequiredTrimmed(draft.author, 'Author'),
+      validateNoDigits(draft.author, 'Author'),
+      validateMaxChars(draft.author.trim(), AdminValidationRules.nameMaxChars, 'Author'),
+      validateMaxWords(draft.author.trim(), AdminValidationRules.nameMaxWords, 'Author'),
+      validateMaxChars((draft.authorRole || '').trim(), AdminValidationRules.roleMaxChars, 'Author role'),
+      validateMaxWords((draft.authorRole || '').trim(), AdminValidationRules.roleMaxWords, 'Author role'),
+      validateNoDigits(draft.authorRole || '', 'Author role')
+    );
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
       return;
     }
     
     setIsSavingQuickBlog(true);
     try {
+      // Handle Image Uploads before saving to database
+      let finalImageUrl = draft.imageUrl;
+      if (typeof finalImageUrl === 'object' && (finalImageUrl as any) instanceof File) {
+        finalImageUrl = await uploadImage(finalImageUrl as any, 'blog');
+      }
+
+      let finalImages = draft.images || [];
+      if (draft.images && draft.images.some(img => typeof img === 'object')) {
+        const filesToUpload = draft.images.filter(img => typeof img === 'object') as File[];
+        const uploadedUrls = await uploadImages(filesToUpload, 'blog');
+        let uploadIdx = 0;
+        finalImages = draft.images.map(img => {
+          if (typeof img === 'object') {
+            return uploadedUrls[uploadIdx++];
+          }
+          return img as string;
+        });
+      }
+
       // Save to database
       const blogData = {
         title: draft.title,
@@ -339,8 +368,8 @@ export const AdminPanel: React.FC = () => {
         author: draft.author,
         author_role: draft.authorRole,
         date: draft.date,
-        image_url: draft.imageUrl || null,
-        images: draft.images || null,
+        image_url: (finalImageUrl as string) || null,
+        images: (finalImages as string[]) || null,
         likes: draft.likes || 0
       };
       
@@ -348,7 +377,7 @@ export const AdminPanel: React.FC = () => {
       
       if (created) {
         // Refresh from database
-        await content.refreshContent?.();
+        await refreshContent();
         setIsQuickBlogOpen(false);
         toast.success('Blog post saved to database!', {
           description: `"${draft.title}" was successfully created.`,
@@ -387,24 +416,40 @@ export const AdminPanel: React.FC = () => {
   const publishQuickPublication = async () => {
     if (isSavingQuickPublication) return; // Prevent multiple submissions
 
-    if (!publicationDraft.title.trim()) {
-      toast.error('Please enter a title.');
-      return;
-    }
-    if (!publicationDraft.content.trim()) {
-      toast.error('Please enter some content.');
+    const validation = mergeValidationResults(
+      validateRequiredTrimmed(publicationDraft.title, 'Title'),
+      validateMaxChars(publicationDraft.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
+      validateMaxWords(publicationDraft.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
+      validateRequiredTrimmed(publicationDraft.content || '', 'Content'),
+      validateMaxChars((publicationDraft.content || '').trim(), AdminValidationRules.contentMaxChars, 'Content'),
+      validateMaxChars((publicationDraft.authors || '').trim(), AdminValidationRules.authorsMaxChars, 'Authors'),
+      validateMaxWords((publicationDraft.authors || '').trim(), AdminValidationRules.authorsMaxWords, 'Authors'),
+      validateNoDigits(publicationDraft.authors || '', 'Authors'),
+      validateMaxChars((publicationDraft.excerpt || '').trim(), AdminValidationRules.shortTextMaxChars, 'Excerpt'),
+      validateMaxWords((publicationDraft.excerpt || '').trim(), AdminValidationRules.shortTextMaxWords, 'Excerpt'),
+      validateMaxChars((publicationDraft.sentence || '').trim(), AdminValidationRules.shortTextMaxChars, 'Sentence'),
+      validateMaxWords((publicationDraft.sentence || '').trim(), AdminValidationRules.shortTextMaxWords, 'Sentence')
+    );
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
       return;
     }
     
     setIsSavingQuickPublication(true);
     try {
+      // Handle PDF Upload before saving to database
+      let finalPdfUrl = publicationDraft.pdfUrl;
+      if (typeof finalPdfUrl === 'object' && (finalPdfUrl as any) instanceof File) {
+        finalPdfUrl = await uploadImage(finalPdfUrl as any, 'publications');
+      }
+
       // Save to database
       const publicationData = {
         title: publicationDraft.title,
         authors: publicationDraft.authors,
         link: publicationDraft.link,
         featured: publicationDraft.featured,
-        pdf_url: publicationDraft.pdfUrl || null,
+        pdf_url: (finalPdfUrl as string) || null,
         content: publicationDraft.content || null,
         published_date: publicationDraft.publishedDate || null,
         excerpt: publicationDraft.excerpt || null,
@@ -418,7 +463,7 @@ export const AdminPanel: React.FC = () => {
       
       if (created) {
         // Refresh from database
-        await content.refreshContent?.();
+        await refreshContent();
         setIsQuickPublicationOpen(false);
         toast.success('Publication saved to database!', {
           description: `"${publicationDraft.title}" was successfully created.`,
@@ -434,19 +479,37 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
-  // News handlers - Now saves to Supabase
-  const handleSaveNews = async (newsItem?: NewsItem) => {
+  const handleSaveNews = async (newsItem?: NewsItemForm) => {
     try {
       const itemsToSave = newsItem ? [newsItem] : newsItems;
       
       // Save each news item to database
       for (const item of itemsToSave) {
+        // Handle Image Uploads before saving
+        let finalImageUrl = item.imageUrl;
+        if (typeof finalImageUrl === 'object' && (finalImageUrl as any) instanceof File) {
+          finalImageUrl = await uploadImage(finalImageUrl as any, 'news');
+        }
+
+        let finalImages = item.images || [];
+        if (item.images && item.images.some(img => typeof img === 'object')) {
+          const filesToUpload = item.images.filter(img => typeof img === 'object') as File[];
+          const uploadedUrls = await uploadImages(filesToUpload, 'news');
+          let uploadIdx = 0;
+          finalImages = item.images.map(img => {
+            if (typeof img === 'object') {
+              return uploadedUrls[uploadIdx++];
+            }
+            return img as string;
+          });
+        }
+
         const newsData = {
           title: item.title,
           content: item.content,
           date: item.date,
-          image_url: item.imageUrl || null,
-          images: item.images || null
+          image_url: (finalImageUrl as string) || null,
+          images: (finalImages as string[]) || null
         };
         
         if (item.id.startsWith('temp-')) {
@@ -455,7 +518,7 @@ export const AdminPanel: React.FC = () => {
           if (created && newsItem) {
             // Replace temp ID with real ID from database
             setNewsItems(newsItems.map(i => 
-              i.id === item.id ? { ...item, id: created.id } : i
+              i.id === item.id ? { ...item, id: created.id, imageUrl: (finalImageUrl as string), images: (finalImages as string[]) } : i
             ));
           }
         } else {
@@ -465,27 +528,48 @@ export const AdminPanel: React.FC = () => {
       }
       
       // Refresh from database
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('News saved to database successfully!');
     } catch (error) {
       console.error('Error saving news:', error);
-      toast.error('Failed to save news. Please try again.');
+      toast.error('Failed to save news.');
       throw error;
     }
   };
   
   const addNewsItem = () => {
-    const n: NewsItem = { id: `temp-${Date.now()}`, title: '', content: '', date: new Date().toISOString().split('T')[0], images: [] };
+    const n: NewsItemForm = { id: `temp-${Date.now()}`, title: '', content: '', date: new Date().toISOString().split('T')[0], imageUrl: '', images: [] };
     setEditingNews(n); setIsNewsModalOpen(true);
   };
   
   const deleteNewsItem = async (id: string) => {
     try {
+      const confirmed = await confirmDelete({
+        itemName: 'news item',
+        title: 'Delete News Item',
+        message: 'Are you sure you want to delete this news item? This action cannot be undone.'
+      });
+      if (!confirmed) return;
+
       if (!id.startsWith('temp-')) {
+        // Find the item to get its image URLs
+        const itemToDelete = newsItems.find(i => i.id === id);
+        if (itemToDelete) {
+          // Delete main image
+          if (itemToDelete.imageUrl) {
+            await deleteStorageFile(itemToDelete.imageUrl, 'news');
+          }
+          // Delete additional images
+          if (itemToDelete.images && itemToDelete.images.length > 0) {
+            for (const imgUrl of itemToDelete.images) {
+              await deleteStorageFile(imgUrl, 'news');
+            }
+          }
+        }
         await deleteNewsFromDb(id);
       }
       setNewsItems(newsItems.filter(i => i.id !== id));
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('News item deleted successfully!');
     } catch (error) {
       console.error('Error deleting news:', error);
@@ -493,27 +577,37 @@ export const AdminPanel: React.FC = () => {
     }
   };
   
-  const updateNewsItem = (id: string, field: keyof NewsItem, value: string) => setNewsItems(newsItems.map(i => i.id === id ? { ...i, [field]: value } : i));
-  const updateNewsItemImages = (id: string, images: string[]) => setNewsItems(newsItems.map(i => i.id === id ? { ...i, images, imageUrl: images[0] || '' } : i));
-  const updateHighlightImages = (id: string, images: string[]) => setHighlights(highlights.map(h => h.id === id ? { ...h, images, imageUrl: images[0] || '' } : h));
+  const updateNewsItem = <K extends keyof NewsItem>(id: string, field: K, value: NewsItem[K]) => setNewsItems(newsItems.map(i => i.id === id ? { ...i, [field]: value } : i));
+  const updateNewsItemImages = (id: string, images: Array<string | File>) => {
+    const sanitized = images.filter((img): img is string => typeof img === 'string');
+    setNewsItems(newsItems.map(i => i.id === id ? { ...i, images: sanitized, imageUrl: sanitized[0] || '' } : i));
+  };
+  const updateHighlightImages = (id: string, images: Array<string | File>) => {
+    const sanitized = images.filter((img): img is string => typeof img === 'string');
+    setHighlights(highlights.map(h => h.id === id ? { ...h, images: sanitized, imageUrl: sanitized[0] || '' } : h));
+  };
 
-  // Partners handlers - Now saves to Supabase
-  const handleSavePartners = async (partner?: Partner) => {
+  const handleSavePartners = async (partner?: PartnerForm) => {
     try {
       const itemsToSave = partner ? [partner] : partners;
       
       for (const item of itemsToSave) {
+        // Handle Image Upload before saving
+        let finalLogoUrl = item.logoUrl;
+        if (typeof finalLogoUrl === 'object' && (finalLogoUrl as any) instanceof File) {
+          finalLogoUrl = await uploadImage(finalLogoUrl as any, 'partners');
+        }
+
         const partnerData = {
           name: item.name,
-          logo_url: item.logoUrl
+          logo_url: (finalLogoUrl as string) || ''
         };
         
         if (item.id.startsWith('temp-')) {
           const created = await createPartner(partnerData);
           if (created && partner) {
-            // Replace temp ID with real ID from database
             setPartners(partners.map(p => 
-              p.id === item.id ? { ...item, id: created.id } : p
+              p.id === item.id ? { ...item, id: created.id, logoUrl: (finalLogoUrl as string) } : p
             ));
           }
         } else {
@@ -521,7 +615,7 @@ export const AdminPanel: React.FC = () => {
         }
       }
       
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('Partners saved to database successfully!');
     } catch (error) {
       console.error('Error saving partners:', error);
@@ -531,7 +625,7 @@ export const AdminPanel: React.FC = () => {
   };
   
   const addPartner = () => {
-    const p: Partner = {
+    const p: PartnerForm = {
       id: `temp-${Date.now()}`,
       name: '',
       logoUrl: ''
@@ -542,11 +636,23 @@ export const AdminPanel: React.FC = () => {
   
   const deletePartner = async (id: string) => {
     try {
+      const confirmed = await confirmDelete({
+        itemName: 'partner',
+        title: 'Delete Partner',
+        message: 'Are you sure you want to delete this partner? This action cannot be undone.'
+      });
+      if (!confirmed) return;
+
       if (!id.startsWith('temp-')) {
+        // Find the item to get its logo URL
+        const itemToDelete = partners.find(p => p.id === id);
+        if (itemToDelete?.logoUrl) {
+          await deleteStorageFile(itemToDelete.logoUrl, 'partners');
+        }
         await deletePartnerFromDb(id);
       }
       setPartners(partners.filter(p => p.id !== id));
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('Partner deleted successfully!');
     } catch (error) {
       console.error('Error deleting partner:', error);
@@ -554,20 +660,39 @@ export const AdminPanel: React.FC = () => {
     }
   };
   
-  const updatePartner = (id: string, field: keyof Partner, value: string) => setPartners(partners.map(p => p.id === id ? { ...p, [field]: value } : p));
+  const updatePartner = <K extends keyof Partner>(id: string, field: K, value: Partner[K]) => setPartners(partners.map(p => p.id === id ? { ...p, [field]: value } : p));
 
-  // Highlights handlers - Now saves to Supabase
-  const handleSaveHighlights = async (highlight?: Highlight) => {
+  // Highlights handlers - Now saves to Supabase with image upload
+  const handleSaveHighlights = async (highlight?: HighlightForm) => {
     try {
       const itemsToSave = highlight ? [highlight] : highlights;
       
       for (const item of itemsToSave) {
+        // Handle Image Uploads before saving
+        let finalImageUrl = item.imageUrl;
+        if (typeof finalImageUrl === 'object' && (finalImageUrl as any) instanceof File) {
+          finalImageUrl = await uploadImage(finalImageUrl as any, 'highlights');
+        }
+
+        let finalImages = item.images || [];
+        if (item.images && item.images.some(img => typeof img === 'object')) {
+          const filesToUpload = item.images.filter(img => typeof img === 'object') as File[];
+          const uploadedUrls = await uploadImages(filesToUpload, 'highlights');
+          let uploadIdx = 0;
+          finalImages = item.images.map(img => {
+            if (typeof img === 'object') {
+              return uploadedUrls[uploadIdx++];
+            }
+            return img as string;
+          });
+        }
+
         // Prepare data - conditionally include 'featured' only if it's defined
         const highlightData: any = {
           title: item.title,
           description: item.description,
-          image_url: item.imageUrl,
-          images: item.images || null,
+          image_url: (finalImageUrl as string) || '',
+          images: (finalImages as string[]) || null,
           icon_name: item.iconName,
           content: item.content || null,
           published_date: item.publishedDate || null,
@@ -581,9 +706,8 @@ export const AdminPanel: React.FC = () => {
         if (item.id.startsWith('temp-')) {
           const created = await createHighlight(highlightData);
           if (created && highlight) {
-            // Replace temp ID with real ID from database
             setHighlights(highlights.map(h => 
-              h.id === item.id ? { ...item, id: created.id } : h
+              h.id === item.id ? { ...item, id: created.id, imageUrl: (finalImageUrl as string), images: (finalImages as string[]) } : h
             ));
           }
         } else {
@@ -591,13 +715,12 @@ export const AdminPanel: React.FC = () => {
         }
       }
       
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('Highlights saved to database successfully!');
-      setShowMigrationWarning(false); // Hide warning on successful save
+      setShowMigrationWarning(false);
     } catch (error: any) {
       console.error('Error saving highlights:', error);
       
-      // Check if error is related to missing 'featured' column
       if (error?.message?.includes("'featured' column") || error?.code === 'PGRST204') {
         setShowMigrationWarning(true);
         toast.error('Database migration required! Check the banner above for instructions.');
@@ -609,12 +732,16 @@ export const AdminPanel: React.FC = () => {
   };
   
   const addHighlight = () => {
-    const h: Highlight = {
+    const h: HighlightForm = {
       id: `temp-${Date.now()}`,
       title: '',
       description: '',
       imageUrl: '',
-      iconName: 'Globe'
+      images: [],
+      iconName: 'Globe',
+      content: '',
+      publishedDate: new Date().toISOString().split('T')[0],
+      featured: false,
     };
     setEditingHighlight(h);
     setIsHighlightModalOpen(true);
@@ -622,46 +749,72 @@ export const AdminPanel: React.FC = () => {
   
   const deleteHighlight = async (id: string) => {
     try {
+      const confirmed = await confirmDelete({
+        itemName: 'highlight',
+        title: 'Delete Highlight',
+        message: 'Are you sure you want to delete this highlight? This action cannot be undone.'
+      });
+      if (!confirmed) return;
+
       if (!id.startsWith('temp-')) {
+        // Find the item to get its image URLs
+        const itemToDelete = highlights.find(h => h.id === id);
+        if (itemToDelete) {
+          // Delete main image
+          if (itemToDelete.imageUrl) {
+            await deleteStorageFile(itemToDelete.imageUrl, 'highlights');
+          }
+          // Delete additional images
+          if (itemToDelete.images && itemToDelete.images.length > 0) {
+            for (const imgUrl of itemToDelete.images) {
+              await deleteStorageFile(imgUrl, 'highlights');
+            }
+          }
+        }
         await deleteHighlightFromDb(id);
       }
       setHighlights(highlights.filter(h => h.id !== id));
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('Highlight deleted successfully!');
     } catch (error) {
       console.error('Error deleting highlight:', error);
       toast.error('Failed to delete highlight.');
     }
   };
-  const updateHighlight = (id: string, field: keyof Highlight, value: string) => setHighlights(highlights.map(h => h.id === id ? { ...h, [field]: value } : h));
+  const updateHighlight = <K extends keyof Highlight>(id: string, field: K, value: Highlight[K]) => setHighlights(highlights.map(h => h.id === id ? { ...h, [field]: value } : h));
 
-  // Team Members handlers - Now saves to Supabase
-  const handleSaveTeamMembers = async (member?: TeamMember) => {
+  // Team Members handlers - Now saves to Supabase with image upload
+  const handleSaveTeamMembers = async (member?: TeamMemberForm) => {
     try {
       const itemsToSave = member ? [member] : teamMembers;
       
       for (const item of itemsToSave) {
+        // Handle Image Upload before saving
+        let finalImageUrl = item.imageUrl;
+        if (typeof finalImageUrl === 'object' && (finalImageUrl as any) instanceof File) {
+          finalImageUrl = await uploadImage(finalImageUrl as any, 'team');
+        }
+
         const memberData = {
           name: item.name,
           role: item.role,
           description: item.description,
-          image_url: item.imageUrl || null
+          image_url: (finalImageUrl as string) || null
         };
         
         if (item.id.startsWith('temp-')) {
           const created = await createTeamMember(memberData);
           if (created && member) {
-            // Replace temp ID with real ID from database
             setTeamMembers(teamMembers.map(m => 
-              m.id === item.id ? { ...item, id: created.id } : m
+              m.id === item.id ? { ...item, id: created.id, imageUrl: (finalImageUrl as string) } : m
             ));
           }
         } else {
-          await updateTeamMemberInDb(item.id, memberData);
+          await updateTeamInDb(item.id, memberData);
         }
       }
       
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('Team members saved to database successfully!');
     } catch (error) {
       console.error('Error saving team members:', error);
@@ -670,15 +823,27 @@ export const AdminPanel: React.FC = () => {
     }
   };
   
-  const addTeamMember = () => { const m: TeamMember = { id: `temp-${Date.now()}`, name: '', role: '', description: '', imageUrl: '' }; setEditingTeamMember(m); setIsTeamMemberModalOpen(true); };
+  const addTeamMember = () => { const m: TeamMemberForm = { id: `temp-${Date.now()}`, name: '', role: '', description: '', imageUrl: '' }; setEditingTeamMember(m); setIsTeamMemberModalOpen(true); };
   
   const deleteTeamMember = async (id: string) => {
     try {
+      const confirmed = await confirmDelete({
+        itemName: 'team member',
+        title: 'Delete Team Member',
+        message: 'Are you sure you want to delete this team member? This action cannot be undone.'
+      });
+      if (!confirmed) return;
+
       if (!id.startsWith('temp-')) {
-        await deleteTeamMemberFromDb(id);
+        // Find the item to get its image URL
+        const itemToDelete = teamMembers.find(m => m.id === id);
+        if (itemToDelete?.imageUrl) {
+          await deleteStorageFile(itemToDelete.imageUrl, 'team');
+        }
+        await deleteTeamFromDb(id);
       }
       setTeamMembers(teamMembers.filter(m => m.id !== id));
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('Team member deleted successfully!');
     } catch (error) {
       console.error('Error deleting team member:', error);
@@ -686,7 +851,7 @@ export const AdminPanel: React.FC = () => {
     }
   };
   
-  const updateTeamMember = (id: string, field: keyof TeamMember, value: string) => setTeamMembers(teamMembers.map(m => m.id === id ? { ...m, [field]: value } : m));
+  const updateTeamMember = <K extends keyof TeamMember>(id: string, field: K, value: TeamMember[K]) => setTeamMembers(teamMembers.map(m => m.id === id ? { ...m, [field]: value } : m));
 
   // Hero handlers - Now saves to Supabase
   const handleSaveHero = async () => {
@@ -705,6 +870,20 @@ export const AdminPanel: React.FC = () => {
       return;
     }
 
+     const validation = mergeValidationResults(
+       validateRequiredTrimmed(heroTitle, 'Hero title'),
+       validateMaxChars(heroTitle.trim(), AdminValidationRules.shortTitleMaxChars, 'Hero title'),
+       validateMaxWords(heroTitle.trim(), AdminValidationRules.shortTitleMaxWords, 'Hero title'),
+       validateRequiredTrimmed(heroSubtitle, 'Hero subtitle'),
+       validateMaxChars(heroSubtitle.trim(), AdminValidationRules.shortTextMaxChars, 'Hero subtitle'),
+       validateMaxWords(heroSubtitle.trim(), AdminValidationRules.shortTextMaxWords, 'Hero subtitle'),
+       validateMaxChars((heroBackgroundUrl || '').trim(), 1000, 'Background image URL')
+     );
+     if (!validation.isValid) {
+       toast.error(validation.error || 'Validation failed');
+       return;
+     }
+
     setIsSavingHero(true);
     try {
       await updateHeroSection({
@@ -713,7 +892,7 @@ export const AdminPanel: React.FC = () => {
         background_url: heroBackgroundUrl || null
       });
       
-      await content.refreshContent?.();
+      await refreshContent();
       toast.success('Hero section saved to database successfully!');
     } catch (error) {
       console.error('Error saving hero section:', error);
@@ -724,6 +903,15 @@ export const AdminPanel: React.FC = () => {
   };
   
   const handleSaveAbout = async () => {
+    const validation = mergeValidationResults(
+      validateRequiredTrimmed(aboutText, 'About text'),
+      validateMaxChars(aboutText.trim(), AdminValidationRules.contentMaxChars, 'About text')
+    );
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
+      return;
+    }
+
     try {
       await updateAboutSection({
         vision: '',  // You can expand the About section to include vision/mission fields
@@ -1004,7 +1192,7 @@ export const AdminPanel: React.FC = () => {
 
           {/* OLD UNUSED CODE BELOW */}
           <TabsContent value="__never_render__">
-            {false && (<Card key="x" className="cursor-pointer hover:shadow-lg transition-shadow relative group" onClick={() => { setEditingNews({} as any); setIsNewsModalOpen(true); }}>
+            {false && editingNews && (<Card key="x" className="cursor-pointer hover:shadow-lg transition-shadow relative group" onClick={() => { setEditingNews({} as any); setIsNewsModalOpen(true); }}>
                   <div className="absolute top-2 left-2 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Button 
                       variant="ghost" 
@@ -1013,17 +1201,17 @@ export const AdminPanel: React.FC = () => {
                       onClick={async (e) => { 
                         e.stopPropagation(); 
                         const confirmed = await confirmDelete({ itemName: 'news item' });
-                        if (confirmed) deleteNewsItem(item.id); 
+                        if (confirmed && editingNews) deleteNewsItem((editingNews as NewsItemForm).id); 
                       }}
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
                     </Button>
                   </div>
-                  {item.imageUrl ? (<div className="w-full h-48 overflow-hidden rounded-t-lg"><img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" /></div>) : (<div className="w-full h-48 bg-gray-100 rounded-t-lg flex items-center justify-center"><FileText className="w-12 h-12 text-gray-400" /></div>)}
+                  {(editingNews as NewsItemForm).imageUrl ? (<div className="w-full h-48 overflow-hidden rounded-t-lg"><img src={(editingNews as NewsItemForm).imageUrl as string} alt={(editingNews as NewsItemForm).title} className="w-full h-full object-cover" /></div>) : (<div className="w-full h-48 bg-gray-100 rounded-t-lg flex items-center justify-center"><FileText className="w-12 h-12 text-gray-400" /></div>)}
                   <CardContent className="p-4">
-                    <h4 className="font-semibold text-sm line-clamp-2 mb-2">{item.title}</h4>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{item.content}</p>
-                    {item.date && <p className="text-xs text-gray-500">{new Date(item.date).toLocaleDateString()}</p>}
+                    <h4 className="font-semibold text-sm line-clamp-2 mb-2">{(editingNews as NewsItemForm).title}</h4>
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{(editingNews as NewsItemForm).content}</p>
+                    {(editingNews as NewsItemForm).date && <p className="text-xs text-gray-500">{new Date((editingNews as NewsItemForm).date).toLocaleDateString()}</p>}
                     <div className="mt-3 flex items-center gap-2"><Edit className="w-3 h-3 text-gray-400" /><span className="text-xs text-gray-500">Click to edit</span></div>
                   </CardContent>
                 </Card>
@@ -1045,20 +1233,30 @@ export const AdminPanel: React.FC = () => {
               </DialogHeader>
               {editingNews && (
                 <div className="space-y-6 py-2">
-                  <div className="space-y-2"><Label className="text-sm font-medium">Title</Label><Input value={editingNews.title} onChange={(e) => { const u={...editingNews,title:e.target.value}; setEditingNews(u); updateNewsItem(editingNews.id,'title',e.target.value); }} /></div>
-                  <div className="space-y-2"><Label className="text-sm font-medium">Date</Label><Input type="date" value={editingNews.date} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => { const u={...editingNews,date:e.target.value}; setEditingNews(u); updateNewsItem(editingNews.id,'date',e.target.value); }} /></div>
-                  <div className="space-y-2"><Label className="text-sm font-medium">Content</Label><Textarea value={editingNews.content} onChange={(e) => { const u={...editingNews,content:e.target.value}; setEditingNews(u); updateNewsItem(editingNews.id,'content',e.target.value); }} rows={8} className="resize-none" /></div>
+                  <div className="space-y-2"><Label className="text-sm font-medium">Title</Label><Input value={editingNews.title} onChange={(e) => { const u={...editingNews,title:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'title',e.target.value); }} /></div>
+                  <div className="space-y-2"><Label className="text-sm font-medium">Date</Label><Input type="date" value={editingNews.date} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => { const u={...editingNews,date:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'date',e.target.value); }} /></div>
+                  <div className="space-y-2"><Label className="text-sm font-medium">Content</Label><Textarea value={editingNews.content} onChange={(e) => { const u={...editingNews,content:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'content',e.target.value); }} rows={8} className="resize-none" /></div>
                   
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Cover Image (Drag & Drop)</Label>
                     <p className="text-xs text-gray-500 mb-2">Upload a cover image for this news article</p>
-                    <ImageDropzone value={editingNews.imageUrl||''} onChange={(url) => { const u={...editingNews,imageUrl:url}; setEditingNews(u); updateNewsItem(editingNews.id,'imageUrl',url); }} label="Cover Image" />
+                    <ImageDropzone
+                      value={typeof (editingNews as NewsItemForm).imageUrl === 'string' ? ((editingNews as NewsItemForm).imageUrl as string) : ''}
+                      onChange={(url) => {
+                        const u = { ...editingNews, imageUrl: url };
+                        setEditingNews(u);
+                        if (typeof url === 'string') {
+                          updateNewsItem((editingNews as NewsItemForm).id, 'imageUrl', url);
+                        }
+                      }}
+                      label="Cover Image"
+                    />
                   </div>
                   
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Gallery Images (Drag & Drop)</Label>
                     <p className="text-xs text-gray-500 mb-2">Upload additional images for the gallery</p>
-                    <MultiImageDropzone images={editingNews.images||[]} onChange={(images) => { const u={...editingNews,images}; setEditingNews(u); updateNewsItemImages(editingNews.id,images); }} label="News Article Images" />
+                    <MultiImageDropzone images={(editingNews as NewsItemForm).images||[]} onChange={(images) => { const u={...editingNews,images}; setEditingNews(u); updateNewsItemImages((editingNews as NewsItemForm).id,images); }} label="News Article Images" />
                   </div>
 
                   {/* Save Button */}
@@ -1077,7 +1275,12 @@ export const AdminPanel: React.FC = () => {
                             const exists = newsItems.find(item => item.id === editingNews.id);
                             if (!exists) {
                               // New item - add to array first
-                              setNewsItems([...newsItems, editingNews]);
+                              const newsItemToAdd: NewsItem = {
+                                ...(editingNews as NewsItemForm),
+                                imageUrl: typeof (editingNews as NewsItemForm).imageUrl === 'string' ? ((editingNews as NewsItemForm).imageUrl as string) : undefined,
+                                images: ((editingNews as NewsItemForm).images || []).filter((img) => typeof img === 'string') as string[],
+                              };
+                              setNewsItems([...newsItems, newsItemToAdd]);
                             }
                             // Save to Supabase
                             await handleSaveNews(editingNews);
@@ -1100,12 +1303,12 @@ export const AdminPanel: React.FC = () => {
 
           {/* ── HIGHLIGHTS TAB ─────────────────────────────────────────────── */}
           <TabsContent value="highlights">
-            <HighlightsManager highlights={content.highlights} onUpdate={updateHighlights} refreshContent={refreshContent} />
+            <HighlightsManager highlights={highlights} onUpdate={updateHighlights} refreshContent={refreshContent} />
           </TabsContent>
 
           {/* ── TEAM TAB ───────────────────────────────────────────────────── */}
           <TabsContent value="team">
-            <TeamManager teamMembers={content.teamMembers} onUpdate={updateTeamMembers} refreshContent={refreshContent} />
+            <TeamManager teamMembers={teamMembers} onUpdate={updateTeamMembers} refreshContent={refreshContent} />
           </TabsContent>
 
           {false && (
@@ -1278,23 +1481,23 @@ export const AdminPanel: React.FC = () => {
                 <TabsTrigger value="financial">Financial</TabsTrigger>
                 <TabsTrigger value="findings">Findings</TabsTrigger>
               </TabsList>
-              <TabsContent value="internationally-funded"><ProjectManager projects={content.internationallyFundedProjects} onUpdate={updateInternationallyFundedProjects} title="Internationally Funded Projects" category="internationally_funded" /></TabsContent>
-              <TabsContent value="locally-funded"><ProjectManager projects={content.locallyFundedProjects} onUpdate={updateLocallyFundedProjects} title="Locally Funded Projects" category="locally_funded" /></TabsContent>
-              <TabsContent value="community"><ProjectManager projects={content.communityTransformationProjects} onUpdate={updateCommunityTransformationProjects} title="Community Transformation" category="community_transformation" /></TabsContent>
-              <TabsContent value="internship"><InternshipTestimonialManager testimonials={content.internshipTestimonials} onUpdate={updateInternshipTestimonials} /></TabsContent>
-              <TabsContent value="financial"><FinancialStatementManager statements={content.financialStatements} onUpdate={updateFinancialStatements} /></TabsContent>
-              <TabsContent value="findings"><ProjectManager projects={content.studyFindings} onUpdate={updateStudyFindings} title="Findings from Our Latest Studies" category="study_findings" /></TabsContent>
+              <TabsContent value="internationally-funded"><ProjectManager projects={content.internationallyFundedProjects as Project[]} onUpdate={updateInternationallyFundedProjects} title="Internationally Funded Projects" category="internationally_funded" /></TabsContent>
+              <TabsContent value="locally-funded"><ProjectManager projects={content.locallyFundedProjects as Project[]} onUpdate={updateLocallyFundedProjects} title="Locally Funded Projects" category="locally_funded" /></TabsContent>
+              <TabsContent value="community"><ProjectManager projects={content.communityTransformationProjects as Project[]} onUpdate={updateCommunityTransformationProjects} title="Community Transformation" category="community_transformation" /></TabsContent>
+              <TabsContent value="internship"><InternshipTestimonialManager testimonials={content.internshipTestimonials as InternshipTestimonial[]} onUpdate={updateInternshipTestimonials} /></TabsContent>
+              <TabsContent value="financial"><FinancialStatementManager statements={content.financialStatements as FinancialStatement[]} onUpdate={updateFinancialStatements} /></TabsContent>
+              <TabsContent value="findings"><ProjectManager projects={content.studyFindings as Project[]} onUpdate={updateStudyFindings} title="Findings from Our Latest Studies" category="study_findings" /></TabsContent>
             </Tabs>
           </TabsContent>
 
           {/* DUPLICATE PUBLICATIONS TAB - DO NOT EXECUTE */}
           <TabsContent value="publications-duplicate">
-            <PublicationsManager publications={publications} onUpdate={updatePublications} />
+            <PublicationsManager publications={publications as Publication[]} onUpdate={updatePublications} />
           </TabsContent>
 
           {/* DUPLICATE PARTNERS TAB - DO NOT EXECUTE */}
           <TabsContent value="partners-duplicate">
-            <PartnersManager partners={content.partners} onUpdate={updatePartners} />
+            <PartnersManager partners={content.partners as Partner[]} onUpdate={updatePartners} />
           </TabsContent>
 
           {/* OLD PARTNERS CODE - DO NOT EXECUTE */}
@@ -1446,7 +1649,7 @@ export const AdminPanel: React.FC = () => {
                 <Label className="text-sm font-semibold">Gallery Images (Drag & Drop)</Label>
                 <p className="text-xs text-gray-500 mb-2">Upload additional images for the gallery</p>
                 <MultiImageDropzone
-                  images={draft.images || []}
+                  images={(draft as BlogPostForm).images || []}
                   onChange={(images) => setDraft(p => ({ ...p, images }))}
                   label="Blog Post Images"
                 />
@@ -1548,7 +1751,7 @@ export const AdminPanel: React.FC = () => {
                   PDF File
                 </Label>
                 <PDFDropzone
-                  value={publicationDraft.pdfUrl || ''}
+                  value={(publicationDraft.pdfUrl as string) || ''}
                   onChange={(url) => setPublicationDraft(p => ({ ...p, pdfUrl: url }))}
                   label="Drop PDF file here or click to browse"
                 />
@@ -1567,7 +1770,7 @@ export const AdminPanel: React.FC = () => {
                   placeholder="Write your publication content here..."
                   className="resize-none focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC] text-sm leading-relaxed min-h-[200px]"
                 />
-                <p className="text-xs text-gray-400 text-right">{publicationDraft.content.length} characters</p>
+                <p className="text-xs text-gray-400 text-right">{(publicationDraft.content || '').length} characters</p>
               </div>
 
               {/* Published Date */}
@@ -1620,13 +1823,15 @@ export const AdminPanel: React.FC = () => {
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Cover Image (Drag & Drop)</Label>
                 <p className="text-xs text-gray-500 mb-2">Upload a cover image for this highlight</p>
-                <ImageDropzone 
-                  value={editingHighlight.imageUrl} 
-                  onChange={(url) => { 
-                    const u={...editingHighlight,imageUrl:url}; 
-                    setEditingHighlight(u); 
-                    updateHighlight(editingHighlight.id,'imageUrl',url); 
-                  }} 
+                <ImageDropzone
+                  value={typeof (editingHighlight as HighlightForm).imageUrl === 'string' ? ((editingHighlight as HighlightForm).imageUrl as string) : ''}
+                  onChange={(url) => {
+                    const u = { ...editingHighlight, imageUrl: url };
+                    setEditingHighlight(u);
+                    if (typeof url === 'string') {
+                      updateHighlight((editingHighlight as HighlightForm).id, 'imageUrl', url);
+                    }
+                  }}
                   label="Cover Image"
                 />
               </div>
@@ -1635,7 +1840,7 @@ export const AdminPanel: React.FC = () => {
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Gallery Images (Drag & Drop)</Label>
                 <p className="text-xs text-gray-500 mb-2">Upload additional images for the gallery</p>
-                <MultiImageDropzone images={editingHighlight.images||[]} onChange={(images) => { const u={...editingHighlight,images}; setEditingHighlight(u); updateHighlightImages(editingHighlight.id,images); }} label="Highlight Images" />
+                <MultiImageDropzone images={(editingHighlight as HighlightForm).images||[]} onChange={(images) => { const u={...editingHighlight,images}; setEditingHighlight(u); updateHighlightImages((editingHighlight as HighlightForm).id,images); }} label="Highlight Images" />
               </div>
               
               {/* Featured Checkbox */}
@@ -1681,7 +1886,12 @@ export const AdminPanel: React.FC = () => {
                         const exists = highlights.find(item => item.id === editingHighlight.id);
                         if (!exists) {
                           // New item - add to array first
-                          setHighlights([...highlights, editingHighlight]);
+                          const highlightToAdd: Highlight = {
+                            ...(editingHighlight as HighlightForm),
+                            imageUrl: typeof (editingHighlight as HighlightForm).imageUrl === 'string' ? ((editingHighlight as HighlightForm).imageUrl as string) : '',
+                            images: ((editingHighlight as HighlightForm).images || []).filter((img) => typeof img === 'string') as string[],
+                          };
+                          setHighlights([...highlights, highlightToAdd]);
                         }
                         // Save to Supabase
                         await handleSaveHighlights(editingHighlight);
@@ -1721,7 +1931,7 @@ export const AdminPanel: React.FC = () => {
               <div className="space-y-2"><Label className="text-sm font-medium">Name</Label><Input value={editingTeamMember.name} onChange={(e) => { const u={...editingTeamMember,name:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'name',e.target.value); }} /></div>
               <div className="space-y-2"><Label className="text-sm font-medium">Role</Label><Input value={editingTeamMember.role} onChange={(e) => { const u={...editingTeamMember,role:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'role',e.target.value); }} /></div>
               <div className="space-y-2"><Label className="text-sm font-medium">Description</Label><Textarea value={editingTeamMember.description} onChange={(e) => { const u={...editingTeamMember,description:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'description',e.target.value); }} rows={4} className="resize-none" /></div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Member Photo</Label><ImageDropzone value={editingTeamMember.imageUrl||''} onChange={(url) => { const u={...editingTeamMember,imageUrl:url}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'imageUrl',url); }} /></div>
+              <div className="space-y-2"><Label className="text-sm font-medium">Member Photo</Label><ImageDropzone value={typeof (editingTeamMember as TeamMemberForm).imageUrl === 'string' ? (((editingTeamMember as TeamMemberForm).imageUrl as string) || '') : ''} onChange={(url) => { const u={...editingTeamMember,imageUrl:url}; setEditingTeamMember(u); if (typeof url === 'string') { updateTeamMember((editingTeamMember as TeamMemberForm).id,'imageUrl',url); } }} /></div>
               
               {/* Save Button */}
               <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
@@ -1739,7 +1949,11 @@ export const AdminPanel: React.FC = () => {
                         const exists = teamMembers.find(item => item.id === editingTeamMember.id);
                         if (!exists) {
                           // New item - add to array first
-                          setTeamMembers([...teamMembers, editingTeamMember]);
+                          const memberToAdd: TeamMember = {
+                            ...(editingTeamMember as TeamMemberForm),
+                            imageUrl: typeof (editingTeamMember as TeamMemberForm).imageUrl === 'string' ? ((editingTeamMember as TeamMemberForm).imageUrl as string) : undefined,
+                          };
+                          setTeamMembers([...teamMembers, memberToAdd]);
                         }
                         // Save to Supabase
                         await handleSaveTeamMembers(editingTeamMember);
@@ -1777,7 +1991,7 @@ export const AdminPanel: React.FC = () => {
           {editingPartner && (
             <div className="space-y-6 py-2">
               <div className="space-y-2"><Label className="text-sm font-medium">Name</Label><Input value={editingPartner.name} onChange={(e) => { const u={...editingPartner,name:e.target.value}; setEditingPartner(u); updatePartner(editingPartner.id,'name',e.target.value); }} /></div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Partner Logo</Label><ImageDropzone value={editingPartner.logoUrl} onChange={(url) => { const u={...editingPartner,logoUrl:url}; setEditingPartner(u); updatePartner(editingPartner.id,'logoUrl',url); }} /></div>
+              <div className="space-y-2"><Label className="text-sm font-medium">Partner Logo</Label><ImageDropzone value={typeof editingPartner.logoUrl === 'string' ? editingPartner.logoUrl : ''} onChange={(url) => { const u={...editingPartner,logoUrl:url}; setEditingPartner(u); if (typeof url === 'string') { updatePartner(editingPartner.id,'logoUrl',url); } }} /></div>
               
               {/* Save Button */}
               <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
@@ -1795,7 +2009,11 @@ export const AdminPanel: React.FC = () => {
                         const exists = partners.find(item => item.id === editingPartner.id);
                         if (!exists) {
                           // New item - add to array first
-                          setPartners([...partners, editingPartner]);
+                          const partnerToAdd: Partner = {
+                            ...(editingPartner as PartnerForm),
+                            logoUrl: typeof (editingPartner as PartnerForm).logoUrl === 'string' ? ((editingPartner as PartnerForm).logoUrl as string) : '',
+                          };
+                          setPartners([...partners, partnerToAdd]);
                         }
                         // Save to Supabase
                         await handleSavePartners(editingPartner);

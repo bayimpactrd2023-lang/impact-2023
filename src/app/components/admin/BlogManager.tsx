@@ -4,17 +4,15 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Plus, Trash2, FileText, Image, Calendar, User, Edit, CheckCircle, X } from 'lucide-react';
+import { Plus, Trash2, FileText, Edit, CheckCircle, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/app/components/ui/dialog';
-import { useContent } from '@/app/context/ContentContext';
-import { BlogPost } from '@/app/context/ContentContext';
+import { BlogPost, BlogPostForm } from '@/app/context/ContentContext';
 import {
   createBlogPost,
   updateBlogPost,
@@ -24,11 +22,13 @@ import {
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
-import { AdminGridSkeleton, AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
+import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
 import { invalidateBlogCache } from '@/utils/cacheInvalidation';
+import { AdminValidationRules, mergeValidationResults, validateMaxChars, validateMaxWords, validateNoDigits, validateRequiredTrimmed } from '@/app/components/admin/utils/adminHelpers';
+import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 
 interface BlogManagerProps {
   blogPosts: BlogPost[];
@@ -41,7 +41,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
   onUpdate,
   refreshContent,
 }) => {
-  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [editingPost, setEditingPost] = useState<BlogPostForm | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -85,8 +85,22 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     if (!confirmed) return;
 
     try {
-      // Only delete from database if it's not a temp ID
+      // Only delete from database and storage if it's not a temp ID
       if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+        // Find the post to get its image URLs for storage cleanup
+        const postToDelete = pagination.data.find(p => p.id === id);
+        if (postToDelete) {
+          // Delete main image
+          if (postToDelete.imageUrl) {
+            await deleteStorageFile(postToDelete.imageUrl, 'blog');
+          }
+          // Delete gallery images
+          if (postToDelete.images && postToDelete.images.length > 0) {
+            for (const imgUrl of postToDelete.images) {
+              await deleteStorageFile(imgUrl, 'blog');
+            }
+          }
+        }
         await deleteBlogPost(id);
       }
       
@@ -110,17 +124,55 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
 
   const handleSavePost = async () => {
     if (!editingPost) return;
+
+    const validation = mergeValidationResults(
+      validateRequiredTrimmed(editingPost.title, 'Title'),
+      validateMaxChars(editingPost.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
+      validateMaxWords(editingPost.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
+      validateRequiredTrimmed(editingPost.content, 'Content'),
+      validateMaxChars(editingPost.content.trim(), AdminValidationRules.contentMaxChars, 'Content'),
+      validateRequiredTrimmed(editingPost.author, 'Author'),
+      validateNoDigits(editingPost.author, 'Author'),
+      validateMaxChars(editingPost.author.trim(), AdminValidationRules.nameMaxChars, 'Author'),
+      validateMaxWords(editingPost.author.trim(), AdminValidationRules.nameMaxWords, 'Author'),
+      validateMaxChars((editingPost.authorRole || '').trim(), AdminValidationRules.roleMaxChars, 'Author role'),
+      validateMaxWords((editingPost.authorRole || '').trim(), AdminValidationRules.roleMaxWords, 'Author role'),
+      validateNoDigits(editingPost.authorRole || '', 'Author role')
+    );
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
+      return;
+    }
     
     setIsSaving(true);
     try {
+      // Handle Image Uploads before saving to database
+      let finalImageUrl = editingPost.imageUrl;
+      if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
+        finalImageUrl = await uploadImage(finalImageUrl, 'blog');
+      }
+
+      let finalImages = editingPost.images || [];
+      if (editingPost.images && editingPost.images.some(img => typeof img === 'object')) {
+        const filesToUpload = editingPost.images.filter(img => typeof img === 'object') as File[];
+        const uploadedUrls = await uploadImages(filesToUpload, 'blog');
+        let uploadIdx = 0;
+        finalImages = editingPost.images.map(img => {
+          if (typeof img === 'object') {
+            return uploadedUrls[uploadIdx++];
+          }
+          return img as string;
+        });
+      }
+
       const postData = {
         title: editingPost.title,
         content: editingPost.content,
         author: editingPost.author,
         author_role: editingPost.authorRole,
         date: editingPost.date,
-        image_url: editingPost.imageUrl || null,
-        images: editingPost.images || null,
+        image_url: (finalImageUrl as string) || null,
+        images: (finalImages as string[]) || null,
         likes: editingPost.likes || 0
       };
       

@@ -4,7 +4,7 @@
  * Displays key highlights/features of the organization.
  */
 
-import React from 'react';
+import { useState, useMemo, type ComponentType } from 'react';
 import { useContent } from '@/app/context/ContentContext';
 import { Satellite, Sprout, BarChart3, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/app/components/ui/card';
@@ -15,7 +15,7 @@ const ITEMS_PER_PAGE = 8;
 /**
  * Icon map for highlights
  */
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   Satellite,
   Sprout,
   BarChart3,
@@ -34,14 +34,14 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
  */
 export function HighlightsSection() {
   const { content } = useContent();
-  const [currentPage, setCurrentPage] = React.useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Calculate pagination
   const totalPages = Math.ceil(content.highlights.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
 
-  const currentHighlights = React.useMemo(() => {
+  const currentHighlights = useMemo(() => {
     return content.highlights.slice(startIndex, endIndex);
   }, [content.highlights, startIndex, endIndex]);
 

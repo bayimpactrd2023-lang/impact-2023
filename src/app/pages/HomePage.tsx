@@ -22,7 +22,7 @@ const SectionSkeleton: React.FC = () => (
 );
 
 export const HomePage: React.FC = () => {
-  const { content, loadingStates, fetchNews, fetchHighlights, fetchPublications, fetchPartners, fetchHeroSection } = useContent();
+  const { loadingStates, fetchNews, fetchHighlights, fetchPublications, fetchPartners, fetchHeroSection } = useContent();
   const navigate = useNavigate();
   const [pageLoading, setPageLoading] = React.useState(true);
 
@@ -46,6 +46,7 @@ export const HomePage: React.FC = () => {
     };
 
     loadPageData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const navigateAndScroll = (path: string) => {

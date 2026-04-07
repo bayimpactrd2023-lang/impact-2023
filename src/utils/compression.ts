@@ -13,11 +13,13 @@ export const LZString = {
     const dict: { [key: string]: number } = {};
     const data: (string | number)[] = (input + '').split('');
     const out: number[] = [];
-    let phrase = data[0];
+    const firstChar = data[0];
+    let phrase = typeof firstChar === 'string' ? firstChar : String.fromCharCode(firstChar as number);
     let code = 256;
 
     for (let i = 1; i < data.length; i++) {
-      const currChar = data[i];
+      const curr = data[i];
+      const currChar = typeof curr === 'string' ? curr : String.fromCharCode(curr as number);
       const combined = phrase + currChar;
 
       if (dict[combined] != null) {
@@ -90,9 +92,9 @@ function _compress(data: number[]): string {
     enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
     enc4 = chr3 & 63;
 
-    if (isNaN(chr2)) {
+    if (chr2 == null || isNaN(chr2)) {
       enc3 = enc4 = 64;
-    } else if (isNaN(chr3)) {
+    } else if (chr3 == null || isNaN(chr3)) {
       enc4 = 64;
     }
 

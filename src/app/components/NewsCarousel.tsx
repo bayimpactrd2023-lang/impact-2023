@@ -129,7 +129,7 @@ export const NewsCarousel: React.FC = React.memo(() => {
                 {/* Carousel Container - Only for top content */}
                 <div className="overflow-hidden mb-8" ref={emblaRef}>
                   <div className="flex">
-                    {content.newsItems.map((item, index) => (
+                    {content.newsItems.map((item) => (
                       <div
                         key={item.id}
                         className="flex-[0_0_100%] min-w-0"

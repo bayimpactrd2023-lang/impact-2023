@@ -32,7 +32,7 @@ export const Header: React.FC = () => {
   };
 
   // Helper function to handle navigation - IMMEDIATE, no waiting
-  const handleNavigation = (path: string, sectionId?: string) => {
+  const handleNavigation = (path: string) => {
     // Immediate navigation - no delays
     navigateAndScroll(path);
     setMobileMenuOpen(false);
@@ -120,7 +120,7 @@ export const Header: React.FC = () => {
             {navItems.map((item) => (
               <button
                 key={item.key}
-                onClick={() => handleNavigation(item.path, item.sectionId)}
+                onClick={() => handleNavigation(item.path)}
                 className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${getNavButtonClass(item.path)}`}
               >
                 {item.label}
@@ -170,7 +170,7 @@ export const Header: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  onClick={() => { handleNavigation(item.path, item.sectionId); setMobileMenuOpen(false); }}
+                  onClick={() => { handleNavigation(item.path); setMobileMenuOpen(false); }}
                   className={`block w-full text-left px-4 py-3 text-base font-semibold rounded-xl transition-all duration-300 ${
                     isActive 
                       ? 'bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white shadow-lg' 

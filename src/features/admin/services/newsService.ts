@@ -76,7 +76,7 @@ export const handleSaveNews = async (
         title: newsItem.title,
         content: newsItem.content,
         date: newsItem.date,
-        imageUrl: newsItem.imageUrl || '',
+        image_url: newsItem.imageUrl || '',
         images: newsItem.images || [],
       });
       
@@ -90,7 +90,7 @@ export const handleSaveNews = async (
         title: newsItem.title,
         content: newsItem.content,
         date: newsItem.date,
-        imageUrl: newsItem.imageUrl || '',
+        image_url: newsItem.imageUrl || '',
         images: newsItem.images || [],
       });
       

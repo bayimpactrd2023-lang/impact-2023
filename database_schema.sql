@@ -182,7 +182,10 @@ CREATE TABLE IF NOT EXISTS financial_statements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   year TEXT NOT NULL,
-  image_url TEXT NOT NULL, -- Cover image
+  pdf_url TEXT, -- PDF file URL
+  pdf_access_type TEXT DEFAULT 'download' CHECK (pdf_access_type IN ('view', 'download')),
+  description TEXT, -- Optional description
+  image_url TEXT, -- Cover image (optional)
   images TEXT[], -- Array of page images
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -229,75 +232,40 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE financial_statements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE internship_testimonials ENABLE ROW LEVEL SECURITY;
 
--- Create policies for anonymous access
--- Note: These policies allow anyone to read/write data using the public anon key
--- This is appropriate for demo/development. For production with sensitive data, implement authentication.
+-- Production-Ready RLS Policies
+-- AUTHENTICATED users (Admins) can do everything
+-- PUBLIC (Anonymous) can only read
 
--- Hero Sections
-DROP POLICY IF EXISTS "Allow public read access on hero_sections" ON hero_sections;
-CREATE POLICY "Allow public read access on hero_sections" ON hero_sections FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on hero_sections" ON hero_sections;
-CREATE POLICY "Allow all access on hero_sections" ON hero_sections FOR ALL USING (true);
+DO $$
+DECLARE
+    t text;
+    tables text[] := ARRAY[
+        'hero_sections', 'about_sections', 'news', 'highlights', 
+        'team_members', 'partners', 'publications', 'blog_posts', 
+        'projects', 'financial_statements', 'internship_testimonials'
+    ];
+BEGIN
+    FOREACH t IN ARRAY tables LOOP
+        -- Drop existing policies
+        EXECUTE format('DROP POLICY IF EXISTS "Allow public read access on %I" ON %I', t, t);
+        EXECUTE format('DROP POLICY IF EXISTS "Allow all access on %I" ON %I', t, t);
+        EXECUTE format('DROP POLICY IF EXISTS "Admins can manage %I" ON %I', t, t);
+        
+        -- Create Read Policy
+        EXECUTE format('CREATE POLICY "Allow public read access on %I" ON %I FOR SELECT USING (true)', t, t);
+        
+        -- Create Admin Policy (Authenticated users only)
+        EXECUTE format('CREATE POLICY "Admins can manage %I" ON %I FOR ALL TO authenticated USING (true) WITH CHECK (true)', t, t);
+    END LOOP;
+END $$;
 
--- About Sections
-DROP POLICY IF EXISTS "Allow public read access on about_sections" ON about_sections;
-CREATE POLICY "Allow public read access on about_sections" ON about_sections FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on about_sections" ON about_sections;
-CREATE POLICY "Allow all access on about_sections" ON about_sections FOR ALL USING (true);
-
--- News
-DROP POLICY IF EXISTS "Allow public read access on news" ON news;
-CREATE POLICY "Allow public read access on news" ON news FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on news" ON news;
-CREATE POLICY "Allow all access on news" ON news FOR ALL USING (true);
-
--- Highlights
-DROP POLICY IF EXISTS "Allow public read access on highlights" ON highlights;
-CREATE POLICY "Allow public read access on highlights" ON highlights FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on highlights" ON highlights;
-CREATE POLICY "Allow all access on highlights" ON highlights FOR ALL USING (true);
-
--- Team Members
-DROP POLICY IF EXISTS "Allow public read access on team_members" ON team_members;
-CREATE POLICY "Allow public read access on team_members" ON team_members FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on team_members" ON team_members;
-CREATE POLICY "Allow all access on team_members" ON team_members FOR ALL USING (true);
-
--- Partners
-DROP POLICY IF EXISTS "Allow public read access on partners" ON partners;
-CREATE POLICY "Allow public read access on partners" ON partners FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on partners" ON partners;
-CREATE POLICY "Allow all access on partners" ON partners FOR ALL USING (true);
-
--- Publications
-DROP POLICY IF EXISTS "Allow public read access on publications" ON publications;
-CREATE POLICY "Allow public read access on publications" ON publications FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on publications" ON publications;
-CREATE POLICY "Allow all access on publications" ON publications FOR ALL USING (true);
-
--- Blog Posts
-DROP POLICY IF EXISTS "Allow public read access on blog_posts" ON blog_posts;
-CREATE POLICY "Allow public read access on blog_posts" ON blog_posts FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on blog_posts" ON blog_posts;
-CREATE POLICY "Allow all access on blog_posts" ON blog_posts FOR ALL USING (true);
-
--- Projects
-DROP POLICY IF EXISTS "Allow public read access on projects" ON projects;
-CREATE POLICY "Allow public read access on projects" ON projects FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on projects" ON projects;
-CREATE POLICY "Allow all access on projects" ON projects FOR ALL USING (true);
-
--- Financial Statements
-DROP POLICY IF EXISTS "Allow public read access on financial_statements" ON financial_statements;
-CREATE POLICY "Allow public read access on financial_statements" ON financial_statements FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on financial_statements" ON financial_statements;
-CREATE POLICY "Allow all access on financial_statements" ON financial_statements FOR ALL USING (true);
-
--- Internship Testimonials
-DROP POLICY IF EXISTS "Allow public read access on internship_testimonials" ON internship_testimonials;
-CREATE POLICY "Allow public read access on internship_testimonials" ON internship_testimonials FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow all access on internship_testimonials" ON internship_testimonials;
-CREATE POLICY "Allow all access on internship_testimonials" ON internship_testimonials FOR ALL USING (true);
+-- ============================================
+-- PERFORMANCE INDEXES
+-- ============================================
+CREATE INDEX IF NOT EXISTS idx_news_created_at ON news(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_blog_created_at ON blog_posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pubs_date ON publications(published_date DESC);
+CREATE INDEX IF NOT EXISTS idx_projects_cat_date ON projects(category, date DESC);
 
 -- ============================================
 -- STORAGE BUCKETS FOR IMAGES
@@ -370,7 +338,219 @@ CREATE TRIGGER update_internship_testimonials_updated_at BEFORE UPDATE ON intern
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
+-- INPUT VALIDATION CONSTRAINTS
+-- Enforces same rules as client-side validation
+-- ============================================
+
+-- Helper function to count words (used in CHECK constraints)
+CREATE OR REPLACE FUNCTION word_count(text_input TEXT)
+RETURNS INTEGER AS $$
+BEGIN
+  RETURN array_length(regexp_split_to_array(COALESCE(trim(text_input), ''), '\s+'), 1);
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- Helper function to check if text contains digits
+CREATE OR REPLACE FUNCTION contains_digits(text_input TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN text_input ~ '\d';
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+DO $$
+BEGIN
+  -- 1. HERO SECTIONS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'hero_title_max_chars') THEN
+    ALTER TABLE hero_sections ADD CONSTRAINT hero_title_max_chars CHECK (LENGTH(title) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'hero_title_max_words') THEN
+    ALTER TABLE hero_sections ADD CONSTRAINT hero_title_max_words CHECK (word_count(title) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'hero_subtitle_max_chars') THEN
+    ALTER TABLE hero_sections ADD CONSTRAINT hero_subtitle_max_chars CHECK (subtitle IS NULL OR LENGTH(subtitle) <= 300);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'hero_subtitle_max_words') THEN
+    ALTER TABLE hero_sections ADD CONSTRAINT hero_subtitle_max_words CHECK (subtitle IS NULL OR word_count(subtitle) <= 60);
+  END IF;
+
+  -- 2. ABOUT SECTIONS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'about_description_max_chars') THEN
+    ALTER TABLE about_sections ADD CONSTRAINT about_description_max_chars CHECK (description IS NULL OR LENGTH(description) <= 20000);
+  END IF;
+
+  -- 3. NEWS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'news_title_max_chars') THEN
+    ALTER TABLE news ADD CONSTRAINT news_title_max_chars CHECK (LENGTH(title) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'news_title_max_words') THEN
+    ALTER TABLE news ADD CONSTRAINT news_title_max_words CHECK (word_count(title) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'news_content_max_chars') THEN
+    ALTER TABLE news ADD CONSTRAINT news_content_max_chars CHECK (LENGTH(content) <= 20000);
+  END IF;
+
+  -- 4. HIGHLIGHTS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'highlights_title_max_chars') THEN
+    ALTER TABLE highlights ADD CONSTRAINT highlights_title_max_chars CHECK (LENGTH(title) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'highlights_title_max_words') THEN
+    ALTER TABLE highlights ADD CONSTRAINT highlights_title_max_words CHECK (word_count(title) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'highlights_description_max_chars') THEN
+    ALTER TABLE highlights ADD CONSTRAINT highlights_description_max_chars CHECK (LENGTH(description) <= 300);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'highlights_description_max_words') THEN
+    ALTER TABLE highlights ADD CONSTRAINT highlights_description_max_words CHECK (word_count(description) <= 60);
+  END IF;
+
+  -- 5. TEAM MEMBERS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'team_name_max_chars') THEN
+    ALTER TABLE team_members ADD CONSTRAINT team_name_max_chars CHECK (LENGTH(name) <= 80);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'team_name_max_words') THEN
+    ALTER TABLE team_members ADD CONSTRAINT team_name_max_words CHECK (word_count(name) <= 10);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'team_name_no_digits') THEN
+    ALTER TABLE team_members ADD CONSTRAINT team_name_no_digits CHECK (NOT contains_digits(name));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'team_role_max_chars') THEN
+    ALTER TABLE team_members ADD CONSTRAINT team_role_max_chars CHECK (LENGTH(role) <= 80);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'team_role_max_words') THEN
+    ALTER TABLE team_members ADD CONSTRAINT team_role_max_words CHECK (word_count(role) <= 12);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'team_role_no_digits') THEN
+    ALTER TABLE team_members ADD CONSTRAINT team_role_no_digits CHECK (NOT contains_digits(role));
+  END IF;
+
+  -- 6. PARTNERS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'partners_name_max_chars') THEN
+    ALTER TABLE partners ADD CONSTRAINT partners_name_max_chars CHECK (LENGTH(name) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'partners_name_max_words') THEN
+    ALTER TABLE partners ADD CONSTRAINT partners_name_max_words CHECK (word_count(name) <= 25);
+  END IF;
+
+  -- 7. PUBLICATIONS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_title_max_chars') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_title_max_chars CHECK (LENGTH(title) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_title_max_words') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_title_max_words CHECK (word_count(title) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_authors_max_chars') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_authors_max_chars CHECK (LENGTH(authors) <= 200);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_authors_max_words') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_authors_max_words CHECK (word_count(authors) <= 35);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_authors_no_digits') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_authors_no_digits CHECK (NOT contains_digits(authors));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_content_max_chars') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_content_max_chars CHECK (content IS NULL OR LENGTH(content) <= 20000);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_excerpt_max_chars') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_excerpt_max_chars CHECK (excerpt IS NULL OR LENGTH(excerpt) <= 300);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_excerpt_max_words') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_excerpt_max_words CHECK (excerpt IS NULL OR word_count(excerpt) <= 60);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_sentence_max_chars') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_sentence_max_chars CHECK (sentence IS NULL OR LENGTH(sentence) <= 300);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'publications_sentence_max_words') THEN
+    ALTER TABLE publications ADD CONSTRAINT publications_sentence_max_words CHECK (sentence IS NULL OR word_count(sentence) <= 60);
+  END IF;
+
+  -- 8. BLOG POSTS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_title_max_chars') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_title_max_chars CHECK (LENGTH(title) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_title_max_words') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_title_max_words CHECK (word_count(title) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_content_max_chars') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_content_max_chars CHECK (LENGTH(content) <= 20000);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_author_max_chars') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_author_max_chars CHECK (LENGTH(author) <= 80);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_author_max_words') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_author_max_words CHECK (word_count(author) <= 10);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_author_no_digits') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_author_no_digits CHECK (NOT contains_digits(author));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_author_role_max_chars') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_author_role_max_chars CHECK (author_role IS NULL OR LENGTH(author_role) <= 80);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_author_role_max_words') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_author_role_max_words CHECK (author_role IS NULL OR word_count(author_role) <= 12);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'blog_author_role_no_digits') THEN
+    ALTER TABLE blog_posts ADD CONSTRAINT blog_author_role_no_digits CHECK (author_role IS NULL OR NOT contains_digits(author_role));
+  END IF;
+
+  -- 9. PROJECTS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'projects_title_max_chars') THEN
+    ALTER TABLE projects ADD CONSTRAINT projects_title_max_chars CHECK (LENGTH(title) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'projects_title_max_words') THEN
+    ALTER TABLE projects ADD CONSTRAINT projects_title_max_words CHECK (word_count(title) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'projects_description_max_chars') THEN
+    ALTER TABLE projects ADD CONSTRAINT projects_description_max_chars CHECK (LENGTH(description) <= 20000);
+  END IF;
+
+  -- 10. FINANCIAL STATEMENTS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fs_title_max_chars') THEN
+    ALTER TABLE financial_statements ADD CONSTRAINT fs_title_max_chars CHECK (LENGTH(title) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fs_title_max_words') THEN
+    ALTER TABLE financial_statements ADD CONSTRAINT fs_title_max_words CHECK (word_count(title) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fs_year_format') THEN
+    ALTER TABLE financial_statements ADD CONSTRAINT fs_year_format CHECK (year ~ '^\d{4}$');
+  END IF;
+
+  -- 11. INTERNSHIP TESTIMONIALS VALIDATION
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_name_max_chars') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_name_max_chars CHECK (LENGTH(name) <= 80);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_name_max_words') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_name_max_words CHECK (word_count(name) <= 10);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_name_no_digits') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_name_no_digits CHECK (NOT contains_digits(name));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_degree_max_chars') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_degree_max_chars CHECK (LENGTH(degree) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_degree_max_words') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_degree_max_words CHECK (word_count(degree) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_institution_max_chars') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_institution_max_chars CHECK (LENGTH(institution) <= 150);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_institution_max_words') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_institution_max_words CHECK (word_count(institution) <= 25);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_quote_max_chars') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_quote_max_chars CHECK (LENGTH(quote) <= 300);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_quote_max_words') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_quote_max_words CHECK (word_count(quote) <= 60);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'it_year_format') THEN
+    ALTER TABLE internship_testimonials ADD CONSTRAINT it_year_format CHECK (year ~ '^\d{4}$');
+  END IF;
+END $$;
+
+-- ============================================
 -- COMPLETE! 
 -- All 13 admin panel sections are now ready
--- All tables are empty and ready for your data
+-- All tables have input validation constraints
+-- Run this SQL in Supabase SQL Editor to apply constraints
 -- ============================================

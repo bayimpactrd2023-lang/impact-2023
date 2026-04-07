@@ -1,5 +1,5 @@
 import React from 'react';
-import impactLogoImage from 'impact.png';
+ 
 
 interface LogoProps {
   className?: string;
@@ -18,7 +18,7 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   return (
     <img
-      src={impactLogoImage}
+      src="/images/logos/impact.png"
       alt="IMPACT R&D Logo"
       className={className}
       style={{

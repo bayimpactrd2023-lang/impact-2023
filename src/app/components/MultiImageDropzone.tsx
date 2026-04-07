@@ -1,29 +1,27 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { uploadImages, isBase64Url } from '@/utils/storageUpload';
+import { isBase64Url } from '@/utils/storageUpload';
 import { getImageUrl } from '@/utils/r2Upload';
 
 interface MultiImageDropzoneProps {
-  images: string[];
-  onChange: (images: string[]) => void;
+  images: (string | File)[];
+  onChange: (images: (string | File)[]) => void;
   label?: string;
-  bucket?: string;
-  folder?: string;
 }
 
 export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
   images,
   onChange,
-  label = 'Gallery Images',
-  bucket = 'images',
-  folder
+  label = 'Gallery Images'
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
-  // Generate a simple hash from image data for comparison
-  const getImageHash = useCallback((imageData: string) => {
+  const getImageHash = useCallback((imageData: string | File): string => {
+    if (imageData instanceof File) {
+      return `file-${imageData.name}-${imageData.size}-${imageData.lastModified}`;
+    }
+    if (typeof imageData !== 'string') return '';
     // For storage URLs, use the full URL
     if (!isBase64Url(imageData)) {
       return imageData;
@@ -37,7 +35,7 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
   // Filter out any duplicate images before rendering (safety check)
   const uniqueImages = React.useMemo(() => {
     const seen = new Set<string>();
-    const unique: string[] = [];
+    const unique: (string | File)[] = [];
     
     images.forEach(img => {
       const hash = getImageHash(img);
@@ -59,41 +57,28 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
       }
       toast.info(`${duplicatesFound} duplicate image${duplicatesFound > 1 ? 's' : ''} removed automatically`);
     }
-  }, [images.length, uniqueImages.length]); // Only trigger when counts change
+  }, [images, uniqueImages, onChange]);
 
-  // Handle multiple file selection with Supabase Storage upload
+  // Handle multiple file selection - NO AUTOMATIC UPLOAD
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
     
     if (imageFiles.length === 0) return;
 
-    try {
-      setIsUploading(true);
-      
-      // Upload all images to Supabase Storage with compression
-      const newUrls = await uploadImages(imageFiles, bucket, folder);
-      
-      // Check for duplicates
-      const existingHashes = new Set(uniqueImages.map(img => getImageHash(img)));
-      const uniqueNewUrls = newUrls.filter(url => !existingHashes.has(getImageHash(url)));
-      
-      if (uniqueNewUrls.length > 0 && onChange && typeof onChange === 'function') {
-        onChange([...images, ...uniqueNewUrls]);
-        toast.success(`${uniqueNewUrls.length} image${uniqueNewUrls.length > 1 ? 's' : ''} uploaded successfully`);
-      }
-      
-      const duplicateCount = newUrls.length - uniqueNewUrls.length;
-      if (duplicateCount > 0) {
-        toast.error(`${duplicateCount} duplicate image${duplicateCount > 1 ? 's' : ''} skipped`);
-      }
-    } catch (error) {
-      console.error('[MultiImageDropzone] Upload error:', error);
-      toast.error('Failed to upload images. Please try again.');
-    } finally {
-      setIsUploading(false);
+    // Check for duplicates
+    const existingHashes = new Set(uniqueImages.map(img => getImageHash(img)));
+    const uniqueNewFiles = imageFiles.filter(file => !existingHashes.has(getImageHash(file)));
+    
+    if (uniqueNewFiles.length > 0 && onChange && typeof onChange === 'function') {
+      onChange([...images, ...uniqueNewFiles]);
     }
-  }, [images, onChange, uniqueImages, getImageHash, bucket, folder]);
+    
+    const duplicateCount = imageFiles.length - uniqueNewFiles.length;
+    if (duplicateCount > 0) {
+      toast.error(`${duplicateCount} duplicate image${duplicateCount > 1 ? 's' : ''} skipped`);
+    }
+  }, [images, onChange, uniqueImages, getImageHash]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -125,7 +110,7 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
   };
 
   // Count how many old Base64 images exist
-  const base64Count = uniqueImages.filter(img => isBase64Url(img)).length;
+  const base64Count = uniqueImages.filter(img => typeof img === 'string' && isBase64Url(img)).length;
 
   return (
     <div className="space-y-4">
@@ -146,9 +131,7 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          isUploading ? 'cursor-wait opacity-75' : 'cursor-pointer'
-        } ${
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
           isDragging 
             ? 'border-[#1887FC] bg-blue-50' 
             : 'border-gray-300 hover:border-gray-400'
@@ -161,19 +144,12 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
           onChange={handleFileSelect}
           className="hidden"
           id="multi-image-input"
-          disabled={isUploading}
         />
         <label 
           htmlFor="multi-image-input"
-          className={`${isUploading ? 'cursor-wait' : 'cursor-pointer'} flex flex-col items-center`}
+          className="cursor-pointer flex flex-col items-center"
         >
-          {isUploading ? (
-            <>
-              <Loader2 className="w-10 h-10 text-[#1887FC] mb-2 animate-spin" />
-              <p className="text-sm font-medium text-gray-700 mb-1">Uploading & compressing...</p>
-              <p className="text-xs text-gray-500">Please wait</p>
-            </>
-          ) : (
+          {(
             <>
               <Upload className="w-10 h-10 text-gray-400 mb-2" />
               <p className="text-sm font-medium text-gray-700 mb-1">
@@ -193,7 +169,7 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
           {uniqueImages.map((image, index) => (
             <div key={index} className="relative group">
               <img
-                src={getImageUrl(image)}
+                src={image instanceof File ? URL.createObjectURL(image) : getImageUrl(image as string)}
                 alt={`Gallery image ${index + 1}`}
                 className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
               />
@@ -202,7 +178,6 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
                 onClick={() => handleRemoveImage(index)}
                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
                 aria-label="Remove image"
-                disabled={isUploading}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -210,7 +185,7 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
                 {index + 1}
               </div>
               {/* Indicator for old Base64 images */}
-              {isBase64Url(image) && (
+              {typeof image === 'string' && isBase64Url(image) && (
                 <div className="absolute top-2 left-2 bg-yellow-500 text-white px-1.5 py-0.5 rounded text-xs font-semibold">
                   ⚠️
                 </div>

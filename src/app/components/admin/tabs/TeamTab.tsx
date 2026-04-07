@@ -4,7 +4,6 @@
  * Tab for managing team members.
  */
 
-import React from 'react';
 import { FileText } from 'lucide-react';
 import { ContentGridTab } from './ContentGridTab';
 import { TeamMember } from '../types/admin.types';

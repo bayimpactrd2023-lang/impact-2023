@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Publication } from '@/app/types/content';
-import { BookOpen, ExternalLink, Download, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { BookOpen, ExternalLink, Download, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/card';
-import { Button } from '@/app/components/ui/button';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
@@ -206,48 +205,52 @@ export const PublicationsPage: React.FC = () => {
                                     View Online
                                   </a>
                                 )}
-                                {publication.pdfUrl && (
-                                  <>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        // View PDF in modal
-                                        if (publication.pdfUrl.startsWith('data:')) {
-                                          const base64Data = publication.pdfUrl.split(',')[1];
-                                          const byteCharacters = atob(base64Data);
-                                          const byteNumbers = new Array(byteCharacters.length);
-                                          for (let i = 0; i < byteCharacters.length; i++) {
-                                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                                          }
-                                          const byteArray = new Uint8Array(byteNumbers);
-                                          const blob = new Blob([byteArray], { type: 'application/pdf' });
-                                          const blobUrl = URL.createObjectURL(blob);
-                                          setPdfToView({ url: blobUrl, title: publication.title });
-                                          setIsPDFViewerOpen(true);
-                                        } else {
-                                          setPdfToView({ url: publication.pdfUrl, title: publication.title });
-                                          setIsPDFViewerOpen(true);
-                                        }
-                                      }}
-                                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#1887FC] hover:bg-[#0b5ab8] text-white rounded-lg font-medium transition-colors text-sm shadow-sm hover:shadow-md"
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                      View PDF
-                                    </button>
-                                    {publication.pdfAccessType === 'downloadable' && (
+                                {(() => {
+                                  const pdfUrl = publication.pdfUrl;
+                                  if (!pdfUrl) return null;
+                                  return (
+                                    <>
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          downloadPDF(publication.pdfUrl, publication.title);
+                                          // View PDF in modal
+                                          if (pdfUrl.startsWith('data:')) {
+                                            const base64Data = pdfUrl.split(',')[1];
+                                            const byteCharacters = atob(base64Data);
+                                            const byteNumbers = new Array(byteCharacters.length);
+                                            for (let i = 0; i < byteCharacters.length; i++) {
+                                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                            }
+                                            const byteArray = new Uint8Array(byteNumbers);
+                                            const blob = new Blob([byteArray], { type: 'application/pdf' });
+                                            const blobUrl = URL.createObjectURL(blob);
+                                            setPdfToView({ url: blobUrl, title: publication.title });
+                                            setIsPDFViewerOpen(true);
+                                          } else {
+                                            setPdfToView({ url: pdfUrl, title: publication.title });
+                                            setIsPDFViewerOpen(true);
+                                          }
                                         }}
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors text-sm border border-gray-300"
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#1887FC] hover:bg-[#0b5ab8] text-white rounded-lg font-medium transition-colors text-sm shadow-sm hover:shadow-md"
                                       >
-                                        <Download className="w-4 h-4" />
-                                        Download PDF
+                                        <Eye className="w-4 h-4" />
+                                        View PDF
                                       </button>
-                                    )}
-                                  </>
-                                )}
+                                      {publication.pdfAccessType === 'download' && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            downloadPDF(pdfUrl, publication.title);
+                                          }}
+                                          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors text-sm border border-gray-300"
+                                        >
+                                          <Download className="w-4 h-4" />
+                                          Download PDF
+                                        </button>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             </CardContent>
                           </Card>

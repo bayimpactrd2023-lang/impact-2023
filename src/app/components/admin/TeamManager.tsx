@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TeamMember } from '@/app/context/ContentContext';
+import { TeamMember, TeamMemberForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -11,6 +11,7 @@ import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { useServerPagination } from '@/hooks/useServerPagination';
+import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
 import {
   createTeamMember,
   updateTeamMember as updateTeamInDb,
@@ -18,8 +19,9 @@ import {
   getTeamMembersPaginated,
 } from '@/services/supabaseService';
 
+import { uploadImage, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
-import { AdminModalLoadingBar, AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
+import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateTeamCache } from '@/utils/cacheInvalidation';
 
 interface TeamManagerProps {
@@ -28,9 +30,9 @@ interface TeamManagerProps {
   refreshContent?: () => Promise<void>;
 }
 
-export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers, onUpdate, refreshContent }) => {
+export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMembers, onUpdate: _onUpdate, refreshContent: _refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [editingMember, setEditingMember] = useState<TeamMemberForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
@@ -42,7 +44,7 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers, onUpdate,
   });
 
   const addMember = () => {
-    const newMember: TeamMember = {
+    const newMember: TeamMemberForm = {
       id: `temp-${Date.now()}`,
       name: '',
       role: '',
@@ -69,6 +71,11 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers, onUpdate,
 
     try {
       if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+        // Find the member to get its image URL for storage cleanup
+        const memberToDelete = pagination.data.find(m => m.id === id);
+        if (memberToDelete?.imageUrl) {
+          await deleteStorageFile(memberToDelete.imageUrl, 'team');
+        }
         await deleteTeamFromDb(id);
       }
       
@@ -85,14 +92,26 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers, onUpdate,
 
   const handleSave = async () => {
     if (!editingMember || isSaving) return;
+
+    const validation = EntityValidator.validateTeamMember(editingMember);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
+      return;
+    }
     
     setIsSaving(true);
     try {
+      // Handle Image Upload before saving to database
+      let finalImageUrl = editingMember.imageUrl;
+      if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
+        finalImageUrl = await uploadImage(finalImageUrl, 'team');
+      }
+
       const memberData = {
         name: editingMember.name,
         role: editingMember.role,
         description: editingMember.description || '',
-        image_url: editingMember.imageUrl || null,
+        image_url: (finalImageUrl as string) || null,
       };
 
       if (editingMember.id && !editingMember.id.startsWith('temp-') && !editingMember.id.match(/^\\d{13}$/)) {

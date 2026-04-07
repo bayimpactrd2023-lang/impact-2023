@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
-import { uploadImage, deleteStorageFile, isBase64Url } from '@/utils/storageUpload';
+import { uploadImage, isBase64Url } from '@/utils/storageUpload';
 import { getImageUrl } from '@/utils/r2Upload';
 import { toast } from 'sonner';
 
 interface ImageDropzoneProps {
-  value?: string;
-  onChange: (url: string) => void;
+  value?: string | File;
+  onChange: (value: string | File) => void;
   label?: string;
   className?: string;
   bucket?: string;
@@ -22,12 +22,23 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
   folder
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string>(value || '');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
 
   // Sync previewUrl with value prop when it changes externally
   useEffect(() => {
-    setPreviewUrl(value || '');
+    let objectUrl: string | null = null;
+    if (typeof value === 'string') {
+      setPreviewUrl(value);
+    } else if (value instanceof File) {
+      objectUrl = URL.createObjectURL(value);
+      setPreviewUrl(objectUrl);
+    } else {
+      setPreviewUrl('');
+    }
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [value]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -41,38 +52,19 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
   }, []);
 
   const processImageFile = useCallback(async (imageFile: File) => {
+    setIsUploading(true);
     try {
-      setIsUploading(true);
-
-      const previousUrl = previewUrl;
-      
-      // Upload to Supabase Storage with compression
-      const publicUrl = await uploadImage(imageFile, bucket, folder);
-      
-      // Update preview and notify parent
-      setPreviewUrl(publicUrl);
-      if (onChange && typeof onChange === 'function') {
-        onChange(publicUrl);
-      }
-
-      // Best-effort cleanup of previously stored image (overwrite semantics)
-      // This prevents old R2 public URLs (r2.dev) from lingering after replacement.
-      if (previousUrl && previousUrl !== publicUrl && !isBase64Url(previousUrl)) {
-        try {
-          await deleteStorageFile(previousUrl, bucket);
-        } catch (cleanupError) {
-          console.warn('[ImageDropzone] Failed to delete previous image:', cleanupError);
-        }
-      }
-      
-      toast.success('Image uploaded successfully');
-    } catch (error) {
-      console.error('[ImageDropzone] Upload error:', error);
-      toast.error('Failed to upload image. Please try again.');
+      const url = await uploadImage(imageFile, bucket, folder);
+      setPreviewUrl(url);
+      onChange(url);
+      toast.success('Image uploaded');
+    } catch (err) {
+      console.error('[ImageDropzone] Upload failed:', err);
+      toast.error('Failed to upload image');
     } finally {
       setIsUploading(false);
     }
-  }, [onChange, bucket, folder, previewUrl]);
+  }, [bucket, folder, onChange]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { Publication } from '@/app/context/ContentContext';
+import { Publication, PublicationForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
-import { Plus, Trash2, Edit, X, CheckCircle, FileText, BookOpen, Star } from 'lucide-react';
+import { Plus, Trash2, Edit, X, CheckCircle, FileText, Star } from 'lucide-react';
 import { Switch } from '@/app/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { useServerPagination } from '@/hooks/useServerPagination';
+import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
 import {
   createPublication,
   updatePublication as updatePublicationInDb,
@@ -20,6 +21,7 @@ import {
   getPublicationsPaginated,
   getAllPublications,
 } from '@/services/supabaseService';
+import { uploadImage, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidatePublicationsCache } from '@/utils/cacheInvalidation';
@@ -30,8 +32,8 @@ interface PublicationsManagerProps {
   refreshContent?: () => Promise<void>;
 }
 
-export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ publications, onUpdate, refreshContent }) => {
-  const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
+export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ publications: _publications, onUpdate: _onUpdate, refreshContent }) => {
+  const [editingPublication, setEditingPublication] = useState<PublicationForm | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
@@ -48,7 +50,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
   });
 
   const addPublication = () => {
-    const newPub: Publication = {
+    const newPub: PublicationForm = {
       id: `temp-${Date.now()}`,
       title: '',
       authors: '',
@@ -57,14 +59,14 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
       pdfUrl: '',
       content: '',
       publishedDate: new Date().toISOString().split('T')[0],
-      pdfAccessType: 'download', // Default to download
+      pdfAccessType: 'download',
     };
     setEditingPublication(newPub);
     setIsModalOpen(true);
   };
 
   const handleEdit = (pub: Publication) => {
-    setEditingPublication({ ...pub });
+    setEditingPublication({ ...pub } as PublicationForm);
     setIsModalOpen(true);
   };
 
@@ -79,6 +81,11 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
 
     try {
       if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+        // Find the publication to get its PDF URL for storage cleanup
+        const pubToDelete = pagination.data.find(p => p.id === id);
+        if (pubToDelete?.pdfUrl) {
+          await deleteStorageFile(pubToDelete.pdfUrl, 'pdfs');
+        }
         await deletePublicationFromDb(id);
       }
       
@@ -95,6 +102,12 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
 
   const handleSavePublication = async () => {
     if (!editingPublication) return;
+
+    const validation = EntityValidator.validatePublication(editingPublication);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Validation failed');
+      return;
+    }
     
     // Validation: Check featured items limit (max 3)
     if (editingPublication.featured) {
@@ -113,15 +126,21 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
     
     setIsSaving(true);
     try {
+      // Handle PDF Upload before saving to database
+      let finalPdfUrl = editingPublication.pdfUrl;
+      if (typeof finalPdfUrl === 'object' && (finalPdfUrl as any) instanceof File) {
+        finalPdfUrl = await uploadImage(finalPdfUrl as any, 'publications');
+      }
+
       const pubData = {
         title: editingPublication.title,
         authors: editingPublication.authors,
         link: editingPublication.link,
         featured: editingPublication.featured || false,
-        pdf_url: editingPublication.pdfUrl || null,
+        pdf_url: (finalPdfUrl as string) || null,
         content: editingPublication.content || null,
         published_date: editingPublication.publishedDate || null,
-        pdf_access_type: editingPublication.pdfAccessType || 'download', // Add pdf_access_type
+        pdf_access_type: editingPublication.pdfAccessType || 'download',
       };
       
       if (editingPublication.id && !editingPublication.id.startsWith('temp-') && !editingPublication.id.match(/^\\d{13}$/)) {
@@ -374,7 +393,6 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                   <div>
                     <Label htmlFor="pdf-access-type">PDF Access Type</Label>
                     <Select
-                      id="pdf-access-type"
                       value={editingPublication.pdfAccessType || 'download'}
                       onValueChange={(value: 'view' | 'download') =>
                         setEditingPublication({ ...editingPublication, pdfAccessType: value })

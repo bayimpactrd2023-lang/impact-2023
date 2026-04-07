@@ -4,7 +4,6 @@
  * Tab for managing highlights.
  */
 
-import React from 'react';
 import { FileText } from 'lucide-react';
 import { ContentGridTab } from './ContentGridTab';
 import { Highlight } from '../types/admin.types';

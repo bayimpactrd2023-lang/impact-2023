@@ -30,7 +30,6 @@ export const AdminLoginPage: React.FC = () => {
   const {
     isLocked,
     remainingAttempts,
-    remainingTime,
     formatRemainingTime,
     recordFailedAttempt,
     resetAttempts,

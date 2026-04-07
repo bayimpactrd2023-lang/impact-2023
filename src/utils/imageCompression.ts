@@ -26,8 +26,8 @@ export const compressImage = async (
     console.log(`[ImageCompression] Original: ${(imageFile.size / 1024).toFixed(2)}KB → Compressed: ${(compressedFile.size / 1024).toFixed(2)}KB (${((1 - compressedFile.size / imageFile.size) * 100).toFixed(1)}% reduction)`);
     
     return compressedFile;
-  } catch (error) {
-    console.error('[ImageCompression] Compression failed:', error);
+  } catch (error: unknown) {
+    console.error('[ImageCompression] Compression failed:', error instanceof Error ? error.message : error);
     // Fallback to original file if compression fails
     return imageFile;
   }
@@ -58,8 +58,8 @@ export const compressImages = async (
     console.log(`[ImageCompression] Batch: ${imageFiles.length} images, ${(totalOriginalSize / 1024).toFixed(2)}KB → ${(totalCompressedSize / 1024).toFixed(2)}KB (${((1 - totalCompressedSize / totalOriginalSize) * 100).toFixed(1)}% reduction)`);
     
     return compressedFiles;
-  } catch (error) {
-    console.error('[ImageCompression] Batch compression failed:', error);
+  } catch (error: unknown) {
+    console.error('[ImageCompression] Batch compression failed:', error instanceof Error ? error.message : error);
     return imageFiles; // Fallback to original files
   }
 };

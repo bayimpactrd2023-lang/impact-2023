@@ -151,7 +151,8 @@ export const getAllNews = async () => {
     const { data, error } = await supabase
       .from('news')
       .select('*')
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -251,7 +252,8 @@ export const getAllHighlights = async () => {
     const { data, error } = await supabase
       .from('highlights')
       .select('*')
-      .order('published_date', { ascending: false, nullsFirst: false });
+      .order('published_date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -340,7 +342,7 @@ export const getAllPartners = async () => {
     const { data, error } = await supabase
       .from('partners')
       .select('*')
-      .order('name', { ascending: true });
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -417,7 +419,8 @@ export const getAllPublications = async () => {
     const { data, error } = await supabase
       .from('publications')
       .select('*')
-      .order('published_date', { ascending: false, nullsFirst: false });
+      .order('published_date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -434,7 +437,8 @@ export const getFeaturedPublications = async () => {
       .from('publications')
       .select('*')
       .eq('featured', true)
-      .order('published_date', { ascending: false, nullsFirst: false });
+      .order('published_date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -532,7 +536,8 @@ export const getProjectsByCategory = async (category: string) => {
       .from('projects')
       .select('*')
       .eq('category', category)
-      .order('date', { ascending: false, nullsFirst: false });
+      .order('date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -548,7 +553,8 @@ export const getAllProjects = async () => {
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .order('date', { ascending: false, nullsFirst: false });
+      .order('date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -639,7 +645,7 @@ export const getAllTeamMembers = async () => {
     const { data, error } = await supabase
       .from('team_members')
       .select('*')
-      .order('name', { ascending: true });
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -720,7 +726,8 @@ export const getAllBlogPosts = async () => {
     const { data, error } = await supabase
       .from('blog_posts')
       .select('*')
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -921,7 +928,8 @@ export const getAllFinancialStatements = async () => {
     const { data, error } = await supabase
       .from('financial_statements')
       .select('*')
-      .order('year', { ascending: false });
+      .order('year', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     
@@ -1036,7 +1044,8 @@ export const getAllInternshipTestimonials = async () => {
       .from('internship_testimonials')
       .select('*')
       .order('year', { ascending: false })
-      .order('published_date', { ascending: false });
+      .order('published_date', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
@@ -1166,6 +1175,7 @@ export const getNewsPaginated = async (page: number = 1, itemsPerPage: number = 
       .from('news')
       .select('*')
       .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(from, to);
 
     if (error) throw error;
@@ -1292,6 +1302,7 @@ export const getPublicationsPaginated = async (page: number = 1, itemsPerPage: n
       .from('publications')
       .select('*')
       .order('published_date', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(from, to);
 
     if (error) throw error;
@@ -1377,6 +1388,7 @@ export const getBlogPostsPaginated = async (page: number = 1, itemsPerPage: numb
       .from('blog_posts')
       .select('*')
       .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(from, to);
 
     if (error) throw error;
@@ -1420,6 +1432,7 @@ export const getProjectsPaginated = async (category: string, page: number = 1, i
       .from('projects')
       .select('*')
       .eq('category', category)
+      .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .range(from, to);
 
@@ -1462,6 +1475,7 @@ export const getFinancialStatementsPaginated = async (page: number = 1, itemsPer
       .from('financial_statements')
       .select('*')
       .order('year', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(from, to);
 
     if (error) throw error;
@@ -1503,7 +1517,9 @@ export const getInternshipTestimonialsPaginated = async (page: number = 1, items
     const { data, error } = await supabase
       .from('internship_testimonials')
       .select('*')
+      .order('year', { ascending: false })
       .order('published_date', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(from, to);
 
     if (error) throw error;

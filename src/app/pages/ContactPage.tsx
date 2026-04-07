@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Mail, Phone, MapPin, Clock, ExternalLink } from 'lucide-react';
+import { MapPin, Phone, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';

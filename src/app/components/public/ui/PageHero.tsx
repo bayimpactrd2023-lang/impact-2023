@@ -5,12 +5,12 @@
  * Provides consistent styling with customizable content.
  */
 
-import React from 'react';
+import type { ReactNode } from 'react';
 import { HeroConfig } from '../types/page.types';
 
 export interface PageHeroProps extends HeroConfig {
   /** Optional children to render below title/subtitle */
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 /**

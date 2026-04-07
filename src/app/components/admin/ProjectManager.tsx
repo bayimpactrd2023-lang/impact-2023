@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Project } from '@/app/context/ContentContext';
+import { Project, ProjectForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -20,8 +20,18 @@ import {
 } from '@/services/supabaseService';
 
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
-import { AdminModalLoadingBar, AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
+import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateProjectsCache } from '@/utils/cacheInvalidation';
+import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
+import { getImageUrl } from '@/utils/r2Upload';
+
+import { 
+  AdminValidationRules,
+  mergeValidationResults,
+  validateMaxChars,
+  validateMaxWords,
+  validateRequiredTrimmed,
+} from '@/app/components/admin/utils/adminHelpers';
 
 interface ProjectManagerProps {
   projects: Project[];
@@ -31,9 +41,9 @@ interface ProjectManagerProps {
   refreshContent?: () => Promise<void>;
 }
 
-export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects, onUpdate, title = "Projects", category, refreshContent }) => {
+export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _projects, onUpdate: _onUpdate, title = "Projects", category, refreshContent: _refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingProject, setEditingProject] = useState<ProjectForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   // Initialize delete confirmation hook
@@ -53,11 +63,11 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects, onUpda
   });
 
   const addProject = () => {
-    const newProject: Project = {
+    const newProject: ProjectForm = {
       id: `temp-${Date.now()}`,
       title: '',
       description: '',
-      category: category,
+      category: category ?? '',
       imageUrl: '',
       images: [],
       date: new Date().toISOString().split('T')[0],
@@ -67,7 +77,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects, onUpda
   };
 
   const handleEdit = (project: Project) => {
-    setEditingProject({ ...project });
+    setEditingProject({ ...project } as ProjectForm);
     setIsModalOpen(true);
   };
 
@@ -82,6 +92,20 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects, onUpda
 
     try {
       if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+        // Find the project to get its image URLs for storage cleanup
+        const projectToDelete = pagination.data.find(p => p.id === id);
+        if (projectToDelete) {
+          // Delete main image
+          if (projectToDelete.imageUrl) {
+            await deleteStorageFile(projectToDelete.imageUrl, 'projects');
+          }
+          // Delete gallery images
+          if (projectToDelete.images && projectToDelete.images.length > 0) {
+            for (const imgUrl of projectToDelete.images) {
+              await deleteStorageFile(imgUrl, 'projects');
+            }
+          }
+        }
         await deleteProjectFromDb(id);
       }
       
@@ -98,19 +122,62 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects, onUpda
 
   const handleSave = async () => {
     if (!editingProject || isSaving) return;
+
+     const validation = mergeValidationResults(
+       validateRequiredTrimmed(editingProject.title, 'Project title'),
+       validateMaxChars(
+         editingProject.title.trim(),
+         AdminValidationRules.shortTitleMaxChars,
+         'Project title'
+       ),
+       validateMaxWords(
+         editingProject.title.trim(),
+         AdminValidationRules.shortTitleMaxWords,
+         'Project title'
+       ),
+       validateRequiredTrimmed(editingProject.description, 'Description'),
+       validateMaxChars(
+         editingProject.description.trim(),
+         AdminValidationRules.contentMaxChars,
+         'Description'
+       )
+     );
+     if (!validation.isValid) {
+       toast.error(validation.error || 'Validation failed');
+       return;
+     }
     
     setIsSaving(true);
     try {
+      // Handle Image Uploads before saving to database
+      let finalImageUrl = editingProject.imageUrl;
+      if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
+        finalImageUrl = await uploadImage(finalImageUrl, 'projects');
+      }
+
+      let finalImages = editingProject.images || [];
+      if (editingProject.images && editingProject.images.some(img => typeof img === 'object')) {
+        const filesToUpload = editingProject.images.filter(img => typeof img === 'object') as File[];
+        const uploadedUrls = await uploadImages(filesToUpload, 'projects');
+        let uploadIdx = 0;
+        finalImages = editingProject.images.map(img => {
+          if (typeof img === 'object') {
+            return uploadedUrls[uploadIdx++];
+          }
+          return img as string;
+        });
+      }
+
       const projectData = {
         title: editingProject.title,
         description: editingProject.description,
-        category: category,
-        image_url: editingProject.imageUrl || null,
-        images: editingProject.images || null,
+        category: category ?? '',
+        image_url: (finalImageUrl as string) || null,
+        images: (finalImages as string[]) || null,
         date: editingProject.date || null,
       };
 
-      if (editingProject.id && !editingProject.id.startsWith('temp-') && !editingProject.id.match(/^\\d{13}$/)) {
+      if (editingProject.id && !editingProject.id.startsWith('temp-') && !editingProject.id.match(/^\d{13}$/)) {
         await updateProjectInDb(editingProject.id, projectData);
         toast.success('Project updated!');
       } else {
@@ -186,7 +253,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects, onUpda
                 {project.imageUrl || (project.images && project.images.length > 0) ? (
                   <div className="w-full h-48 overflow-hidden rounded-t-lg">
                     <img
-                      src={project.imageUrl || project.images?.[0] || ''}
+                      src={getImageUrl(project.imageUrl || project.images?.[0] || '')}
                       alt={project.title}
                       className="w-full h-full object-cover"
                     />
