@@ -6,22 +6,18 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router';
 import { useAuth } from '@/app/context/AuthContext';
-import { PageSkeletonLoader } from '@/app/components/PageSkeletonLoader';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin } = useAuth();
   const location = useLocation();
 
-  if (loading) {
-    return <PageSkeletonLoader message="Authenticating..." />;
-  }
-
+  // Production: Don't show loading spinner - auth check happens in background
+  // If not authenticated, redirect to login
   if (!user || !isAdmin) {
-    // Redirect to login, but save the location they were trying to access
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 

@@ -6,14 +6,9 @@ import { AuthProvider } from '@/app/context/AuthContext';
 import { ContentProvider } from '@/app/context/ContentContext';
 import { HeaderThemeProvider } from '@/app/context/HeaderThemeContext';
 
-// Loading fallback for admin
+// Minimal loading fallback for admin (production - no spinner)
 const AdminLoader: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50">
-    <div className="text-center">
-      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1887FC]"></div>
-      <p className="mt-4 text-gray-600">Loading Admin Panel...</p>
-    </div>
-  </div>
+  <div className="min-h-screen bg-gray-50" />
 );
 
 export const AdminLayout: React.FC = () => {

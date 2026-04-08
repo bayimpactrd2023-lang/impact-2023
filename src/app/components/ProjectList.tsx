@@ -15,6 +15,7 @@ import { Pagination } from "@/app/components/Pagination";
 import { PaginationControls } from "@/app/components/admin/PaginationControls";
 import { ServerPaginationResult } from "@/hooks/useServerPagination";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
+import { GalleryModal } from "./GalleryModal";
 import {
   Dialog,
   DialogPortal,
@@ -48,7 +49,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>(''); // Track which image was clicked
-  const [isGalleryMode, setIsGalleryMode] = useState(false); // Track if showing gallery carousel
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   // Production-ready scroll-to-top using native browser API
   const scrollRef = useScrollToTop([pagination?.currentPage || currentPage]);
@@ -69,10 +71,10 @@ export const ProjectList: React.FC<ProjectListProps> = ({
 
   // Effect to scroll to the selected slide when modal opens
   React.useEffect(() => {
-    if (emblaApi && isModalOpen && isGalleryMode) {
+    if (emblaApi && isModalOpen) {
       emblaApi.scrollTo(selectedIndex, false); // false = no animation on initial load
     }
-  }, [emblaApi, isModalOpen, isGalleryMode, selectedIndex]);
+  }, [emblaApi, isModalOpen, selectedIndex]);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -109,7 +111,6 @@ export const ProjectList: React.FC<ProjectListProps> = ({
     setIsModalOpen(false);
     setSelectedProject(null);
     setSelectedImageUrl(''); // Reset the image URL
-    setIsGalleryMode(false); // Reset gallery mode
   };
 
   const scrollPrev = useCallback(() => {
@@ -328,7 +329,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
                               Overview
                             </h4>
-                            <p className="text-gray-700 leading-relaxed">
+                            <p className="text-gray-700 leading-relaxed text-justify">
                               {project.description}
                             </p>
                           </div>
@@ -340,7 +341,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
                               Project Context
                             </h4>
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
                               {project.context}
                             </p>
                           </div>
@@ -352,7 +353,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
                               Objectives
                             </h4>
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
                               {project.objectives}
                             </p>
                           </div>
@@ -364,7 +365,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
                               Methodology and Activities
                             </h4>
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
                               {project.methodology}
                             </p>
                           </div>
@@ -382,11 +383,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                                   key={idx}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setSelectedProject(project);
-                                    setSelectedImageUrl(img || ''); // Set the specific gallery image URL
-                                    setIsModalOpen(true);
-                                    setIsGalleryMode(true); // Enable gallery mode
-                                    setSelectedIndex(idx); // Set initial slide to the clicked image
+                                    setGalleryIndex(idx);
+                                    setIsGalleryOpen(true);
                                   }}
                                   className="relative group overflow-hidden rounded-lg border-2 border-blue-200 hover:border-[#1887FC] transition-all aspect-video"
                                 >
@@ -396,7 +394,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                                       "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400"
                                     }
                                     alt={`${project.title} - Image ${idx + 1}`}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
                                   />
                                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                                 </button>
@@ -465,7 +463,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
           const displayImage = selectedImageUrl || selectedProject.imageUrl;
           
           // For gallery mode, use the current slide's image for the background
-          const backgroundImage = isGalleryMode && selectedProject.images && selectedProject.images.length > 0
+          const backgroundImage = selectedProject.images && selectedProject.images.length > 0
             ? selectedProject.images[selectedIndex]
             : displayImage;
 
@@ -503,7 +501,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                     </DialogDescription>
 
                     {/* Conditional rendering: Carousel for gallery mode, single image otherwise */}
-                    {isGalleryMode && selectedProject.images && selectedProject.images.length > 1 ? (
+                    {selectedProject.images && selectedProject.images.length > 1 ? (
                       // Gallery Carousel Mode
                       <div className="relative h-full flex items-center justify-center p-8">
                         {/* Embla Carousel */}
@@ -514,7 +512,11 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                                 <ImageWithFallback
                                   src={img || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400"}
                                   alt={`${selectedProject.title} - Image ${idx + 1}`}
-                                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                                  className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-all duration-300 cursor-pointer"
+                                  onClick={() => {
+                                    setGalleryIndex(idx);
+                                    setIsGalleryOpen(true);
+                                  }}
                                 />
                               </div>
                             ))}
@@ -551,7 +553,13 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                           <ImageWithFallback
                             src={displayImage}
                             alt={selectedProject.title}
-                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-all duration-300 cursor-pointer"
+                            onClick={() => {
+                              // If it's a cover image, check if we have gallery images
+                              const idx = selectedProject.images?.indexOf(selectedImageUrl) ?? 0;
+                              setGalleryIndex(idx >= 0 ? idx : 0);
+                              setIsGalleryOpen(true);
+                            }}
                           />
                         </div>
                       ) : (
@@ -569,6 +577,13 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                   </div>
                 </DialogPrimitive.Content>
               </DialogPortal>
+              <GalleryModal
+                images={selectedProject.images && selectedProject.images.length > 0 ? selectedProject.images : ([selectedProject.imageUrl].filter(Boolean) as string[])}
+                isOpen={isGalleryOpen}
+                onClose={() => setIsGalleryOpen(false)}
+                title={selectedProject.title}
+                initialIndex={galleryIndex}
+              />
             </>
           );
         })()}

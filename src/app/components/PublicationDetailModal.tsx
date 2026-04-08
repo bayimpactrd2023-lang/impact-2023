@@ -21,6 +21,7 @@ import { Button } from "@/app/components/ui/button";
 import useEmblaCarousel from "embla-carousel-react";
 import type { EmblaCarouselType } from "embla-carousel";
 import { downloadPDF } from "@/utils/downloadHelpers";
+import { GalleryModal } from "./GalleryModal";
 
 interface PublicationDetailModalProps {
   publication: Publication | null;
@@ -35,6 +36,8 @@ export const PublicationDetailModal: React.FC<
   // Embla Carousel setup - hooks must be called before any early returns
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -78,11 +81,15 @@ export const PublicationDetailModal: React.FC<
               <div className="overflow-hidden bg-gray-50" ref={emblaRef}>
                 <div className="flex">
                   {galleryImages.map((image, index) => (
-                    <div key={index} className="flex-[0_0_100%] min-w-0">
+                    <div key={index} className="flex-[0_0_100%] min-w-0 flex items-center justify-center bg-gray-900/10">
                       <img
                         src={image}
                         alt={`${publication.title} - Image ${index + 1}`}
-                        className="w-full h-64 sm:h-80 md:h-96 object-cover"
+                        className="max-w-full max-h-[40vh] sm:max-h-[50vh] md:max-h-[60vh] object-contain shadow-sm cursor-pointer"
+                        onClick={() => {
+                          setGalleryIndex(index);
+                          setIsGalleryOpen(true);
+                        }}
                       />
                     </div>
                   ))}
@@ -167,7 +174,7 @@ export const PublicationDetailModal: React.FC<
 
             {/* Publication Content */}
             {publication.content ? (
-              <div className="prose prose-sm sm:prose lg:prose-lg max-w-none mb-6">
+              <div className="prose prose-sm sm:prose lg:prose-lg max-w-none mb-6 text-justify">
                 <p className="text-base sm:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {publication.content}
                 </p>
@@ -308,6 +315,13 @@ export const PublicationDetailModal: React.FC<
           </div>
         </div>
       </DialogContent>
+      <GalleryModal
+        images={galleryImages}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        title={publication.title}
+        initialIndex={galleryIndex}
+      />
     </Dialog>
   );
 };

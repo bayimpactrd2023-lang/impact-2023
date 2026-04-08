@@ -7,6 +7,7 @@ import { motion } from 'motion/react';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { Pagination } from '@/app/components/Pagination';
+import { GalleryModal } from './GalleryModal';
 import { Dialog, DialogPortal, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 
@@ -22,6 +23,8 @@ export const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, title, subti
   const [selectedFinding, setSelectedFinding] = React.useState<Project | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
   const currentProjects = useMemo(() => {
@@ -183,7 +186,7 @@ export const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, title, subti
                         {project.date ? new Date(project.date).toLocaleDateString() : 'Ongoing'}
                       </div>
                       <h3 className="text-xl font-bold text-[#1887FC] mb-2">{project.title}</h3>
-                      <p className="text-gray-600 line-clamp-3">{project.description}</p>
+                      <p className="text-gray-600 line-clamp-3 text-justify">{project.description}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -237,7 +240,11 @@ export const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, title, subti
                     <ImageWithFallback
                       src={selectedFinding.imageUrl}
                       alt={selectedFinding.title}
-                      className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                      className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-all duration-300 cursor-pointer"
+                      onClick={() => {
+                        setGalleryIndex(0);
+                        setIsGalleryOpen(true);
+                      }}
                     />
                   </div>
                 ) : (
@@ -254,6 +261,13 @@ export const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, title, subti
               </div>
             </DialogPrimitive.Content>
           </DialogPortal>
+          <GalleryModal
+            images={selectedFinding.images && selectedFinding.images.length > 0 ? selectedFinding.images : ([selectedFinding.imageUrl].filter(Boolean) as string[])}
+            isOpen={isGalleryOpen}
+            onClose={() => setIsGalleryOpen(false)}
+            title={selectedFinding.title}
+            initialIndex={galleryIndex}
+          />
         </Dialog>
       )}
     </div>

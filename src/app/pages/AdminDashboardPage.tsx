@@ -21,7 +21,7 @@ import { Button } from '@/app/components/ui/button';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
-import { AdminSkeletonLoader } from '@/app/components/AdminSkeletonLoader';
+// Production: No skeleton loader - content loads seamlessly
 import { useInactivityLogout } from '@/app/hooks/useInactivityLogout';
 import { toast } from 'sonner';
 
@@ -230,7 +230,7 @@ export const AdminDashboardPage: React.FC = () => {
             transition={{ delay: 0.2, duration: 0.5 }}
             className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
           >
-            <Suspense fallback={<AdminSkeletonLoader section="home" />}>
+            <Suspense fallback={<div className="min-h-[400px]" />}>
               <AdminPanel />
             </Suspense>
           </motion.div>

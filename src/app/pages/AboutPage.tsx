@@ -182,7 +182,7 @@ export const AboutPage: React.FC = () => {
                         Our Mission
                       </h2>
                     </div>
-                    <p className="text-lg text-gray-700 leading-relaxed">
+                    <p className="text-lg text-gray-700 leading-relaxed text-justify">
                       {content.aboutMission || "To deliver innovative research-driven solutions that address agricultural challenges, environmental sustainability, and community development needs across the Philippines through science-based methodologies and collaborative partnerships."}
                     </p>
                   </CardContent>
@@ -210,7 +210,7 @@ export const AboutPage: React.FC = () => {
                         Our Vision
                       </h2>
                     </div>
-                    <p className="text-lg text-gray-700 leading-relaxed">
+                    <p className="text-lg text-gray-700 leading-relaxed text-justify">
                       {content.aboutVision || "To be a leading research organization in the Philippines, recognized for transforming scientific research into practical solutions that empower communities and promote sustainable development across the nation."}
                     </p>
                   </CardContent>
@@ -245,14 +245,14 @@ export const AboutPage: React.FC = () => {
                 </h2>
               </div>
 
-              <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
+              <div className="space-y-6 text-gray-700 text-lg leading-relaxed text-justify">
                 <div
                   dangerouslySetInnerHTML={{
                     __html: (content.aboutDescription || content.aboutText || "IMPACT R&D is a research organization dedicated to transforming scientific research into practical solutions.")
                       .replace(/\n\n/g, '</p><p>')
                       .replace(/\n/g, '<br>')
                   }}
-                  className="prose prose-lg max-w-none"
+                  className="prose prose-lg max-w-none text-justify"
                 />
               </div>
             </motion.div>

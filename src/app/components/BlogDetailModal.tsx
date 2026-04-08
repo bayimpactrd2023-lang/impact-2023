@@ -4,6 +4,7 @@ import { Calendar, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BlogPost } from '@/app/context/ContentContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { GalleryModal } from './GalleryModal';
 
 interface BlogDetailModalProps {
   blogPost: BlogPost | null;
@@ -19,6 +20,9 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = useState(0);
   
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+
   // Only show gallery images (not the cover image)
   const galleryImages = useMemo(() => {
     if (!blogPost) return [];
@@ -63,13 +67,17 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
               <div className="overflow-hidden bg-gray-50" ref={emblaRef}>
                 <div className="flex">
                   {galleryImages.map((image, index) => (
-                    <div key={index} className="flex-[0_0_100%] min-w-0">
-                      <ImageWithFallback
-                        src={image}
-                        alt={`Blog post - Image ${index + 1}`}
-                        className="w-full h-64 sm:h-80 md:h-96 object-cover"
-                      />
-                    </div>
+                      <div key={index} className="flex-[0_0_100%] min-w-0 flex items-center justify-center bg-gray-900/10">
+                        <ImageWithFallback
+                          src={image}
+                          alt={`Blog post - Image ${index + 1}`}
+                          className="max-w-full max-h-[40vh] sm:max-h-[50vh] md:max-h-[60vh] object-contain shadow-sm cursor-pointer"
+                          onClick={() => {
+                            setGalleryIndex(index);
+                            setIsGalleryOpen(true);
+                          }}
+                        />
+                      </div>
                   ))}
                 </div>
               </div>
@@ -142,7 +150,7 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
             </div>
 
             {/* Blog Content */}
-            <div className="prose prose-sm sm:prose lg:prose-lg max-w-none">
+            <div className="prose prose-sm sm:prose lg:prose-lg max-w-none text-justify">
               <p className="text-base sm:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {blogPost.content}
               </p>
@@ -150,6 +158,13 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
           </div>
         </div>
       </DialogContent>
+      <GalleryModal
+        images={galleryImages}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        title={blogPost.title}
+        initialIndex={galleryIndex}
+      />
     </Dialog>
   );
 };

@@ -196,12 +196,7 @@ export const AdminLoginPage: React.FC = () => {
                 className="w-full h-11 bg-gradient-to-r from-[#1887FC] to-[#0b5ab8] hover:from-[#0b5ab8] hover:to-[#1887FC] shadow-md hover:shadow-lg transition-all duration-300"
                 disabled={isSubmitting || isLocked}
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Logging in...
-                  </>
-                ) : 'Login'}
+                {isSubmitting ? 'Logging in...' : 'Login'}
               </Button>
             </form>
             

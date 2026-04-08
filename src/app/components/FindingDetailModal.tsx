@@ -3,6 +3,7 @@ import { Project } from '@/app/context/ContentContext';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/app/components/ui/dialog';
 import { X, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
+import { GalleryModal } from './GalleryModal';
 
 interface FindingDetailModalProps {
   finding: Project | null;
@@ -14,6 +15,8 @@ export const FindingDetailModal: React.FC<FindingDetailModalProps> = ({ finding,
   // Move hooks before any conditional returns
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   
   // Combine imageUrl and images array for gallery
   const galleryImages = React.useMemo(() => {
@@ -73,7 +76,11 @@ export const FindingDetailModal: React.FC<FindingDetailModalProps> = ({ finding,
                       <img
                         src={image}
                         alt={`${finding.title} - Image ${index + 1}`}
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                        className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-all duration-300 cursor-pointer"
+                        onClick={() => {
+                          setGalleryIndex(index);
+                          setIsGalleryOpen(true);
+                        }}
                       />
                     </div>
                   </div>
@@ -120,6 +127,13 @@ export const FindingDetailModal: React.FC<FindingDetailModalProps> = ({ finding,
           </div>
         )}
       </DialogContent>
+      <GalleryModal
+        images={galleryImages}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        title={finding.title}
+        initialIndex={galleryIndex}
+      />
     </Dialog>
   );
 };

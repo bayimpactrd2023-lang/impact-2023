@@ -317,9 +317,9 @@ export const deleteStorageFile = async (url: string, bucket: string = 'images'):
     // Skip if not a remote URL (e.g., local blob or base64)
     if (!url.startsWith('http')) return;
 
-    // Check if it's an R2 URL
-    if (url.includes('.r2.dev') || url.includes('r2.cloudflarestorage.com')) {
-      DEBUG && console.log('[StorageUpload] Deleting from R2');
+    // Check if it's an R2 URL (including Worker URLs)
+    if (url.includes('.r2.dev') || url.includes('r2.cloudflarestorage.com') || url.includes('workers.dev')) {
+      DEBUG && console.log('[StorageUpload] Deleting from R2 (Worker URL detected)');
       await deleteImageFromR2(url);
       return;
     }

@@ -25,7 +25,6 @@ import { PartnersManager } from '@/app/components/admin/PartnersManager';
 import { TeamManager } from '@/app/components/admin/TeamManager';
 import { ProductionStatusBanner } from '@/app/components/admin/ProductionStatusBanner';
 import { OurWorkTabs } from '@/app/components/admin/OurWorkTabs';
-import { AdminSkeletonLoader } from '@/app/components/AdminSkeletonLoader';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import {
   AdminValidationRules,
@@ -81,8 +80,6 @@ export const AdminPanel: React.FC = () => {
   
   const {
     content,
-    loading: contentLoading,
-    loadingStates,
     updateNews,
     updatePublications,
     updatePartners,
@@ -180,9 +177,8 @@ export const AdminPanel: React.FC = () => {
   const [isSavingTeamMember, setIsSavingTeamMember] = useState(false);
   const [isSavingPartner, setIsSavingPartner] = useState(false);
 
-  // Loading state for tab switching
+  // Active tab state
   const [activeTab, setActiveTab] = useState('home');
-  const [isTabLoading, setIsTabLoading] = useState(false);
 
   // Database counts for home tab
   const [dbCounts, setDbCounts] = useState({
@@ -197,7 +193,6 @@ export const AdminPanel: React.FC = () => {
   // Fetch initial data for the home tab on mount
   useEffect(() => {
     const loadInitialData = async () => {
-      setIsTabLoading(true);
       try {
         await Promise.all([fetchHeroSection(), fetchAboutSection()]);
         
@@ -220,8 +215,6 @@ export const AdminPanel: React.FC = () => {
       } catch (error) {
         console.error('[AdminPanel] Error loading initial data:', error);
         toast.error('Failed to load initial data');
-      } finally {
-        setIsTabLoading(false);
       }
     };
 
@@ -259,7 +252,6 @@ export const AdminPanel: React.FC = () => {
     if (value === activeTab) return; // Don't reload if same tab
 
     setActiveTab(value);
-    setIsTabLoading(true);
 
     try {
       // Fetch only the data needed for the specific tab
@@ -297,8 +289,6 @@ export const AdminPanel: React.FC = () => {
     } catch (error) {
       console.error(`Error fetching data for tab ${value}:`, error);
       toast.error('Failed to load data');
-    } finally {
-      setIsTabLoading(false);
     }
   };
 
@@ -969,21 +959,6 @@ export const AdminPanel: React.FC = () => {
 
         <div className="p-3 sm:p-4 md:p-6 lg:p-8">
 
-          {/* Loading State with Skeleton */}
-          {(isTabLoading || contentLoading || 
-            (activeTab === 'news' && loadingStates.news) ||
-            (activeTab === 'blog' && loadingStates.blogPosts) ||
-            (activeTab === 'highlights' && loadingStates.highlights) ||
-            (activeTab === 'team' && loadingStates.teamMembers) ||
-            (activeTab === 'publications' && loadingStates.publications) ||
-            (activeTab === 'partners' && loadingStates.partners) ||
-            (activeTab === 'about' && loadingStates.about) ||
-            (activeTab === 'home' && (loadingStates.hero || loadingStates.about))
-          ) && (
-            <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
-              <AdminSkeletonLoader section={activeTab} />
-            </div>
-          )}
 
           {/* ── HOME TAB ───────────────────────────────────────────────────── */}
           <TabsContent value="home" className="space-y-6">

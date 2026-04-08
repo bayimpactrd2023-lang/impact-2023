@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/app/components/ui/dialog';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NewsItem } from '@/app/context/ContentContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { motion } from 'motion/react';
+import { GalleryModal } from './GalleryModal';
 
 interface NewsModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ interface NewsModalProps {
 export const NewsModal: React.FC<NewsModalProps> = ({ isOpen, onClose, newsItem }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -59,22 +62,18 @@ export const NewsModal: React.FC<NewsModalProps> = ({ isOpen, onClose, newsItem 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="p-6 md:p-8"
         >
-          <DialogHeader className="space-y-4 pb-6 border-b border-gray-100">
-            <div className="flex items-center gap-3 text-sm text-gray-600">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <Calendar className="w-4 h-4 text-[#1887FC]" />
-              </div>
-              <span className="font-medium">{formatDate(newsItem.date)}</span>
-            </div>
-            <DialogTitle className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+          <div className="mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-2">
               {newsItem.title}
-            </DialogTitle>
-          </DialogHeader>
+            </h2>
+            <DialogTitle className="sr-only">{newsItem.title}</DialogTitle>
+          </div>
 
           {/* Image Gallery */}
           {hasGallery && (
-            <div className="relative mb-8 mt-6">
+            <div className="relative mb-4 mt-6">
               <div className="overflow-hidden rounded-2xl bg-gray-100" ref={emblaRef}>
                 <div className="flex">
                   {galleryImages.map((image, index) => (
@@ -82,7 +81,11 @@ export const NewsModal: React.FC<NewsModalProps> = ({ isOpen, onClose, newsItem 
                       <ImageWithFallback
                         src={image}
                         alt={`${newsItem.title} - Image ${index + 1}`}
-                        className="w-full h-64 sm:h-80 md:h-96 object-cover"
+                        className="w-full h-64 sm:h-80 md:h-96 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                        onClick={() => {
+                          setGalleryIndex(index);
+                          setIsGalleryOpen(true);
+                        }}
                       />
                     </div>
                   ))}
@@ -122,20 +125,39 @@ export const NewsModal: React.FC<NewsModalProps> = ({ isOpen, onClose, newsItem 
 
           {/* Single Image (fallback if no gallery) */}
           {!hasGallery && newsItem.imageUrl && (
-            <div className="mb-8 mt-6 rounded-2xl overflow-hidden bg-gray-100">
+            <div className="mb-4 mt-6 rounded-2xl overflow-hidden bg-gray-100">
               <ImageWithFallback
                 src={newsItem.imageUrl}
                 alt={newsItem.title}
-                className="w-full h-[500px] object-cover"
+                className="w-full h-[500px] object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                onClick={() => {
+                  setGalleryIndex(0);
+                  setIsGalleryOpen(true);
+                }}
               />
             </div>
           )}
 
-          <DialogDescription className="text-base md:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
+          {/* Published Date - Now below gallery/image */}
+          <div className="flex items-center gap-3 text-sm text-gray-600 mb-6">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <Calendar className="w-4 h-4 text-[#1887FC]" />
+            </div>
+            <span className="font-semibold tracking-wide">Published on {formatDate(newsItem.date)}</span>
+          </div>
+
+          <DialogDescription className="text-base md:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap text-justify">
             {newsItem.content}
           </DialogDescription>
         </motion.div>
       </DialogContent>
+      <GalleryModal
+        images={galleryImages.length > 0 ? galleryImages : newsItem.imageUrl ? [newsItem.imageUrl] : []}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        title={newsItem.title}
+        initialIndex={galleryIndex}
+      />
     </Dialog>
   );
 };
