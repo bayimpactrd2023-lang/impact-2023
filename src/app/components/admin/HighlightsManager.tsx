@@ -7,7 +7,7 @@ import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Switch } from '@/app/components/ui/switch';
-import { Plus, Trash2, Edit, X, CheckCircle, Star, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Edit, X, CheckCircle, Star, Sparkles, Calendar } from 'lucide-react';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
@@ -134,6 +134,18 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
         : editingHighlight.imageUrl instanceof File);
     if (!hasImage) {
       toast.error('Please upload at least one image for the highlight.');
+      return;
+    }
+
+    // Validation: Ensure published date is set and valid
+    const minDate = '2000-01-01';
+    const maxDate = new Date().toISOString().split('T')[0];
+    if (!editingHighlight.publishedDate) {
+      toast.error('Please select a published date.');
+      return;
+    }
+    if (editingHighlight.publishedDate < minDate || editingHighlight.publishedDate > maxDate) {
+      toast.error(`Published date must be between ${minDate} and ${maxDate}.`);
       return;
     }
 
@@ -363,6 +375,18 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                   <p className="text-xs text-gray-600 line-clamp-2">
                     {highlight.description}
                   </p>
+                  {highlight.publishedDate && (
+                    <div className="flex items-center gap-1 mt-2">
+                      <Calendar className="w-3 h-3 text-blue-500" />
+                      <span className="text-xs text-blue-600">
+                        {new Date(highlight.publishedDate).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    </div>
+                  )}
                   <div className="mt-3 flex items-center gap-2">
                     <Edit className="w-3 h-3 text-gray-400" />
                     <span className="text-xs text-gray-500">Click to edit</span>
@@ -426,6 +450,33 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                     }
                     rows={4}
                     placeholder="Enter highlight description"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="highlight-published-date">
+                    Published Date *{' '}
+                    <span className="text-xs text-gray-400">(2000 - {new Date().toISOString().split('T')[0]})</span>
+                  </Label>
+                  <Input
+                    id="highlight-published-date"
+                    type="date"
+                    value={editingHighlight.publishedDate || ''}
+                    onChange={(e) => {
+                      const selectedDate = e.target.value;
+                      const minDate = '2000-01-01';
+                      const maxDate = new Date().toISOString().split('T')[0];
+                      
+                      if (selectedDate && (selectedDate < minDate || selectedDate > maxDate)) {
+                        toast.error(`Date must be between ${minDate} and ${maxDate}`);
+                        return;
+                      }
+                      
+                      setEditingHighlight({ ...editingHighlight, publishedDate: selectedDate });
+                    }}
+                    min="2000-01-01"
+                    max={new Date().toISOString().split('T')[0]}
+                    className="mt-1"
                   />
                 </div>
 
