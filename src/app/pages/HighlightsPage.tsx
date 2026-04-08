@@ -284,7 +284,7 @@ export const HighlightsPage: React.FC = () => {
                                   </div>
                                 </div>
                                 <div
-                                  className={`flex justify-end md:justify-${isImageOnRight ? "start" : "end"} mt-4`}
+                                  className={`flex ${index % 2 === 0 ? "justify-end" : "justify-start"} mt-4`}
                                 >
                                   <motion.button
                                     onClick={() =>

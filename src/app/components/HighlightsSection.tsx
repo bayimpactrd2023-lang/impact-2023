@@ -116,7 +116,7 @@ export const HighlightsSection: React.FC = () => {
                       </p>
                       
                       {/* Read More Button */}
-                      <div className="mt-auto">
+                      <div className={`mt-auto flex ${index % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
                         <div className="inline-flex items-center gap-2 text-white font-medium text-sm group-hover:gap-3 transition-all duration-300">
                           <span>Learn More</span>
                           <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

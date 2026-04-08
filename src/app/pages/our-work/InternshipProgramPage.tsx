@@ -29,6 +29,8 @@ export const InternshipProgramPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   
+  const [showOnlyOneImage, setShowOnlyOneImage] = useState(false);
+  
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
   const onSelect = useCallback(() => {
@@ -42,6 +44,13 @@ export const InternshipProgramPage: React.FC = () => {
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
   }, [emblaApi, onSelect]);
+
+  // Effect to scroll to the selected slide when modal opens
+  React.useEffect(() => {
+    if (emblaApi && isModalOpen) {
+      emblaApi.scrollTo(selectedIndex, false); // false = no animation on initial load
+    }
+  }, [emblaApi, isModalOpen, selectedIndex]);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -105,8 +114,23 @@ export const InternshipProgramPage: React.FC = () => {
     setYearPages(prev => ({ ...prev, [year]: page }));
   };
 
-  const handleImageClick = (testimonial: InternshipTestimonial) => {
+  const handleImageClick = (testimonial: InternshipTestimonial, imageUrl?: string, isFromGallery: boolean = false) => {
     setSelectedTestimonial(testimonial);
+    setShowOnlyOneImage(!isFromGallery);
+    
+    // Determine which image to show first
+    if (testimonial.images && testimonial.images.length > 0) {
+      const clickedImage = imageUrl || testimonial.images[0];
+      const idx = testimonial.images.indexOf(clickedImage);
+      if (idx !== -1) {
+        setSelectedIndex(idx);
+      } else {
+        setSelectedIndex(0);
+      }
+    } else {
+      setSelectedIndex(0);
+    }
+    
     setIsModalOpen(true);
   };
 
@@ -345,7 +369,7 @@ export const InternshipProgramPage: React.FC = () => {
                                   {testimonial.images.map((image, imgIndex) => (
                                     <button
                                       key={imgIndex}
-                                      onClick={() => handleImageClick(testimonial)}
+                                      onClick={() => handleImageClick(testimonial, image, true)}
                                       className="relative group overflow-hidden rounded-lg border-2 border-blue-200 hover:border-[#1887FC] transition-all aspect-square"
                                     >
                                       <ImageWithFallback
@@ -453,12 +477,8 @@ export const InternshipProgramPage: React.FC = () => {
                         : 'View internship photos'}
                     </DialogDescription>
 
-                    {/* Image Section */}
-                    {imagesToShow.length === 0 ? (
-                      <div className="relative h-full flex items-center justify-center">
-                        <p className="text-white/70">No images available</p>
-                      </div>
-                    ) : (
+                    {/* Conditional rendering: Carousel for gallery mode, single image otherwise */}
+                    {(!showOnlyOneImage && imagesToShow.length > 1) ? (
                       <>
                         {/* Carousel */}
                         <div className="relative overflow-hidden h-full" ref={emblaRef}>
@@ -502,6 +522,15 @@ export const InternshipProgramPage: React.FC = () => {
                           </div>
                         )}
                       </>
+                    ) : (
+                      // Single Image Mode
+                      <div className="relative h-full flex items-center justify-center p-8">
+                        <ImageWithFallback
+                          src={imagesToShow[selectedIndex] || imagesToShow[0]}
+                          alt={`${selectedTestimonial.name} - Photo`}
+                          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                        />
+                      </div>
                     )}
 
                     {/* Close Button */}

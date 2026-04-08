@@ -16,7 +16,7 @@ export const Footer: FC = () => {
     {
       icon: Linkedin,
       label: "LinkedIn",
-      url: "#",
+      url: "https://www.linkedin.com/company/impact-r-d/posts/?feedView=all",
       color: "hover:bg-[#0077b5]",
     },
   ];

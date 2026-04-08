@@ -52,6 +52,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
 
+  const [showOnlyOneImage, setShowOnlyOneImage] = useState(false);
+
   // Production-ready scroll-to-top using native browser API
   const scrollRef = useScrollToTop([pagination?.currentPage || currentPage]);
 
@@ -100,11 +102,30 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   const handleImageClick = (
     project: Project,
     e: React.MouseEvent,
+    imageUrl?: string, // Optional parameter to specify which image was clicked
+    isFromGallery: boolean = false // Flag to show all images or just one
   ) => {
     e.stopPropagation();
     setSelectedProject(project);
+    setShowOnlyOneImage(!isFromGallery);
+    
+    // Determine the image to show first
+    const clickedImage = imageUrl || project.imageUrl || '';
+    setSelectedImageUrl(clickedImage);
+    
+    // Find index of clicked image in gallery
+    if (project.images && project.images.length > 0) {
+      const idx = project.images.indexOf(clickedImage);
+      if (idx !== -1) {
+        setSelectedIndex(idx);
+      } else {
+        setSelectedIndex(0);
+      }
+    } else {
+      setSelectedIndex(0);
+    }
+    
     setIsModalOpen(true);
-    setSelectedImageUrl(project.imageUrl || ''); // Set the clicked image URL
   };
 
   const handleCloseModal = () => {
@@ -259,7 +280,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                       <div className="md:w-64 flex-shrink-0">
                         <button
                           onClick={(e) =>
-                            handleImageClick(project, e)
+                            handleImageClick(project, e, coverImage, false)
                           }
                           className="relative group overflow-hidden rounded-lg w-full h-48 md:h-40"
                         >
@@ -270,16 +291,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                           />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                             <span className="text-white opacity-0 group-hover:opacity-100 font-semibold px-4 py-2 bg-black/50 rounded">
-                              {displayImages.length > 1
-                                ? `View ${displayImages.length} Images`
-                                : "View Full Size"}
+                              View Full Size
                             </span>
                           </div>
-                          {displayImages.length > 1 && (
-                            <div className="absolute top-2 right-2 bg-[#1887FC] text-white px-3 py-1 rounded-full text-sm font-semibold">
-                              {displayImages.length} images
-                            </div>
-                          )}
                         </button>
                       </div>
 
@@ -381,11 +395,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                               {displayImages.map((img, idx) => (
                                 <button
                                   key={idx}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setGalleryIndex(idx);
-                                    setIsGalleryOpen(true);
-                                  }}
+                                  onClick={(e) =>
+                                    handleImageClick(project, e, img, true)
+                                  }
                                   className="relative group overflow-hidden rounded-lg border-2 border-blue-200 hover:border-[#1887FC] transition-all aspect-video"
                                 >
                                   <ImageWithFallback
@@ -501,7 +513,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                     </DialogDescription>
 
                     {/* Conditional rendering: Carousel for gallery mode, single image otherwise */}
-                    {selectedProject.images && selectedProject.images.length > 1 ? (
+                    {(!showOnlyOneImage && selectedProject.images && selectedProject.images.length > 1) ? (
                       // Gallery Carousel Mode
                       <div className="relative h-full flex items-center justify-center p-8">
                         {/* Embla Carousel */}
