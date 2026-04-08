@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { useContent } from '@/app/context/ContentContext';
 import { NewsModal } from '@/app/components/NewsModal';
 import { NewsItem } from '@/app/context/ContentContext';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
@@ -172,7 +173,7 @@ export const NewsPage: React.FC = () => {
                     </CardHeader>
                     <CardContent className="flex-grow flex flex-col">
                       <CardDescription className="flex-grow mb-4 line-clamp-3 text-sm sm:text-base">
-                        {item.content}
+                        <RichTextContent text={item.content} className="text-sm sm:text-base line-clamp-3" />
                       </CardDescription>
                       <button 
                         onClick={() => handleReadMore(item)}
@@ -216,9 +217,9 @@ export const NewsPage: React.FC = () => {
                         <h3 className="text-2xl font-bold text-gray-900 mb-4">
                           {content.newsItems[0].title}
                         </h3>
-                        <p className="text-gray-700 leading-relaxed mb-6 line-clamp-4">
-                          {content.newsItems[0].content}
-                        </p>
+                        <div className="text-gray-700 leading-relaxed mb-6 line-clamp-4">
+                          <RichTextContent text={content.newsItems[0].content} className="line-clamp-4" />
+                        </div>
                         <button 
                           onClick={() => handleReadMore(content.newsItems[0])}
                           className="inline-flex items-center gap-2 text-[#1887FC] font-medium hover:gap-3 transition-all"

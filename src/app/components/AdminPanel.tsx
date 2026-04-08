@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Admin Panel - Fixed all function references (updateTeamMembers, etc.)
-import { useContent, NewsItem, Publication, Partner, Highlight, TeamMember, BlogPost, NewsItemForm, HighlightForm, TeamMemberForm, PartnerForm, BlogPostForm, PublicationForm, Project, InternshipTestimonial, FinancialStatement } from '@/app/context/ContentContext';
+import { useContent, NewsItem, Publication, Partner, Highlight, TeamMember, NewsItemForm, HighlightForm, TeamMemberForm, PartnerForm, BlogPostForm, PublicationForm, Project, InternshipTestimonial, FinancialStatement } from '@/app/context/ContentContext';
 import { Plus, Trash2, Save, Edit, FileText, Newspaper, Sparkles, Users, Info, Briefcase, BookOpen, Handshake, Home, X, CheckCircle, Star, AlertCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -14,6 +14,7 @@ import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 import { toast } from 'sonner';
+import { RichTextContent, RichTextHelperTip } from '@/app/components/RichTextContent';
 import { ProjectManager } from '@/app/components/admin/ProjectManager';
 import { FinancialStatementManager } from '@/app/components/admin/FinancialStatementManager';
 import { InternshipTestimonialManager } from '@/app/components/admin/InternshipTestimonialManager';
@@ -92,7 +93,6 @@ export const AdminPanel: React.FC = () => {
     updateFinancialStatements,
     updateStudyFindings,
     updateInternshipTestimonials,
-    updateBlogPosts,
     refreshContent,
     // Lazy fetch functions
     fetchNews,
@@ -114,9 +114,6 @@ export const AdminPanel: React.FC = () => {
   const [heroSubtitle, setHeroSubtitle] = useState(content.heroSubtitle);
   const [aboutText, setAboutText] = useState(content.aboutText);
   const [heroBackgroundUrl, setHeroBackgroundUrl] = useState(content.heroBackgroundUrl);
-
-  // ── Blog state lifted here so Quick Create can push into BlogManager ──────
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(content.blogPosts);
 
   // ── Quick Create Blog modal ───────────────────────────────────────────────
   const [isQuickBlogOpen, setIsQuickBlogOpen] = useState(false);
@@ -233,7 +230,6 @@ export const AdminPanel: React.FC = () => {
     setHeroSubtitle(content.heroSubtitle);
     setAboutText(content.aboutText);
     setHeroBackgroundUrl(content.heroBackgroundUrl);
-    setBlogPosts(content.blogPosts);
   }, [
     content.newsItems,
     content.publications,
@@ -244,7 +240,6 @@ export const AdminPanel: React.FC = () => {
     content.heroSubtitle,
     content.aboutText,
     content.heroBackgroundUrl,
-    content.blogPosts,
   ]);
 
   // ── Tab change handler with lazy loading ─────────────────────────────────
@@ -917,12 +912,6 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
-  // Callback from BlogManager when user edits from Blog tab
-  const handleBlogUpdate = (posts: BlogPost[]) => {
-    setBlogPosts(posts);
-    updateBlogPosts(posts);
-  };
-
   return (
     <div className="bg-gradient-to-br from-white/90 to-white/95 backdrop-blur-2xl rounded-3xl border border-[#1887FC]/15 shadow-[0_8px_32px_rgba(24,135,252,0.12)] overflow-hidden">
       {/* Production Status Banner */}
@@ -1018,7 +1007,10 @@ export const AdminPanel: React.FC = () => {
                       </div>
                       <div className="text-left">
                         <div className="font-semibold text-sm">Create Blog Post</div>
-                        <div className="text-xs text-gray-500">Write a new article</div>
+                        <RichTextContent 
+                          text="Write a [[new article]]" 
+                          className="text-xs text-gray-500 !mb-0" 
+                        />
                       </div>
                     </div>
                   </Button>
@@ -1035,7 +1027,10 @@ export const AdminPanel: React.FC = () => {
                       </div>
                       <div className="text-left">
                         <div className="font-semibold text-sm">Add News Update</div>
-                        <div className="text-xs text-gray-500">Post an announcement</div>
+                        <RichTextContent 
+                          text="Post an [[announcement]]" 
+                          className="text-xs text-gray-500 !mb-0" 
+                        />
                       </div>
                     </div>
                   </Button>
@@ -1052,7 +1047,10 @@ export const AdminPanel: React.FC = () => {
                       </div>
                       <div className="text-left">
                         <div className="font-semibold text-sm">Add Team Member</div>
-                        <div className="text-xs text-gray-500">Manage your team</div>
+                        <RichTextContent 
+                          text="Manage your [[team]]" 
+                          className="text-xs text-gray-500 !mb-0" 
+                        />
                       </div>
                     </div>
                   </Button>
@@ -1069,7 +1067,10 @@ export const AdminPanel: React.FC = () => {
                       </div>
                       <div className="text-left">
                         <div className="font-semibold text-sm">Add Highlight</div>
-                        <div className="text-xs text-gray-500">Feature your work</div>
+                        <RichTextContent 
+                          text="Feature your [[work]]" 
+                          className="text-xs text-gray-500 !mb-0" 
+                        />
                       </div>
                     </div>
                   </Button>
@@ -1103,7 +1104,10 @@ export const AdminPanel: React.FC = () => {
                       </div>
                       <div className="text-left">
                         <div className="font-semibold text-sm">Create Publication</div>
-                        <div className="text-xs text-gray-500">Add new publication</div>
+                        <RichTextContent 
+                          text="Add [[new publication]]" 
+                          className="text-xs text-gray-500 !mb-0" 
+                        />
                       </div>
                     </div>
                   </Button>
@@ -1115,7 +1119,7 @@ export const AdminPanel: React.FC = () => {
 
           {/* ── BLOG TAB — receives the shared blogPosts state ─────────────── */}
           <TabsContent value="blog">
-            <BlogManager blogPosts={blogPosts} onUpdate={handleBlogUpdate} refreshContent={refreshContent} />
+            <BlogManager refreshContent={refreshContent} />
           </TabsContent>
 
           {/* ── NEWS TAB ───────────────────────────────────────────────────── */}
@@ -1210,7 +1214,11 @@ export const AdminPanel: React.FC = () => {
                 <div className="space-y-6 py-2">
                   <div className="space-y-2"><Label className="text-sm font-medium">Title</Label><Input value={editingNews.title} onChange={(e) => { const u={...editingNews,title:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'title',e.target.value); }} /></div>
                   <div className="space-y-2"><Label className="text-sm font-medium">Date</Label><Input type="date" value={editingNews.date} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => { const u={...editingNews,date:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'date',e.target.value); }} /></div>
-                  <div className="space-y-2"><Label className="text-sm font-medium">Content</Label><Textarea value={editingNews.content} onChange={(e) => { const u={...editingNews,content:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'content',e.target.value); }} rows={8} className="resize-none" /></div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Content</Label>
+                    <RichTextHelperTip />
+                    <Textarea value={editingNews.content} onChange={(e) => { const u={...editingNews,content:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'content',e.target.value); }} rows={8} className="resize-none" />
+                  </div>
                   
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Cover Image (Drag & Drop)</Label>
@@ -1579,6 +1587,7 @@ export const AdminPanel: React.FC = () => {
                 <Label htmlFor="qb-content" className="text-sm font-semibold">
                   Content <span className="text-red-500">*</span>
                 </Label>
+                <RichTextHelperTip />
                 <Textarea
                   id="qb-content"
                   value={draft.content}
@@ -1737,6 +1746,7 @@ export const AdminPanel: React.FC = () => {
                 <Label htmlFor="qp-content" className="text-sm font-semibold">
                   Content <span className="text-red-500">*</span>
                 </Label>
+                <RichTextHelperTip />
                 <Textarea
                   id="qp-content"
                   value={publicationDraft.content}
@@ -1789,9 +1799,17 @@ export const AdminPanel: React.FC = () => {
           {editingHighlight && (
             <div className="space-y-6 py-2">
               <div className="space-y-2"><Label className="text-sm font-medium">Title</Label><Input value={editingHighlight.title} onChange={(e) => { const u={...editingHighlight,title:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'title',e.target.value); }} /></div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Description</Label><Textarea value={editingHighlight.description} onChange={(e) => { const u={...editingHighlight,description:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'description',e.target.value); }} rows={3} className="resize-none" /></div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Description</Label>
+                <RichTextHelperTip />
+                <Textarea value={editingHighlight.description} onChange={(e) => { const u={...editingHighlight,description:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'description',e.target.value); }} rows={3} className="resize-none" />
+              </div>
               <div className="space-y-2"><Label className="text-sm font-medium">Icon</Label><Select value={editingHighlight.iconName} onValueChange={(v) => { const u={...editingHighlight,iconName:v}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'iconName',v); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Satellite">Satellite</SelectItem><SelectItem value="Sprout">Sprout</SelectItem><SelectItem value="BarChart3">BarChart3</SelectItem><SelectItem value="Globe">Globe</SelectItem></SelectContent></Select></div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Detailed Content</Label><Textarea value={editingHighlight.content||''} onChange={(e) => { const u={...editingHighlight,content:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'content',e.target.value); }} rows={6} className="resize-none" /></div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Detailed Content</Label>
+                <RichTextHelperTip />
+                <Textarea value={editingHighlight.content||''} onChange={(e) => { const u={...editingHighlight,content:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'content',e.target.value); }} rows={6} className="resize-none" />
+              </div>
               <div className="space-y-2"><Label className="text-sm font-medium">Published Date</Label><Input type="date" value={editingHighlight.publishedDate||''} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => { const u={...editingHighlight,publishedDate:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'publishedDate',e.target.value); }} /></div>
               
               {/* Cover Image */}
@@ -1905,7 +1923,11 @@ export const AdminPanel: React.FC = () => {
             <div className="space-y-6 py-2">
               <div className="space-y-2"><Label className="text-sm font-medium">Name</Label><Input value={editingTeamMember.name} onChange={(e) => { const u={...editingTeamMember,name:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'name',e.target.value); }} /></div>
               <div className="space-y-2"><Label className="text-sm font-medium">Role</Label><Input value={editingTeamMember.role} onChange={(e) => { const u={...editingTeamMember,role:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'role',e.target.value); }} /></div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Description</Label><Textarea value={editingTeamMember.description} onChange={(e) => { const u={...editingTeamMember,description:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'description',e.target.value); }} rows={4} className="resize-none" /></div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Description</Label>
+                <RichTextHelperTip />
+                <Textarea value={editingTeamMember.description} onChange={(e) => { const u={...editingTeamMember,description:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'description',e.target.value); }} rows={4} className="resize-none" />
+              </div>
               <div className="space-y-2"><Label className="text-sm font-medium">Member Photo</Label><ImageDropzone value={typeof (editingTeamMember as TeamMemberForm).imageUrl === 'string' ? (((editingTeamMember as TeamMemberForm).imageUrl as string) || '') : ''} onChange={(url) => { const u={...editingTeamMember,imageUrl:url}; setEditingTeamMember(u); if (typeof url === 'string') { updateTeamMember((editingTeamMember as TeamMemberForm).id,'imageUrl',url); } }} /></div>
               
               {/* Save Button */}

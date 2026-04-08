@@ -26,6 +26,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
+import { RichTextHelperTip } from '@/app/components/RichTextContent';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 
@@ -194,6 +195,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
 
           <div>
             <Label htmlFor="blog-content">Content *</Label>
+            <RichTextHelperTip />
             <Textarea
               id="blog-content"
               value={draft.content}

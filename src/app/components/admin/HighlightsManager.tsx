@@ -26,6 +26,7 @@ import {
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
+import { RichTextHelperTip } from '@/app/components/RichTextContent';
 
 interface HighlightsManagerProps {
   highlights: Highlight[];
@@ -443,6 +444,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
 
                 <div>
                   <Label htmlFor="highlight-description">Description *</Label>
+                  <RichTextHelperTip />
                   <Textarea
                     id="highlight-description"
                     value={editingHighlight.description}

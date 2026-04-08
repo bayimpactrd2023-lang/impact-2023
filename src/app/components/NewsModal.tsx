@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/app/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NewsItem } from '@/app/context/ContentContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { motion } from 'motion/react';
 import { GalleryModal } from './GalleryModal';
+import { RichTextContent } from './RichTextContent';
 
 interface NewsModalProps {
   isOpen: boolean;
@@ -146,9 +147,12 @@ export const NewsModal: React.FC<NewsModalProps> = ({ isOpen, onClose, newsItem 
             <span className="font-semibold tracking-wide">Published on {formatDate(newsItem.date)}</span>
           </div>
 
-          <DialogDescription className="text-base md:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap text-justify">
-            {newsItem.content}
-          </DialogDescription>
+          <div className="text-base md:text-lg text-gray-700 leading-relaxed text-justify">
+            <RichTextContent 
+              text={newsItem.content}
+              className="text-base md:text-lg text-gray-700 leading-relaxed"
+            />
+          </div>
         </motion.div>
       </DialogContent>
       <GalleryModal

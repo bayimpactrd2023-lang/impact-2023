@@ -6,6 +6,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { GalleryModal } from './GalleryModal';
 import { motion } from 'motion/react';
+import { RichTextContent } from './RichTextContent';
 
 interface HighlightDetailModalProps {
   highlight: Highlight | null;
@@ -147,9 +148,11 @@ export const HighlightDetailModal: React.FC<HighlightDetailModalProps> = ({
 
             {/* Description */}
             <div className="prose prose-sm sm:prose lg:prose-lg max-w-none text-justify">
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                <span className="whitespace-pre-line">{fullText}</span>
-              </p>
+              <RichTextContent 
+                text={fullText} 
+                enabled={true}
+                className="text-base sm:text-lg text-gray-700 leading-relaxed"
+              />
             </div>
           </div>
         </motion.div>

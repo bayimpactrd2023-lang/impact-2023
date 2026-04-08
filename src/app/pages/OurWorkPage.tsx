@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router';
 import { Globe, Briefcase, Users, DollarSign, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { ProjectGrid } from '@/app/components/ProjectGrid';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
@@ -17,7 +16,7 @@ export const OurWorkPage: React.FC = () => {
     {
       id: 'internationally-funded',
       title: 'Internationally Funded Projects',
-      description: 'Collaborative initiatives supported by global partners driving impact across borders.',
+      description: 'Project overview required i and add below it Objectives and Methodology and Activities',
       icon: Globe,
       path: '/our-work/internationally-funded',
       gradient: 'from-blue-500 to-blue-600'
@@ -25,7 +24,7 @@ export const OurWorkPage: React.FC = () => {
     {
       id: 'locally-funded',
       title: 'Locally Funded Projects',
-      description: 'Homegrown initiatives addressing local challenges with sustainable solutions.',
+      description: 'Project overview required i and add below it Objectives and Methodology and Activities',
       icon: Briefcase,
       path: '/our-work/locally-funded',
       gradient: 'from-green-500 to-green-600'

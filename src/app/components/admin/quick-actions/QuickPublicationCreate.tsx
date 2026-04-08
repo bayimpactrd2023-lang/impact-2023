@@ -27,6 +27,7 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
+import { RichTextHelperTip } from '@/app/components/RichTextContent';
 import { Textarea } from '@/app/components/ui/textarea';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 
@@ -209,6 +210,7 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
 
           <div>
             <Label htmlFor="pub-content">Content *</Label>
+            <RichTextHelperTip />
             <Textarea
               id="pub-content"
               value={draft.content}

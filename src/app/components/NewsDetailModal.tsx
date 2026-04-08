@@ -4,6 +4,7 @@ import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NewsItem } from '@/app/context/ContentContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { GalleryModal } from './GalleryModal';
+import { RichTextContent } from './RichTextContent';
 
 interface NewsDetailModalProps {
   news: NewsItem | null;
@@ -141,9 +142,11 @@ export const NewsDetailModal: React.FC<NewsDetailModalProps> = ({
 
             {/* Content */}
             <div className="prose prose-sm sm:prose lg:prose-lg max-w-none text-justify">
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {news.content}
-              </p>
+              <RichTextContent 
+                text={news.content} 
+                enabled={true}
+                className="text-base sm:text-lg text-gray-700 leading-relaxed"
+              />
             </div>
           </div>
         </div>

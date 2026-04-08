@@ -4,6 +4,7 @@ import { useContent } from '@/app/context/ContentContext';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NewsModal } from '@/app/components/NewsModal';
 import { NewsItem } from '@/app/context/ContentContext';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Button } from '@/app/components/ui/button';
 import { getImageUrl } from '@/utils/r2Upload';
@@ -164,9 +165,9 @@ export const NewsCarousel: React.FC = React.memo(() => {
                             <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight">
                               {item.title}
                             </h3>
-                            <p className="text-gray-600 text-lg line-clamp-5 leading-relaxed">
-                              {item.content}
-                            </p>
+                            <div className="text-gray-600 text-lg line-clamp-5 leading-relaxed">
+                              <RichTextContent text={item.content} className="text-lg line-clamp-5" />
+                            </div>
                             <div className="mt-2">
                               <motion.button
                                 onClick={() => handleReadMore(item)}

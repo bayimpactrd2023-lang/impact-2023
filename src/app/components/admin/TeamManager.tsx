@@ -23,6 +23,7 @@ import { uploadImage, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateTeamCache } from '@/utils/cacheInvalidation';
+import { RichTextHelperTip } from '@/app/components/RichTextContent';
 
 interface TeamManagerProps {
   teamMembers: TeamMember[];
@@ -280,6 +281,7 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
 
                 <div>
                   <Label htmlFor="member-bio">Biography</Label>
+                  <RichTextHelperTip />
                   <Textarea
                     id="member-bio"
                     value={editingMember.description || ''}

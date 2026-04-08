@@ -22,6 +22,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import type { EmblaCarouselType } from "embla-carousel";
 import { downloadPDF } from "@/utils/downloadHelpers";
 import { GalleryModal } from "./GalleryModal";
+import { RichTextContent } from "./RichTextContent";
 
 interface PublicationDetailModalProps {
   publication: Publication | null;
@@ -175,9 +176,11 @@ export const PublicationDetailModal: React.FC<
             {/* Publication Content */}
             {publication.content ? (
               <div className="prose prose-sm sm:prose lg:prose-lg max-w-none mb-6 text-justify">
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {publication.content}
-                </p>
+                <RichTextContent 
+                  text={publication.content} 
+                  enabled={true}
+                  className="text-base sm:text-lg text-gray-700 leading-relaxed"
+                />
               </div>
             ) : (
               <p className="text-gray-500 italic text-sm mb-6">

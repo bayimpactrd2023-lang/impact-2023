@@ -25,6 +25,7 @@ import { uploadPDF, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidatePublicationsCache } from '@/utils/cacheInvalidation';
+import { RichTextHelperTip } from '@/app/components/RichTextContent';
 
 interface PublicationsManagerProps {
   publications: Publication[];
@@ -355,6 +356,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
 
                 <div>
                   <Label htmlFor="pub-content">Abstract/Description</Label>
+                  <RichTextHelperTip />
                   <Textarea
                     id="pub-content"
                     value={editingPublication.content || ''}

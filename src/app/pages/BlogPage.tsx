@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { BlogPost } from '@/app/types/content';
 import { BookOpen, ExternalLink } from 'lucide-react';
+import { RichTextContent } from '@/app/components/RichTextContent';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/app/components/ui/dialog';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
@@ -15,6 +22,11 @@ import { useScrollToTop } from '@/hooks/useScrollToTop';
 export const BlogPage: React.FC = () => {
   const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Cover image modal state
+  const [coverImageModalOpen, setCoverImageModalOpen] = useState(false);
+  const [selectedCoverImage, setSelectedCoverImage] = useState<string | null>(null);
+  const [selectedCoverTitle, setSelectedCoverTitle] = useState<string>('');
 
   // Use server-side pagination with 6 items per page
   const pagination = useServerPagination<BlogPost>({
@@ -182,20 +194,38 @@ export const BlogPage: React.FC = () => {
                     >
                       <div className="h-full flex flex-col overflow-hidden cursor-pointer group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300">
                         {/* Cover Image or Fallback */}
-                        <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#1887FC] via-[#3b82f6] to-[#60a5fa]">
+                        <div 
+                          className="relative h-56 overflow-hidden bg-gradient-to-br from-[#1887FC] via-[#3b82f6] to-[#60a5fa] cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (post.imageUrl) {
+                              setSelectedCoverImage(post.imageUrl);
+                              setSelectedCoverTitle(post.title || 'Blog Image');
+                              setCoverImageModalOpen(true);
+                            }
+                          }}
+                        >
                           {post.imageUrl ? (
-                            <ImageWithFallback
-                              src={post.imageUrl}
-                              alt={post.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
+                            <>
+                              <ImageWithFallback
+                                src={post.imageUrl}
+                                alt={post.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              {/* Click hint overlay */}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <span className="text-white opacity-0 group-hover:opacity-100 font-semibold px-4 py-2 bg-black/50 rounded">
+                                  View Full Size
+                                </span>
+                              </div>
+                            </>
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <BookOpen className="w-24 h-24 text-white/90" strokeWidth={1.5} />
                             </div>
                           )}
                           {/* Gradient Overlay on Hover */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                         </div>
 
                         {/* White Bottom Section with Content */}
@@ -206,9 +236,9 @@ export const BlogPage: React.FC = () => {
                           </h3>
 
                           {/* Content Preview */}
-                          <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-6 flex-grow">
-                            {post.content}
-                          </p>
+                          <div className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-6 flex-grow">
+                            <RichTextContent text={post.content} className="text-sm leading-relaxed line-clamp-3" />
+                          </div>
 
                           {/* Read More Button */}
                           <button
@@ -255,6 +285,27 @@ export const BlogPage: React.FC = () => {
           setSelectedBlogPost(null);
         }}
       />
+
+      {/* Cover Image Modal */}
+      <Dialog open={coverImageModalOpen} onOpenChange={setCoverImageModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-black/95 border-none overflow-hidden">
+          <DialogTitle className="sr-only">{selectedCoverTitle}</DialogTitle>
+          <DialogDescription className="sr-only">Cover image for {selectedCoverTitle}</DialogDescription>
+          
+  
+
+          {/* Image Container */}
+          <div className="flex items-center justify-center min-h-[50vh] max-h-[85vh] p-4">
+            {selectedCoverImage && (
+              <img
+                src={selectedCoverImage}
+                alt={selectedCoverTitle}
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

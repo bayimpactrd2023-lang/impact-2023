@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Highlight } from '@/app/context/ContentContext';
 import * as Icons from 'lucide-react';
 import { Star, Calendar, ChevronRight } from 'lucide-react';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from "@/app/components/SectionTheme";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
@@ -149,6 +150,17 @@ export const HighlightsPage: React.FC = () => {
             >
               Our Highlights
             </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="text-base sm:text-xl text-white/90 max-w-2xl mx-auto"
+              style={{
+                textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+              }}
+            >
+              Celebrating our milestones and achievements in research and community impact
+            </motion.p>
           </div>
         </section>
       </SectionTheme>
@@ -277,9 +289,9 @@ export const HighlightsPage: React.FC = () => {
                                     {highlight.title}
                                   </h3>
                                   <div className="text-gray-600 text-base leading-relaxed h-48 overflow-hidden relative">
-                                    <p className="whitespace-pre-line mb-3">
-                                      {highlight.description}
-                                    </p>
+                                    <div className="mb-3">
+                                      <RichTextContent text={highlight.description} className="text-base leading-relaxed" />
+                                    </div>
                                     <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
                                   </div>
                                 </div>

@@ -24,6 +24,7 @@ import {
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
+import { RichTextHelperTip } from '@/app/components/RichTextContent';
 
 interface NewsManagerProps {
   news: NewsItem[];
@@ -320,6 +321,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
 
                 <div>
                   <Label htmlFor="news-content">Content *</Label>
+                  <RichTextHelperTip />
                   <Textarea
                     id="news-content"
                     value={editingNews.content}

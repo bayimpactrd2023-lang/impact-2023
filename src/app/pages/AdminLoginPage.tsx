@@ -93,8 +93,10 @@ export const AdminLoginPage: React.FC = () => {
             >
               <Lock className="w-10 h-10 text-white" />
             </motion.div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-[#1887FC] to-[#0b5ab8] bg-clip-text text-transparent">
-              Admin Login
+            <CardTitle className="text-3xl font-bold -mt-2">
+              <span className="inline-block bg-gradient-to-r from-[#1887FC] to-[#0b5ab8] bg-clip-text text-transparent leading-tight">
+                Admin Login
+              </span>
             </CardTitle>
             <CardDescription className="text-base">
               {usingSupabaseAuth 

@@ -5,6 +5,7 @@ import { Highlight } from '@/app/context/ContentContext';
 import * as Icons from 'lucide-react';
 import { Star, ArrowRight } from 'lucide-react';
 import { HighlightDetailModal } from '@/app/components/HighlightDetailModal';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import { useNavigate } from 'react-router';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 
@@ -106,9 +107,9 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
                     <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-[#1887FC] transition-colors">
                       {highlight.title}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-5 line-clamp-3">
-                      {highlight.description}
-                    </p>
+                    <div className="text-sm text-gray-600 mb-5 line-clamp-3">
+                      <RichTextContent text={highlight.description} className="text-sm line-clamp-3" />
+                    </div>
                     <div className="flex gap-3">
                       <motion.button
                         whileHover={{ x: 5 }}

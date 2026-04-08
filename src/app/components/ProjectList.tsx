@@ -24,6 +24,7 @@ import {
 } from "@/app/components/ui/dialog";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import useEmblaCarousel from "embla-carousel-react";
+import { RichTextContent } from "./RichTextContent";
 
 interface ProjectListProps {
   projects: Project[];
@@ -33,6 +34,10 @@ interface ProjectListProps {
 }
 
 const ITEMS_PER_PAGE = 5;
+
+// Check if rich text is enabled for this category
+const isRichTextEnabled = (category?: string) => 
+  category === 'locally_funded' || category === 'internationally_funded';
 
 export const ProjectList: React.FC<ProjectListProps> = ({
   projects,
@@ -316,8 +321,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             </h3>
                           </button>
                           {!isExpanded && project.description && (
-                            <p className="text-gray-600 mt-2 line-clamp-2">
-                              {project.description}
+                            <p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">
+                              <RichTextContent text={project.description} enabled={isRichTextEnabled(project.category)} />
                             </p>
                           )}
                         </div>
@@ -341,10 +346,10 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                         {project.description && (
                           <div>
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
-                              Overview
+                              Project Overview
                             </h4>
-                            <p className="text-gray-700 leading-relaxed text-justify">
-                              {project.description}
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
+                              <RichTextContent text={project.description} enabled={isRichTextEnabled(project.category)} />
                             </p>
                           </div>
                         )}
@@ -368,7 +373,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                               Objectives
                             </h4>
                             <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
-                              {project.objectives}
+                              <RichTextContent text={project.objectives} enabled={isRichTextEnabled(project.category)} />
                             </p>
                           </div>
                         )}
@@ -380,7 +385,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                               Methodology and Activities
                             </h4>
                             <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
-                              {project.methodology}
+                              <RichTextContent text={project.methodology} enabled={isRichTextEnabled(project.category)} />
                             </p>
                           </div>
                         )}

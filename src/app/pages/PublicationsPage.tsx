@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Publication } from '@/app/types/content';
 import { BookOpen, ExternalLink, Download, Eye } from 'lucide-react';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/card';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
@@ -188,9 +189,9 @@ export const PublicationsPage: React.FC = () => {
                             </CardHeader>
                             <CardContent>
                               {publication.excerpt && (
-                                <p className="text-gray-700 mb-4 leading-relaxed">
-                                  {publication.excerpt}
-                                </p>
+                                <div className="text-gray-700 mb-4 leading-relaxed">
+                                  <RichTextContent text={publication.excerpt} />
+                                </div>
                               )}
                               <div className="flex gap-3 mt-4">
                                 {publication.link && (

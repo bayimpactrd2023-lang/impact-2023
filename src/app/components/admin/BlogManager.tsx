@@ -28,17 +28,14 @@ import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
 import { invalidateBlogCache } from '@/utils/cacheInvalidation';
 import { AdminValidationRules, mergeValidationResults, validateMaxChars, validateMaxWords, validateNoDigits, validateRequiredTrimmed } from '@/app/components/admin/utils/adminHelpers';
+import { RichTextHelperTip } from '@/app/components/RichTextContent';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 
 interface BlogManagerProps {
-  blogPosts: BlogPost[];
-  onUpdate: (posts: BlogPost[]) => void;
   refreshContent?: () => Promise<void>;
 }
 
 export const BlogManager: React.FC<BlogManagerProps> = ({
-  blogPosts,
-  onUpdate,
   refreshContent,
 }) => {
   const [editingPost, setEditingPost] = useState<BlogPostForm | null>(null);
@@ -359,6 +356,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                   <Label htmlFor="modal-blog-content" className="text-sm font-semibold">
                     Content
                   </Label>
+                  <RichTextHelperTip />
                   <Textarea
                     id="modal-blog-content"
                     value={editingPost.content}

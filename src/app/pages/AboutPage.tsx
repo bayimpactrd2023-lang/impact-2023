@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useContent } from '@/app/context/ContentContext';
 import { TeamMember } from '@/app/types/content';
 import { Target, Lightbulb, BookOpen, Users } from 'lucide-react';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { PageHeaderTheme } from "@/app/components/PageHeaderTheme";
 import { SectionTheme } from "@/app/components/SectionTheme";
@@ -139,19 +140,17 @@ export const AboutPage: React.FC = () => {
             >
               About IMPACT R&D
             </motion.h1>
-            {content.heroSubtitle && (
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.8 }}
-                className="text-base sm:text-xl text-white/90"
-                style={{
-                  textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-                }}
-              >
-                {content.heroSubtitle}
-              </motion.p>
-            )}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              className="text-base sm:text-xl text-white/90 max-w-2xl mx-auto"
+              style={{
+                textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+              }}
+            >
+              {content.heroSubtitle || "A DOST-certified Science Foundation dedicated to transformative research and sustainable community development"}
+            </motion.p>
           </div>
         </section>
       </SectionTheme>
@@ -182,9 +181,9 @@ export const AboutPage: React.FC = () => {
                         Our Mission
                       </h2>
                     </div>
-                    <p className="text-lg text-gray-700 leading-relaxed text-justify">
-                      {content.aboutMission || "To deliver innovative research-driven solutions that address agricultural challenges, environmental sustainability, and community development needs across the Philippines through science-based methodologies and collaborative partnerships."}
-                    </p>
+                    <div className="text-lg text-gray-700 leading-relaxed text-justify">
+                      <RichTextContent text={content.aboutMission || "To deliver innovative research-driven solutions that address agricultural challenges, environmental sustainability, and community development needs across the Philippines through science-based methodologies and collaborative partnerships."} />
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -210,9 +209,9 @@ export const AboutPage: React.FC = () => {
                         Our Vision
                       </h2>
                     </div>
-                    <p className="text-lg text-gray-700 leading-relaxed text-justify">
-                      {content.aboutVision || "To be a leading research organization in the Philippines, recognized for transforming scientific research into practical solutions that empower communities and promote sustainable development across the nation."}
-                    </p>
+                    <div className="text-lg text-gray-700 leading-relaxed text-justify">
+                      <RichTextContent text={content.aboutVision || "To be a leading research organization in the Philippines, recognized for transforming scientific research into practical solutions that empower communities and promote sustainable development across the nation."} />
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -246,13 +245,9 @@ export const AboutPage: React.FC = () => {
               </div>
 
               <div className="space-y-6 text-gray-700 text-lg leading-relaxed text-justify">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: (content.aboutDescription || content.aboutText || "IMPACT R&D is a research organization dedicated to transforming scientific research into practical solutions.")
-                      .replace(/\n\n/g, '</p><p>')
-                      .replace(/\n/g, '<br>')
-                  }}
-                  className="prose prose-lg max-w-none text-justify"
+                <RichTextContent 
+                  text={content.aboutDescription || content.aboutText || "IMPACT R&D is a research organization dedicated to transforming scientific research into practical solutions."}
+                  className="text-lg leading-relaxed text-justify"
                 />
               </div>
             </motion.div>
@@ -321,9 +316,9 @@ export const AboutPage: React.FC = () => {
                         <p className="text-[#1887FC] font-semibold mb-4">
                           {member.role}
                         </p>
-                        <p className="text-gray-600 leading-relaxed">
-                          {member.description}
-                        </p>
+                        <div className="text-gray-600 leading-relaxed">
+                          <RichTextContent text={member.description} />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { TeamMember } from '@/app/context/ContentContext';
 import { User as UserIcon } from 'lucide-react';
+import { RichTextContent } from './RichTextContent';
 
 interface TeamMemberDetailModalProps {
   teamMember: TeamMember | null;
@@ -61,9 +62,10 @@ export const TeamMemberDetailModal: React.FC<TeamMemberDetailModalProps> = ({
           {/* Description Section */}
           <div className="p-6 sm:p-8">
             <div className="prose prose-sm sm:prose lg:prose-lg max-w-none">
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {teamMember.description}
-              </p>
+              <RichTextContent 
+                text={teamMember.description}
+                className="text-base sm:text-lg text-gray-700 leading-relaxed"
+              />
             </div>
           </div>
         </div>

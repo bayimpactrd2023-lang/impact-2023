@@ -140,6 +140,16 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
          editingProject.description.trim(),
          AdminValidationRules.contentMaxChars,
          'Description'
+       ),
+       validateMaxWords(
+         editingProject.objectives?.trim() || '',
+         5000,
+         'Objectives'
+       ),
+       validateMaxWords(
+         editingProject.methodology?.trim() || '',
+         5000,
+         'Methodology and Activities'
        )
      );
      if (!validation.isValid) {
@@ -171,6 +181,9 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
       const projectData = {
         title: editingProject.title,
         description: editingProject.description,
+        context: editingProject.context || null,
+        objectives: editingProject.objectives || null,
+        methodology: editingProject.methodology || null,
         category: category ?? '',
         image_url: (finalImageUrl as string) || null,
         images: (finalImages as string[]) || null,
@@ -330,7 +343,12 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                 </div>
 
                 <div>
-                  <Label htmlFor="project-description">Description *</Label>
+                  <Label htmlFor="project-description">Project overview (Required) *</Label>
+                  {(category === 'locally_funded' || category === 'internationally_funded') && (
+                    <p className="text-xs text-[#1887FC] mb-2">
+                      Tip: Use [[text]] to highlight in blue. Start lines with "- " for bullets or "1. " for numbered lists.
+                    </p>
+                  )}
                   <Textarea
                     id="project-description"
                     value={editingProject.description}
@@ -339,6 +357,58 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                     }
                     rows={6}
                     placeholder="Enter project description"
+                  />
+                </div>
+
+                {/* Project Context - Only show for categories other than international and local */}
+                {category !== 'internationally_funded' && category !== 'locally_funded' && (
+                  <div>
+                    <Label htmlFor="project-context">Project Context</Label>
+                    <Textarea
+                      id="project-context"
+                      value={editingProject.context || ''}
+                      onChange={(e) =>
+                        setEditingProject({ ...editingProject, context: e.target.value })
+                      }
+                      rows={4}
+                      placeholder="Enter project context"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="project-objectives">Objectives</Label>
+                  {(category === 'locally_funded' || category === 'internationally_funded') && (
+                    <p className="text-xs text-[#1887FC] mb-2">
+                      Tip: Use [[text]] to highlight in blue. Start lines with "- " for bullets or "1. " for numbered lists.
+                    </p>
+                  )}
+                  <Textarea
+                    id="project-objectives"
+                    value={editingProject.objectives || ''}
+                    onChange={(e) =>
+                      setEditingProject({ ...editingProject, objectives: e.target.value })
+                    }
+                    rows={4}
+                    placeholder="Enter project objectives"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="project-methodology">Methodology and Activities</Label>
+                  {(category === 'locally_funded' || category === 'internationally_funded') && (
+                    <p className="text-xs text-[#1887FC] mb-2">
+                      Tip: Use [[text]] to highlight in blue. Start lines with "- " for bullets or "1. " for numbered lists.
+                    </p>
+                  )}
+                  <Textarea
+                    id="project-methodology"
+                    value={editingProject.methodology || ''}
+                    onChange={(e) =>
+                      setEditingProject({ ...editingProject, methodology: e.target.value })
+                    }
+                    rows={4}
+                    placeholder="Enter methodology and activities"
                   />
                 </div>
 
