@@ -173,22 +173,47 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
         });
       }
 
-      const highlightData = {
+      const highlightData: any = {
         title: editingHighlight.title,
         description: editingHighlight.description,
         image_url: (finalImageUrl as string) || '',
         images: (finalImages as string[]) || null,
         icon_name: editingHighlight.iconName || 'star',
         featured: editingHighlight.featured || false,
-        published_date: editingHighlight.publishedDate || null,
+        content: editingHighlight.content || null,
       };
 
+      // Only add published_date if it exists (for backward compatibility)
+      if (editingHighlight.publishedDate) {
+        highlightData.published_date = editingHighlight.publishedDate;
+      }
+
+      let result;
       if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\\d{13}$/)) {
-        await updateHighlightInDb(editingHighlight.id, highlightData);
-        toast.success('Highlight updated!');
+        result = await updateHighlightInDb(editingHighlight.id, highlightData);
       } else {
-        await createHighlight(highlightData);
-        toast.success('Highlight created!');
+        result = await createHighlight(highlightData);
+      }
+
+      if (!result) {
+        // If failed and we sent published_date, try without it
+        if (highlightData.published_date !== undefined) {
+          delete highlightData.published_date;
+          if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\\d{13}$/)) {
+            result = await updateHighlightInDb(editingHighlight.id, highlightData);
+          } else {
+            result = await createHighlight(highlightData);
+          }
+          if (result) {
+            toast.success('Highlight saved! (Run SQL migration for date support)');
+          } else {
+            throw new Error('Failed to save highlight');
+          }
+        } else {
+          throw new Error('Failed to save highlight');
+        }
+      } else {
+        toast.success(editingHighlight.id && !editingHighlight.id.startsWith('temp-') ? 'Highlight updated!' : 'Highlight created!');
       }
 
       // Invalidate cache so users see fresh data
