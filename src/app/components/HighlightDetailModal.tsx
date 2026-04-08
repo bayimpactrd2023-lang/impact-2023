@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/app/components/ui/dialog';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Highlight } from '@/app/context/ContentContext';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -53,22 +53,21 @@ export const HighlightDetailModal: React.FC<HighlightDetailModalProps> = ({
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  const fullText = highlight.content?.trim() ? highlight.content : highlight.description;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95%] sm:w-[90%] md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl p-0">
+      <DialogContent className="w-[95%] sm:w-[90%] md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl p-0 flex flex-col">
+        {/* DialogTitle and DialogDescription must be direct children of DialogContent for Radix accessibility */}
+        <DialogTitle className="sr-only">{highlight.title}</DialogTitle>
+        <DialogDescription className="sr-only">{fullText}</DialogDescription>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="overflow-y-auto scrollbar-hide max-h-[90vh]"
+          className="flex-1 overflow-y-auto scrollbar-hide"
         >
-          <DialogHeader className="sr-only">
-            <DialogTitle className="sr-only">{highlight.title}</DialogTitle>
-            <DialogDescription className="sr-only">
-              {highlight.description}
-            </DialogDescription>
-          </DialogHeader>
-
           {/* Image Gallery */}
           {galleryImages.length > 0 && (
             <div className="relative">
@@ -126,23 +125,23 @@ export const HighlightDetailModal: React.FC<HighlightDetailModalProps> = ({
 
           {/* Content Section */}
           <div className="p-6 sm:p-8">
-            {/* Title */}
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
-              {highlight.title}
-            </h2>
-
-            {/* Date */}
-            {highlight.publishedDate && (
-              <div className="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200">
-                <Calendar className="w-4 h-4 text-[#1887FC]" />
-                <span className="text-sm text-gray-600 font-medium">{formatDate(highlight.publishedDate)}</span>
-              </div>
-            )}
+            {/* Visible Header with Title and Date */}
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-white">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{highlight.title}</h2>
+              {highlight.publishedDate && (
+                <div className="flex items-center gap-2 text-blue-600">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {formatDate(highlight.publishedDate)}
+                  </span>
+                </div>
+              )}
+            </div>
 
             {/* Description */}
             <div className="prose prose-sm sm:prose lg:prose-lg max-w-none">
               <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                {highlight.description}
+                <span className="whitespace-pre-line">{fullText}</span>
               </p>
             </div>
           </div>

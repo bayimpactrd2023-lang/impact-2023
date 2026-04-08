@@ -185,16 +185,9 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
         });
       }
 
-      // Helper to limit words for database constraint
-      const limitWords = (text: string, maxWords: number) => {
-        const words = text.trim().split(/\s+/);
-        if (words.length <= maxWords) return text;
-        return words.slice(0, maxWords).join(' ') + '...';
-      };
-
       const highlightData: any = {
         title: editingHighlight.title,
-        description: limitWords(editingHighlight.description, 60), // 60 words max for DB constraint
+        description: editingHighlight.description,
         image_url: (finalImageUrl as string) || '',
         images: (finalImages as string[]) || null,
         icon_name: editingHighlight.iconName || 'star',
@@ -208,23 +201,10 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
       }
 
       let result;
-      if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\\d{13}$/)) {
+      if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\d{13}$/)) {
         result = await updateHighlightInDb(editingHighlight.id, highlightData);
       } else {
         result = await createHighlight(highlightData);
-      }
-
-      // If still failed, might be word count constraint - try with fewer words
-      if (!result) {
-        highlightData.description = limitWords(editingHighlight.description, 30); // Try 30 words
-        if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\\d{13}$/)) {
-          result = await updateHighlightInDb(editingHighlight.id, highlightData);
-        } else {
-          result = await createHighlight(highlightData);
-        }
-        if (result) {
-          toast.warning('Description was shortened to fit database limits. Run SQL migration to fix.');
-        }
       }
 
       if (!result) {
@@ -242,6 +222,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
             throw new Error('Failed to save highlight');
           }
         } else {
+          toast.error('Failed to save highlight. Your database has strict limits (description/words). Run the SQL migration: supabase/migrations/fix_all_highlights_constraints.sql');
           throw new Error('Failed to save highlight');
         }
       } else {

@@ -28,7 +28,7 @@ const FIELD_SELECTIONS = {
   newsDetail: 'id,title,content,date,image_url,images',
 
   // Highlights - reduced for list, full for detail
-  highlightsList: 'id,title,description,image_url,images,icon_name,published_date,featured',
+  highlightsList: 'id,title,description,content,image_url,images,icon_name,published_date,featured',
   highlightsDetail: 'id,title,description,content,image_url,images,icon_name,published_date,featured',
 
   // Publications
@@ -255,6 +255,7 @@ export const getAllHighlights = async () => {
         id: item.id,
         title: item.title,
         description: item.description,
+        content: item.content,
         imageUrl: optimizeImageUrl(item.image_url, { width: 800, quality: 75 }),
         images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
         iconName: item.icon_name,
@@ -295,6 +296,7 @@ export const getHighlightsPaginated = async (page: number, limit: number) => {
         id: item.id,
         title: item.title,
         description: item.description,
+        content: item.content,
         imageUrl: optimizeImageUrl(item.image_url),
         images: optimizeImageArray(item.images),
         iconName: item.icon_name,
