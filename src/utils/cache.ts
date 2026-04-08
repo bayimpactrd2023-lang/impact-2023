@@ -10,6 +10,11 @@
 
 import { LZString } from './compression';
 
+// Debug flag - only log in development
+const DEBUG = import.meta.env.DEV || import.meta.env.VITE_DEBUG_CACHE === 'true';
+const log = DEBUG ? console.log : () => {};
+const warn = DEBUG ? console.warn : () => {};
+
 // Cache configuration
 export interface CacheConfig {
   ttl?: number; // Time to live in milliseconds (default: 5 minutes)
@@ -95,7 +100,7 @@ function getFromLocalStorage<T>(key: string): CacheEntry<T> | null {
     return parsed;
   } catch (error) {
     // Corrupted cache data - remove it silently
-    console.debug(`[Cache] Removing corrupted cache for key ${key}`);
+    // Silently remove corrupted cache in production
     try {
       localStorage.removeItem(key);
     } catch (removeError) {
@@ -138,14 +143,14 @@ function setInLocalStorage<T>(key: string, entry: CacheEntry<T>, config: Require
     localStorage.setItem(key, JSON.stringify(entryToStore));
   } catch (error) {
     // localStorage might be full or disabled
-    console.warn(`[Cache] Error writing to localStorage for key ${key}:`, error);
+    warn(`[Cache] Error writing to localStorage for key ${key}:`, error);
 
     // Try to free up space by clearing old entries
     try {
       clearOldEntries();
       localStorage.setItem(key, JSON.stringify(entry));
     } catch (retryError) {
-      console.warn('[Cache] Failed to write even after clearing old entries');
+      warn('[Cache] Failed to write even after clearing old entries');
     }
   }
 }
@@ -176,7 +181,7 @@ function clearOldEntries(): void {
   }
 
   keysToRemove.forEach(key => localStorage.removeItem(key));
-  console.log(`[Cache] Cleared ${keysToRemove.length} old entries`);
+    // Entry count logging removed for production
 }
 
 /**
@@ -239,7 +244,7 @@ export function remove(key: string): void {
   try {
     localStorage.removeItem(key);
   } catch (error) {
-    console.warn(`[Cache] Error removing from localStorage:`, error);
+    warn(`[Cache] Error removing from localStorage:`, error);
   }
 }
 
@@ -258,9 +263,9 @@ export function clearAll(): void {
       }
     }
     keysToRemove.forEach(key => localStorage.removeItem(key));
-    console.log(`[Cache] Cleared all cache (${keysToRemove.length} entries)`);
+    // Cache cleared silently in production
   } catch (error) {
-    console.warn('[Cache] Error clearing localStorage:', error);
+    warn('[Cache] Error clearing localStorage:', error);
   }
 }
 
@@ -287,13 +292,13 @@ export async function cachedFetch<T>(
   // Check if there's already a pending request for this key
   const pending = pendingRequests.get(key);
   if (pending) {
-    console.log(`[Cache] Deduplicating request for ${key}`);
+    log(`[Cache] Deduplicating request for ${key}`);
     return pending;
   }
 
   // If we have stale data, return it immediately while fetching fresh data in background
   if (cached && cfg.staleWhileRevalidate) {
-    console.log(`[Cache] Returning stale data for ${key}, revalidating in background`);
+    log(`[Cache] Returning stale data for ${key}, revalidating in background`);
 
     // Fetch fresh data in background (don't await)
     const backgroundFetch = fetchFn()
@@ -303,7 +308,7 @@ export async function cachedFetch<T>(
         return data;
       })
       .catch(error => {
-        console.warn(`[Cache] Background revalidation failed for ${key}:`, error);
+        warn(`[Cache] Background revalidation failed for ${key}:`, error);
         pendingRequests.delete(key);
         return cached; // Return cached data on error
       });
@@ -312,8 +317,7 @@ export async function cachedFetch<T>(
     return cached;
   }
 
-  // No cache hit - fetch fresh data
-  console.log(`[Cache] Cache miss for ${key}, fetching...`);
+  // No cache hit - fetch fresh data silently
   const fetchPromise = fetchFn()
     .then(data => {
       set(key, data, cfg);
@@ -325,7 +329,7 @@ export async function cachedFetch<T>(
 
       // If fetch fails but we have stale data, return it
       if (wasCached) {
-        console.warn(`[Cache] Fetch failed for ${key}, returning stale data:`, error);
+        warn(`[Cache] Fetch failed for ${key}, returning stale data:`, error);
         return cached;
       }
 
@@ -356,7 +360,7 @@ export async function prefetch<T>(
     const data = await fetchFn();
     set(key, data, cfg);
   } catch (error) {
-    console.warn(`[Cache] Prefetch failed for ${key}:`, error);
+    warn(`[Cache] Prefetch failed for ${key}:`, error);
   }
 }
 
@@ -383,9 +387,9 @@ export function invalidateByPrefix(prefix: string): void {
       }
     }
     lsKeysToRemove.forEach(key => localStorage.removeItem(key));
-    console.log(`[Cache] Invalidated ${keysToDelete.length + lsKeysToRemove.length} entries with prefix ${prefix}`);
+    log(`[Cache] Invalidated ${keysToDelete.length + lsKeysToRemove.length} entries`);
   } catch (error) {
-    console.warn('[Cache] Error invalidating by prefix:', error);
+    warn('[Cache] Error invalidating by prefix:', error);
   }
 }
 
@@ -409,7 +413,7 @@ export function getCacheStats() {
       }
     }
   } catch (error) {
-    console.warn('[Cache] Error getting stats:', error);
+    warn('[Cache] Error getting stats:', error);
   }
 
   return {

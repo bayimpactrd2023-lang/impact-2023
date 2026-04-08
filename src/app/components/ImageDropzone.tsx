@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
-import { uploadImage, isBase64Url } from '@/utils/storageUpload';
+import { isBase64Url } from '@/utils/storageUpload';
 import { getImageUrl } from '@/utils/r2Upload';
 import { toast } from 'sonner';
 
@@ -9,17 +9,13 @@ interface ImageDropzoneProps {
   onChange: (value: string | File) => void;
   label?: string;
   className?: string;
-  bucket?: string;
-  folder?: string;
 }
 
 export const ImageDropzone: React.FC<ImageDropzoneProps> = ({ 
   value, 
   onChange, 
   label = 'Drop an image here',
-  className = '',
-  bucket = 'images',
-  folder
+  className = ''
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -54,17 +50,15 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
   const processImageFile = useCallback(async (imageFile: File) => {
     setIsUploading(true);
     try {
-      const url = await uploadImage(imageFile, bucket, folder);
-      setPreviewUrl(url);
-      onChange(url);
-      toast.success('Image uploaded');
+      onChange(imageFile);
+      toast.success('Image selected');
     } catch (err) {
-      console.error('[ImageDropzone] Upload failed:', err);
-      toast.error('Failed to upload image');
+      console.error('[ImageDropzone] Selection failed:', err);
+      toast.error('Failed to select image');
     } finally {
       setIsUploading(false);
     }
-  }, [bucket, folder, onChange]);
+  }, [onChange]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

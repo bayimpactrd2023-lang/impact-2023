@@ -21,7 +21,7 @@ import {
   getPublicationsPaginated,
   getAllPublications,
 } from '@/services/supabaseService';
-import { uploadImage, deleteStorageFile } from '@/utils/storageUpload';
+import { uploadPDF, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidatePublicationsCache } from '@/utils/cacheInvalidation';
@@ -128,8 +128,8 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
     try {
       // Handle PDF Upload before saving to database
       let finalPdfUrl = editingPublication.pdfUrl;
-      if (typeof finalPdfUrl === 'object' && (finalPdfUrl as any) instanceof File) {
-        finalPdfUrl = await uploadImage(finalPdfUrl as any, 'publications');
+      if (finalPdfUrl instanceof File) {
+        finalPdfUrl = await uploadPDF(finalPdfUrl, 'publications');
       }
 
       const pubData = {
@@ -381,9 +381,9 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                 <div>
                   <Label>PDF File</Label>
                   <PDFDropzone
-                    value={editingPublication.pdfUrl || ''}
-                    onChange={(url) =>
-                      setEditingPublication({ ...editingPublication, pdfUrl: url })
+                    value={editingPublication.pdfUrl}
+                    onChange={(value) =>
+                      setEditingPublication({ ...editingPublication, pdfUrl: value })
                     }
                     label="Drop PDF file here"
                   />

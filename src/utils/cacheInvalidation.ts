@@ -5,12 +5,15 @@
 
 import { invalidateCache, invalidateAllCaches } from '@/services/optimizedSupabaseService';
 
+// Debug flag - only log in development
+const DEBUG = import.meta.env.DEV || import.meta.env.VITE_DEBUG_CACHE === 'true';
+
 /**
  * Invalidate cache after news operations
  */
 export const invalidateNewsCache = () => {
   invalidateCache('news');
-  console.log('[CacheInvalidation] News cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] News cache invalidated');
 };
 
 /**
@@ -18,7 +21,7 @@ export const invalidateNewsCache = () => {
  */
 export const invalidateHighlightsCache = () => {
   invalidateCache('highlights');
-  console.log('[CacheInvalidation] Highlights cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Highlights cache invalidated');
 };
 
 /**
@@ -26,7 +29,7 @@ export const invalidateHighlightsCache = () => {
  */
 export const invalidatePublicationsCache = () => {
   invalidateCache('publications');
-  console.log('[CacheInvalidation] Publications cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Publications cache invalidated');
 };
 
 /**
@@ -34,7 +37,7 @@ export const invalidatePublicationsCache = () => {
  */
 export const invalidatePartnersCache = () => {
   invalidateCache('partners');
-  console.log('[CacheInvalidation] Partners cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Partners cache invalidated');
 };
 
 /**
@@ -42,7 +45,7 @@ export const invalidatePartnersCache = () => {
  */
 export const invalidateTeamCache = () => {
   invalidateCache('team');
-  console.log('[CacheInvalidation] Team cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Team cache invalidated');
 };
 
 /**
@@ -50,7 +53,7 @@ export const invalidateTeamCache = () => {
  */
 export const invalidateBlogCache = () => {
   invalidateCache('blog');
-  console.log('[CacheInvalidation] Blog cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Blog cache invalidated');
 };
 
 /**
@@ -58,7 +61,7 @@ export const invalidateBlogCache = () => {
  */
 export const invalidateProjectsCache = () => {
   invalidateCache('projects');
-  console.log('[CacheInvalidation] Projects cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Projects cache invalidated');
 };
 
 /**
@@ -66,7 +69,7 @@ export const invalidateProjectsCache = () => {
  */
 export const invalidateFinancialCache = () => {
   invalidateCache('financial');
-  console.log('[CacheInvalidation] Financial statements cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Financial statements cache invalidated');
 };
 
 /**
@@ -74,7 +77,7 @@ export const invalidateFinancialCache = () => {
  */
 export const invalidateTestimonialsCache = () => {
   invalidateCache('testimonials');
-  console.log('[CacheInvalidation] Testimonials cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Testimonials cache invalidated');
 };
 
 /**
@@ -82,7 +85,7 @@ export const invalidateTestimonialsCache = () => {
  */
 export const invalidateHeroCache = () => {
   invalidateCache('hero');
-  console.log('[CacheInvalidation] Hero cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] Hero cache invalidated');
 };
 
 /**
@@ -90,7 +93,7 @@ export const invalidateHeroCache = () => {
  */
 export const invalidateAboutCache = () => {
   invalidateCache('about');
-  console.log('[CacheInvalidation] About cache invalidated');
+  DEBUG && console.log('[CacheInvalidation] About cache invalidated');
 };
 
 /**
@@ -98,7 +101,7 @@ export const invalidateAboutCache = () => {
  */
 export const invalidateAll = () => {
   invalidateAllCaches();
-  console.log('[CacheInvalidation] All caches invalidated');
+  DEBUG && console.log('[CacheInvalidation] All caches invalidated');
 };
 
 /**

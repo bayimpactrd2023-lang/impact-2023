@@ -1,41 +1,50 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, X, FileText, Loader2 } from 'lucide-react';
-import { uploadPDF, isBase64Url } from '@/utils/storageUpload';
+import { X, FileText, Loader2 } from 'lucide-react';
+import { isBase64Url } from '@/utils/storageUpload';
 import { toast } from 'sonner';
 
 interface PDFDropzoneProps {
-  value?: string;
-  onChange: (url: string) => void;
+  value?: string | File;
+  onChange: (value: string | File) => void;
   label?: string;
   className?: string;
-  bucket?: string;
-  folder?: string;
 }
 
 export const PDFDropzone: React.FC<PDFDropzoneProps> = ({ 
   value, 
   onChange, 
   label = 'Drop a PDF file here',
-  className = '',
-  bucket = 'pdfs',
-  folder
+  className = ''
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [pdfDataUrl, setPdfDataUrl] = useState<string>(value || '');
+  const [pdfDataUrl, setPdfDataUrl] = useState<string>('');
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
 
   // Sync pdfDataUrl with value prop when it changes externally
   useEffect(() => {
-    setPdfDataUrl(value || '');
-    // Extract filename from data URL if possible
-    if (value && value.startsWith('data:')) {
-      setFileName('Uploaded PDF');
-    } else if (value) {
-      // Try to extract filename from URL
-      const urlParts = value.split('/');
-      setFileName(urlParts[urlParts.length - 1] || 'PDF Document');
+    let objectUrl: string | null = null;
+    if (typeof value === 'string') {
+      setPdfDataUrl(value || '');
+      if (value && value.startsWith('data:')) {
+        setFileName('Uploaded PDF');
+      } else if (value) {
+        const urlParts = value.split('/');
+        setFileName(urlParts[urlParts.length - 1] || 'PDF Document');
+      } else {
+        setFileName('');
+      }
+    } else if (value instanceof File) {
+      objectUrl = URL.createObjectURL(value);
+      setPdfDataUrl(objectUrl);
+      setFileName(value.name);
+    } else {
+      setPdfDataUrl('');
+      setFileName('');
     }
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [value]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -51,26 +60,16 @@ export const PDFDropzone: React.FC<PDFDropzoneProps> = ({
   const processPDFFile = useCallback(async (pdfFile: File) => {
     try {
       setIsUploading(true);
-      setFileName(pdfFile.name);
-      
-      // Upload to Supabase Storage
-      const publicUrl = await uploadPDF(pdfFile, bucket, folder);
-      
-      // Update state and notify parent
-      setPdfDataUrl(publicUrl);
-      if (onChange && typeof onChange === 'function') {
-        onChange(publicUrl);
-      }
-      
-      toast.success('PDF uploaded successfully');
+      onChange(pdfFile);
+      toast.success('PDF selected');
     } catch (error) {
-      console.error('[PDFDropzone] Upload error:', error);
-      toast.error('Failed to upload PDF. Please try again.');
+      console.error('[PDFDropzone] Selection error:', error);
+      toast.error('Failed to select PDF. Please try again.');
       setFileName('');
     } finally {
       setIsUploading(false);
     }
-  }, [onChange, bucket, folder]);
+  }, [onChange]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

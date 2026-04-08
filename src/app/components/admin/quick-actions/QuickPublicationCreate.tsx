@@ -3,10 +3,12 @@
  * Modal for quickly creating a new publication
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { Publication } from '@/app/context/ContentContext';
+import { PublicationForm } from '@/app/context/ContentContext';
 import { createPublication } from '@/services/supabaseService';
+import { uploadPDF } from '@/utils/storageUpload';
+
 import {
   AdminValidationRules,
   mergeValidationResults,
@@ -26,7 +28,11 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { ImageDropzone } from '@/app/components/ImageDropzone';
+import { PDFDropzone } from '@/app/components/PDFDropzone';
+
+type QuickPublicationDraft = Omit<PublicationForm, 'pdfUrl'> & {
+  pdfUrl?: string | File;
+};
 
 interface QuickPublicationCreateProps {
   isOpen: boolean;
@@ -40,7 +46,7 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
   onSuccess,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
-  const [draft, setDraft] = useState<Publication>({
+  const [draft, setDraft] = useState<QuickPublicationDraft>({
     id: '',
     title: '',
     authors: '',
@@ -80,12 +86,18 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
 
     setIsSaving(true);
     try {
+      // Handle PDF Upload before saving to database
+      let finalPdfUrl = draft.pdfUrl;
+      if (finalPdfUrl instanceof File) {
+        finalPdfUrl = await uploadPDF(finalPdfUrl, 'publications');
+      }
+
       const publicationData = {
         title: draft.title,
         authors: draft.authors,
         link: draft.link,
         featured: draft.featured,
-        pdf_url: draft.pdfUrl || null,
+        pdf_url: (finalPdfUrl as string) || null,
         content: draft.content || null,
         published_date: draft.publishedDate || null,
         excerpt: draft.excerpt || null,
@@ -208,9 +220,10 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
 
           <div>
             <Label>PDF Document</Label>
-            <ImageDropzone
-              value={draft.pdfUrl || ''}
-              onChange={(url) => setDraft({ ...draft, pdfUrl: url })}
+            <PDFDropzone
+              value={draft.pdfUrl}
+              onChange={(file: string | File) => setDraft({ ...draft, pdfUrl: file })}
+              label="Drop PDF file here or click to browse"
             />
           </div>
 

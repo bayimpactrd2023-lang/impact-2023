@@ -1,5 +1,8 @@
 import { supabase } from '@/lib/supabase';
 
+// Debug flag - only log in development
+const DEBUG = import.meta.env.DEV || import.meta.env.VITE_DEBUG_R2 === 'true';
+
 // R2 Configuration
 const R2_CONFIG = {
   publicUrl: import.meta.env.VITE_R2_PUBLIC_URL,
@@ -24,10 +27,10 @@ async function getSupabaseAuthHeaders(): Promise<Record<string, string>> {
   
   // If session is missing or potentially expired, try to refresh it
   if (!sessionData.session || error) {
-    console.log('[R2] Session missing or error, attempting refresh...');
+    DEBUG && console.log('[R2] Session missing or error, attempting refresh...');
     const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
-      console.error('[R2] Session refresh failed:', refreshError);
+      DEBUG && console.error('[R2] Session refresh failed:', refreshError);
       throw new Error(`Authentication error: ${refreshError.message}`);
     }
     currentData = refreshData;
@@ -35,7 +38,7 @@ async function getSupabaseAuthHeaders(): Promise<Record<string, string>> {
   
   const token = currentData.session?.access_token;
   if (!token) {
-    console.error('[R2] No active session or access token found after refresh attempt');
+    DEBUG && console.error('[R2] No active session or access token found after refresh attempt');
     throw new Error('Not authenticated: No active session');
   }
 
@@ -43,17 +46,17 @@ async function getSupabaseAuthHeaders(): Promise<Record<string, string>> {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const now = Math.floor(Date.now() / 1000);
-    console.log('[R2] JWT Debug:', {
+    DEBUG && console.log('[R2] JWT Debug:', {
       exp: payload.exp,
       now: now,
       expired: payload.exp < now,
       sub: payload.sub
     });
   } catch (e: unknown) {
-    console.error('[R2] Failed to parse JWT payload for debugging');
+    DEBUG && console.error('[R2] Failed to parse JWT payload for debugging');
   }
   
-  console.log('[R2] Auth token found, length:', token.length);
+  DEBUG && console.log('[R2] Auth token found, length:', token.length);
   return {
     Authorization: `Bearer ${token}`,
   };
@@ -80,7 +83,7 @@ export async function uploadImageToR2(
   folder: string = 'images'
 ): Promise<string> {
   try {
-    console.log(`[R2] Uploading ${file.name} to ${folder}/...`);
+    DEBUG && console.log(`[R2] Uploading ${file.name} to ${folder}...`);
 
     validateR2Config();
 
@@ -102,7 +105,7 @@ export async function uploadImageToR2(
 
     if (!response.ok) {
       const responseText = await response.text().catch(() => 'No response body');
-      console.error('[R2] Upload failed with status:', response.status, 'Response:', responseText);
+      DEBUG && console.log('[R2] Upload response:', response.status, response.statusText, 'Response:', responseText);
       throw new Error(`Upload failed: ${response.status} - ${responseText}`);
     }
 
@@ -111,7 +114,7 @@ export async function uploadImageToR2(
     // Return public URL
     const publicUrl = result?.url || `${R2_CONFIG.publicUrl}/${fileName}`;
     const normalizedUrl = getImageUrl(publicUrl) || publicUrl;
-    console.log(`[R2] Upload successful:`, normalizedUrl);
+    DEBUG && console.log(`[R2] Upload successful: ${publicUrl}`);
 
     return normalizedUrl;
   } catch (error: unknown) {
@@ -129,14 +132,21 @@ export async function deleteImageFromR2(url: string): Promise<void> {
     validateR2Config();
 
     // Extract key from URL
-    const key = url.replace(`${R2_CONFIG.publicUrl}/`, '');
+    let key = '';
+    const workerUrlBase = R2_CONFIG.workerUrl?.replace(/\/$/, '');
+    
+    if (workerUrlBase && url.includes(workerUrlBase)) {
+      key = url.replace(`${workerUrlBase}/`, '');
+    } else {
+      key = url.replace(`${R2_CONFIG.publicUrl}/`, '');
+    }
     
     if (!key || key === url) {
       console.warn('[R2] Invalid URL format, skipping delete:', url);
       return;
     }
 
-    console.log(`[R2] Deleting ${key}...`);
+    DEBUG && console.log(`[R2] Deleting ${key}...`);
 
     const edgeBaseUrl = getEdgeFunctionBaseUrl();
     const response = await fetch(`${edgeBaseUrl}/${key}`, {
@@ -151,9 +161,9 @@ export async function deleteImageFromR2(url: string): Promise<void> {
       throw new Error(`Delete failed: ${response.status}${text ? ` - ${text}` : ''}`);
     }
 
-    console.log(`[R2] Delete successful:`, key);
+    DEBUG && console.log(`[R2] Delete successful: ${key}`);
   } catch (error: unknown) {
-    console.error('[R2] Delete error:', error instanceof Error ? error.message : error);
+    DEBUG && console.error('[R2] Delete failed:', error instanceof Error ? error.message : error);
     // Don't throw - deletion failures shouldn't block operations
   }
 }

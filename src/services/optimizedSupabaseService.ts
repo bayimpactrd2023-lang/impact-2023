@@ -18,6 +18,9 @@ import { supabase } from '@/lib/supabase';
 import { Highlight, BlogPost, Project, InternshipTestimonial, FinancialStatement, Partner, NewsItem, Publication, TeamMember } from '@/app/context/ContentContext';
 import { getImageUrl as getR2ImageUrl } from '@/utils/r2Upload';
 
+// Debug flag - only log in development
+const DEBUG = import.meta.env.DEV || import.meta.env.VITE_DEBUG_CACHE === 'true';
+
 // Field Selection Patterns - Only fetch what we need
 const FIELD_SELECTIONS = {
   // News - reduced fields for list views
@@ -814,7 +817,7 @@ export const getInternshipTestimonialsPaginated = async (page: number, limit: nu
 export const invalidateAllCaches = () => {
   const prefixes = ['hero', 'about', 'news', 'highlights', 'publications', 'partners', 'team', 'blog', 'projects', 'financial', 'testimonials'];
   prefixes.forEach(prefix => invalidateByPrefix(prefix));
-  console.log('[OptimizedService] All caches invalidated');
+  DEBUG && console.log('[OptimizedService] All caches invalidated');
 };
 
 /**
@@ -822,7 +825,7 @@ export const invalidateAllCaches = () => {
  */
 export const invalidateCache = (type: string) => {
   invalidateByPrefix(type);
-  console.log(`[OptimizedService] Cache invalidated for: ${type}`);
+  DEBUG && console.log(`[OptimizedService] Cache invalidated for: ${type}`);
 };
 
 // Export original service functions for admin operations (no caching)

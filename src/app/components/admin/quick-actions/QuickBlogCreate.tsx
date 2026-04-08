@@ -3,9 +3,9 @@
  * Modal for quickly creating a new blog post
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { BlogPost } from '@/app/context/ContentContext';
+import { BlogPostForm } from '@/app/context/ContentContext';
 import { createBlogPost } from '@/services/supabaseService';
 import {
   AdminValidationRules,
@@ -29,6 +29,8 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 
+import { uploadImage, uploadImages } from '@/utils/storageUpload';
+
 interface QuickBlogCreateProps {
   isOpen: boolean;
   onClose: () => void;
@@ -41,7 +43,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
   onSuccess,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
-  const [draft, setDraft] = useState<BlogPost>({
+  const [draft, setDraft] = useState<BlogPostForm>({
     id: '',
     title: '',
     content: '',
@@ -77,14 +79,33 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
 
     setIsSaving(true);
     try {
+      // Handle Image Uploads before saving to database
+      let finalImageUrl = draft.imageUrl;
+      if (typeof finalImageUrl === 'object' && (finalImageUrl as any) instanceof File) {
+        finalImageUrl = await uploadImage(finalImageUrl as any, 'blog');
+      }
+
+      let finalImages = draft.images || [];
+      if (draft.images && draft.images.some(img => typeof img === 'object')) {
+        const filesToUpload = draft.images.filter(img => typeof img === 'object') as File[];
+        const uploadedUrls = await uploadImages(filesToUpload, 'blog');
+        let uploadIdx = 0;
+        finalImages = draft.images.map(img => {
+          if (typeof img === 'object') {
+            return uploadedUrls[uploadIdx++];
+          }
+          return img as string;
+        });
+      }
+
       const blogData = {
         title: draft.title,
         content: draft.content,
         author: draft.author,
         author_role: draft.authorRole,
         date: draft.date,
-        image_url: draft.imageUrl || null,
-        images: draft.images || null,
+        image_url: (finalImageUrl as string) || null,
+        images: (finalImages as string[]) || null,
         likes: draft.likes || 0,
       };
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FinancialStatement } from '@/app/context/ContentContext';
+import { FinancialStatement, FinancialStatementForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -21,7 +21,7 @@ import {
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateFinancialCache } from '@/utils/cacheInvalidation';
-import { deleteStorageFile } from '@/utils/storageUpload';
+import { uploadPDF, deleteStorageFile } from '@/utils/storageUpload';
 import {
   AdminValidationRules,
   mergeValidationResults,
@@ -38,7 +38,7 @@ interface FinancialStatementManagerProps {
 
 export const FinancialStatementManager: React.FC<FinancialStatementManagerProps> = ({ statements: _statements, onUpdate: _onUpdate, refreshContent: _refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingStatement, setEditingStatement] = useState<FinancialStatement | null>(null);
+  const [editingStatement, setEditingStatement] = useState<FinancialStatementForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
@@ -54,7 +54,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
   const yearOptions = Array.from({ length: currentYear - 1999 }, (_, i) => currentYear - i);
 
   const addStatement = () => {
-    const newStatement: FinancialStatement = {
+    const newStatement: FinancialStatementForm = {
       id: `temp-${Date.now()}`,
       title: '',
       year: new Date().getFullYear().toString(),
@@ -125,7 +125,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
       return;
     }
 
-    if (!editingStatement.pdfUrl || editingStatement.pdfUrl.trim() === '') {
+    if (!editingStatement.pdfUrl || (typeof editingStatement.pdfUrl === 'string' && editingStatement.pdfUrl.trim() === '')) {
       toast.error('Please upload a PDF file for the financial statement');
       return;
     }
@@ -134,8 +134,8 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
     try {
       // Handle PDF Upload before saving to database
       let finalPdfUrl = editingStatement.pdfUrl;
-      if (typeof finalPdfUrl === 'object' && finalPdfUrl instanceof File) {
-        finalPdfUrl = await uploadImage(finalPdfUrl, 'pdfs');
+      if (finalPdfUrl instanceof File) {
+        finalPdfUrl = await uploadPDF(finalPdfUrl, 'pdfs');
       }
 
       const statementData = {
@@ -323,9 +323,9 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
                   Upload the PDF file for this financial statement (PDF only)
                 </p>
                 <PDFDropzone
-                  value={editingStatement.pdfUrl || ''}
-                  onChange={(url) =>
-                    setEditingStatement({ ...editingStatement, pdfUrl: url })
+                  value={editingStatement.pdfUrl}
+                  onChange={(value) =>
+                    setEditingStatement({ ...editingStatement, pdfUrl: value })
                   }
                   label="Financial Statement PDF"
                 />

@@ -51,9 +51,14 @@ export interface BlogPostForm extends Omit<BlogPost, 'imageUrl' | 'images'> {
   images?: (string | File)[];
 }
 
-export interface PublicationForm extends Omit<Publication, 'imageUrl' | 'galleryImages'> {
+export interface PublicationForm extends Omit<Publication, 'imageUrl' | 'galleryImages' | 'pdfUrl'> {
   imageUrl?: string | File;
   galleryImages?: (string | File)[];
+  pdfUrl?: string | File;
+}
+
+export interface FinancialStatementForm extends Omit<FinancialStatement, 'pdfUrl'> {
+  pdfUrl?: string | File;
 }
 
 export interface InternshipTestimonialForm extends Omit<InternshipTestimonial, 'imageUrl' | 'images'> {

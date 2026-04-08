@@ -72,7 +72,7 @@ const handleError = (error: any, context: string) => {
 };
 
 // Helper to check if Supabase is configured before making calls
-const checkConfiguration = (context: string) => {
+const checkConfiguration = (_context?: string) => {
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase is not configured. Please check your credentials.');
   }

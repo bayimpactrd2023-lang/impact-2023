@@ -2,6 +2,9 @@ import { supabase } from '@/lib/supabase';
 import { compressImage, compressImages } from './imageCompression';
 import { uploadImageToR2, deleteImageFromR2, isR2Configured } from './r2Upload';
 
+// Debug flag - only log in development
+const DEBUG = import.meta.env.DEV || import.meta.env.VITE_DEBUG_STORAGE === 'true';
+
 /**
  * Generates a unique filename with timestamp and random string
  */
@@ -36,10 +39,10 @@ export const uploadImage = async (
     
     // Step 2: If forcing R2 only, upload to R2
     if (FORCE_R2_ONLY) {
-      console.log('[StorageUpload] Uploading to Cloudflare R2 only...');
+      DEBUG && console.log('[StorageUpload] Uploading to Cloudflare R2 only...');
       try {
         const url = await uploadImageToR2(compressedFile, folder || bucket);
-        console.log(`[StorageUpload] Image uploaded to R2: ${url}`);
+        DEBUG && console.log(`[StorageUpload] Image uploaded to R2: ${url}`);
         return url;
       } catch (r2Error: unknown) {
         console.error('[StorageUpload] R2 upload failed:', r2Error);
@@ -49,10 +52,10 @@ export const uploadImage = async (
     
     // Step 3: Try R2 if configured AND not forcing R2 only
     if (isR2Configured()) {
-      console.log('[StorageUpload] Attempting R2 upload...');
+      DEBUG && console.log('[StorageUpload] Attempting R2 upload...');
       try {
         const url = await uploadImageToR2(compressedFile, folder || bucket);
-        console.log(`[StorageUpload] Image uploaded to R2: ${url}`);
+        DEBUG && console.log(`[StorageUpload] Image uploaded to R2: ${url}`);
         return url;
       } catch (r2Error: unknown) {
         console.warn('[StorageUpload] R2 upload failed, falling back to Supabase:', r2Error);
@@ -61,7 +64,7 @@ export const uploadImage = async (
     }
     
     // Fallback to Supabase Storage
-    console.log('[StorageUpload] R2 not configured, using Supabase Storage');
+    DEBUG && console.log('[StorageUpload] R2 not configured, using Supabase Storage');
     
     // Step 3: Generate unique filename
     const fileName = generateUniqueFileName(file.name);
@@ -84,9 +87,9 @@ export const uploadImage = async (
                               uploadResult.error?.status === 400;
     
     if (isBucketNotFound) {
-      console.warn(`[StorageUpload] Bucket '${bucket}' error: ${uploadResult.error?.message}, falling back to 'images' bucket`);
+      DEBUG && console.warn(`[StorageUpload] Bucket '${bucket}' error: ${uploadResult.error?.message}, falling back to 'images' bucket`);
       const fallbackPath = folder ? `${bucket}/${folder}/${fileName}` : `${bucket}/${fileName}`;
-      console.log(`[StorageUpload] Fallback path: ${fallbackPath}`);
+      DEBUG && console.log(`[StorageUpload] Fallback path: ${fallbackPath}`);
       uploadResult = await supabase.storage
         .from('images')
         .upload(fallbackPath, compressedFile, {
@@ -109,7 +112,7 @@ export const uploadImage = async (
       .from(targetBucket)
       .getPublicUrl(data.path);
     
-    console.log(`[StorageUpload] Image uploaded successfully: ${publicUrl}`);
+    DEBUG && console.log(`[StorageUpload] Image uploaded successfully: ${publicUrl}`);
     
     return publicUrl;
   } catch (error: unknown) {
@@ -136,11 +139,11 @@ export const uploadImages = async (
     
     // If forcing R2 only, use R2 for all uploads
     if (FORCE_R2_ONLY) {
-      console.log('[StorageUpload] Uploading multiple images to Cloudflare R2 only...');
+      DEBUG && console.log('[StorageUpload] Uploading multiple images to Cloudflare R2 only...');
       const uploadPromises = compressedFiles.map(async (file) => {
         try {
           const url = await uploadImageToR2(file, folder || bucket);
-          console.log(`[StorageUpload] Image uploaded to R2: ${url}`);
+          DEBUG && console.log(`[StorageUpload] Image uploaded to R2: ${url}`);
           return url;
         } catch (r2Error: unknown) {
           console.error('[StorageUpload] R2 upload failed:', r2Error);
@@ -149,7 +152,7 @@ export const uploadImages = async (
       });
       
       const publicUrls = await Promise.all(uploadPromises);
-      console.log(`[StorageUpload] ${publicUrls.length} images uploaded to R2 successfully`);
+      DEBUG && console.log(`[StorageUpload] ${publicUrls.length} images uploaded to R2 successfully`);
       return publicUrls;
     }
     
@@ -174,9 +177,9 @@ export const uploadImages = async (
                                 error?.status === 400;
       
       if (isBucketNotFound) {
-        console.warn(`[StorageUpload] Bucket '${bucket}' not found or error (message: ${error?.message}), falling back to 'images' bucket`);
+        DEBUG && console.warn(`[StorageUpload] Bucket '${bucket}' not found or error (message: ${error?.message}), falling back to 'images' bucket`);
         const fallbackPath = folder ? `${bucket}/${folder}/${fileName}` : `${bucket}/${fileName}`;
-        console.log(`[StorageUpload] Attempting fallback upload to 'images' bucket at path: ${fallbackPath}`);
+        DEBUG && console.log(`[StorageUpload] Attempting fallback upload to 'images' bucket at path: ${fallbackPath}`);
         const fallbackResult = await supabase.storage
           .from('images')
           .upload(fallbackPath, file, {
@@ -190,7 +193,7 @@ export const uploadImages = async (
           throw new Error(`Failed to upload ${files[index].name}: ${fallbackResult.error.message}`);
         }
         
-        console.log(`[StorageUpload] Fallback upload successful: ${fallbackResult.data.path}`);
+        DEBUG && console.log(`[StorageUpload] Fallback upload successful: ${fallbackResult.data.path}`);
         const { data: { publicUrl } } = supabase.storage
           .from('images')
           .getPublicUrl(fallbackResult.data.path);
@@ -212,7 +215,7 @@ export const uploadImages = async (
     
     const publicUrls = await Promise.all(uploadPromises);
     
-    console.log(`[StorageUpload] ${publicUrls.length} images uploaded successfully`);
+    DEBUG && console.log(`[StorageUpload] ${publicUrls.length} images uploaded successfully`);
     
     return publicUrls;
   } catch (error: unknown) {
@@ -236,10 +239,10 @@ export const uploadPDF = async (
   try {
     // If forcing R2 only, upload to R2
     if (FORCE_R2_ONLY) {
-      console.log('[StorageUpload] Uploading PDF to Cloudflare R2 only...');
+      DEBUG && console.log('[StorageUpload] Uploading PDF to Cloudflare R2 only...');
       try {
         const url = await uploadImageToR2(file, folder || bucket);
-        console.log(`[StorageUpload] PDF uploaded to R2: ${url}`);
+        DEBUG && console.log(`[StorageUpload] PDF uploaded to R2: ${url}`);
         return url;
       } catch (r2Error: unknown) {
         console.error('[StorageUpload] R2 PDF upload failed:', r2Error);
@@ -268,9 +271,9 @@ export const uploadPDF = async (
                               uploadResult.error?.status === 400;
     
     if (isBucketNotFound) {
-      console.warn(`[StorageUpload] Bucket '${bucket}' error for PDF: ${uploadResult.error?.message}, falling back to 'images' bucket`);
+      DEBUG && console.warn(`[StorageUpload] Bucket '${bucket}' error for PDF: ${uploadResult.error?.message}, falling back to 'images' bucket`);
       const fallbackPath = folder ? `${bucket}/${folder}/${fileName}` : `${bucket}/${fileName}`;
-      console.log(`[StorageUpload] PDF fallback path: ${fallbackPath}`);
+      DEBUG && console.log(`[StorageUpload] PDF fallback path: ${fallbackPath}`);
       uploadResult = await supabase.storage
         .from('images')
         .upload(fallbackPath, file, {
@@ -293,7 +296,7 @@ export const uploadPDF = async (
       .from(targetBucket)
       .getPublicUrl(data.path);
     
-    console.log(`[StorageUpload] PDF uploaded successfully: ${publicUrl}`);
+    DEBUG && console.log(`[StorageUpload] PDF uploaded successfully: ${publicUrl}`);
     
     return publicUrl;
   } catch (error: unknown) {
@@ -316,7 +319,7 @@ export const deleteStorageFile = async (url: string, bucket: string = 'images'):
 
     // Check if it's an R2 URL
     if (url.includes('.r2.dev') || url.includes('r2.cloudflarestorage.com')) {
-      console.log('[StorageUpload] Deleting from R2');
+      DEBUG && console.log('[StorageUpload] Deleting from R2');
       await deleteImageFromR2(url);
       return;
     }
@@ -338,7 +341,7 @@ export const deleteStorageFile = async (url: string, bucket: string = 'images'):
       if (afterImages && afterImages.startsWith(`${bucket}/`)) {
         filePath = afterImages; // Keep the folder prefix like 'blog/filename.png'
         targetBucket = 'images';
-        console.log(`[StorageUpload] File found in fallback location: images/${filePath}`);
+        DEBUG && console.log(`[StorageUpload] File found in fallback location: images/${filePath}`);
       } else {
         // Just a file in images bucket without the folder prefix
         filePath = afterImages;
@@ -348,18 +351,18 @@ export const deleteStorageFile = async (url: string, bucket: string = 'images'):
       // Fallback: try to find the last part of the URL
       const parts = url.split('/');
       filePath = parts[parts.length - 1];
-      console.warn(`[StorageUpload] Could not find bucket path in URL, using filename fallback: ${filePath}`);
+      DEBUG && console.warn(`[StorageUpload] Could not find bucket path in URL, using filename fallback: ${filePath}`);
     }
 
     if (!filePath) {
-      console.warn('[StorageUpload] Could not determine file path from URL:', url);
+      DEBUG && console.warn('[StorageUpload] Could not determine file path from URL:', url);
       return;
     }
 
     // Remove any query parameters if present
     filePath = filePath.split('?')[0];
     
-    console.log(`[StorageUpload] Deleting from bucket '${targetBucket}': ${filePath}`);
+    DEBUG && console.log(`[StorageUpload] Deleting from bucket '${targetBucket}': ${filePath}`);
     
     const { error } = await supabase.storage
       .from(targetBucket)
@@ -369,18 +372,18 @@ export const deleteStorageFile = async (url: string, bucket: string = 'images'):
       console.error('[StorageUpload] Delete failed:', error);
       // Try alternative bucket if first attempt failed
       if (targetBucket !== bucket) {
-        console.log(`[StorageUpload] Retrying delete from original bucket '${bucket}'`);
+        DEBUG && console.log(`[StorageUpload] Retrying delete from original bucket '${bucket}'`);
         const { error: retryError } = await supabase.storage
           .from(bucket)
           .remove([filePath]);
         if (retryError) {
           console.error('[StorageUpload] Retry delete also failed:', retryError);
         } else {
-          console.log(`[StorageUpload] File deleted successfully from ${bucket}: ${filePath}`);
+          DEBUG && console.log(`[StorageUpload] File deleted successfully from ${bucket}: ${filePath}`);
         }
       }
     } else {
-      console.log(`[StorageUpload] File deleted successfully from storage: ${filePath}`);
+      DEBUG && console.log(`[StorageUpload] File deleted successfully from storage: ${filePath}`);
     }
   } catch (error: unknown) {
     console.error('[StorageUpload] Delete error:', error instanceof Error ? error.message : error);

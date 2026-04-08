@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { InternshipTestimonial } from '@/app/context/ContentContext';
+import { InternshipTestimonial, InternshipTestimonialForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -21,7 +21,7 @@ import {
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateTestimonialsCache } from '@/utils/cacheInvalidation';
-import { deleteStorageFile } from '@/utils/storageUpload';
+import { uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 
 import {
   AdminValidationRules,
@@ -40,7 +40,7 @@ interface InternshipTestimonialManagerProps {
 
 export const InternshipTestimonialManager: React.FC<InternshipTestimonialManagerProps> = ({ testimonials: _testimonials, onUpdate: _onUpdate, refreshContent: _refreshContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTestimonial, setEditingTestimonial] = useState<InternshipTestimonial | null>(null);
+  const [editingTestimonial, setEditingTestimonial] = useState<InternshipTestimonialForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
@@ -52,7 +52,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
   });
 
   const addTestimonial = () => {
-    const newTestimonial: InternshipTestimonial = {
+    const newTestimonial: InternshipTestimonialForm = {
       id: `temp-${Date.now()}`,
       name: '',
       degree: '',

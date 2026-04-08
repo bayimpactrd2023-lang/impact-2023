@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Admin Panel - Fixed all function references (updateTeamMembers, etc.)
-import { useContent, NewsItem, Publication, Partner, Highlight, TeamMember, BlogPost, NewsItemForm, HighlightForm, TeamMemberForm, PartnerForm, BlogPostForm, Project, InternshipTestimonial, FinancialStatement } from '@/app/context/ContentContext';
+import { useContent, NewsItem, Publication, Partner, Highlight, TeamMember, BlogPost, NewsItemForm, HighlightForm, TeamMemberForm, PartnerForm, BlogPostForm, PublicationForm, Project, InternshipTestimonial, FinancialStatement } from '@/app/context/ContentContext';
 import { Plus, Trash2, Save, Edit, FileText, Newspaper, Sparkles, Users, Info, Briefcase, BookOpen, Handshake, Home, X, CheckCircle, Star, AlertCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -57,7 +57,7 @@ import {
   getProjectsByCategory,
   getAllInternshipTestimonials
 } from '@/services/supabaseService';
-import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
+import { uploadImage, uploadImages, uploadPDF, deleteStorageFile } from '@/utils/storageUpload';
 
 /**
  * AdminPanel Component
@@ -137,7 +137,7 @@ export const AdminPanel: React.FC = () => {
 
   // ── Quick Create Publication modal ────────────────────────────────────────
   const [isQuickPublicationOpen, setIsQuickPublicationOpen] = useState(false);
-  const [publicationDraft, setPublicationDraft] = useState<Publication>({
+  const [publicationDraft, setPublicationDraft] = useState<PublicationForm>({
     id: '',
     title: '',
     authors: '',
@@ -439,8 +439,8 @@ export const AdminPanel: React.FC = () => {
     try {
       // Handle PDF Upload before saving to database
       let finalPdfUrl = publicationDraft.pdfUrl;
-      if (typeof finalPdfUrl === 'object' && (finalPdfUrl as any) instanceof File) {
-        finalPdfUrl = await uploadImage(finalPdfUrl as any, 'publications');
+      if (finalPdfUrl instanceof File) {
+        finalPdfUrl = await uploadPDF(finalPdfUrl, 'publications');
       }
 
       // Save to database
@@ -1751,8 +1751,8 @@ export const AdminPanel: React.FC = () => {
                   PDF File
                 </Label>
                 <PDFDropzone
-                  value={(publicationDraft.pdfUrl as string) || ''}
-                  onChange={(url) => setPublicationDraft(p => ({ ...p, pdfUrl: url }))}
+                  value={publicationDraft.pdfUrl || ''}
+                  onChange={(value) => setPublicationDraft(p => ({ ...p, pdfUrl: value }))}
                   label="Drop PDF file here or click to browse"
                 />
               </div>

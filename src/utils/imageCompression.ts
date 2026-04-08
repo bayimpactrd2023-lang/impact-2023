@@ -1,5 +1,8 @@
 import imageCompression from 'browser-image-compression';
 
+// Debug flag - only log in development
+const DEBUG = import.meta.env.DEV || import.meta.env.VITE_DEBUG_COMPRESSION === 'true';
+
 /**
  * Compresses an image file for optimal storage and bandwidth usage
  * @param imageFile - The original image file
@@ -23,7 +26,7 @@ export const compressImage = async (
 
     const compressedFile = await imageCompression(imageFile, options);
     
-    console.log(`[ImageCompression] Original: ${(imageFile.size / 1024).toFixed(2)}KB → Compressed: ${(compressedFile.size / 1024).toFixed(2)}KB (${((1 - compressedFile.size / imageFile.size) * 100).toFixed(1)}% reduction)`);
+    DEBUG && console.log(`[ImageCompression] Original: ${(imageFile.size / 1024).toFixed(2)}KB → Compressed: ${(compressedFile.size / 1024).toFixed(2)}KB (${((1 - compressedFile.size / imageFile.size) * 100).toFixed(1)}% reduction)`);
     
     return compressedFile;
   } catch (error: unknown) {
@@ -55,7 +58,7 @@ export const compressImages = async (
     const totalOriginalSize = imageFiles.reduce((sum, file) => sum + file.size, 0);
     const totalCompressedSize = compressedFiles.reduce((sum, file) => sum + file.size, 0);
     
-    console.log(`[ImageCompression] Batch: ${imageFiles.length} images, ${(totalOriginalSize / 1024).toFixed(2)}KB → ${(totalCompressedSize / 1024).toFixed(2)}KB (${((1 - totalCompressedSize / totalOriginalSize) * 100).toFixed(1)}% reduction)`);
+    DEBUG && console.log(`[ImageCompression] Batch: ${imageFiles.length} images, ${(totalOriginalSize / 1024).toFixed(2)}KB → ${(totalCompressedSize / 1024).toFixed(2)}KB (${((1 - totalCompressedSize / totalOriginalSize) * 100).toFixed(1)}% reduction)`);
     
     return compressedFiles;
   } catch (error: unknown) {
