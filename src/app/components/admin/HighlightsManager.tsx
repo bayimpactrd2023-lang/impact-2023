@@ -57,6 +57,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
       imageUrl: '',
       iconName: 'star', // Default icon
       featured: false,
+      publishedDate: new Date().toISOString().split('T')[0], // Default to today
     };
     setEditingHighlight(newHighlight);
     setIsModalOpen(true);
@@ -179,6 +180,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
         images: (finalImages as string[]) || null,
         icon_name: editingHighlight.iconName || 'star',
         featured: editingHighlight.featured || false,
+        published_date: editingHighlight.publishedDate || null,
       };
 
       if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\\d{13}$/)) {

@@ -21,15 +21,15 @@ import {
 export const AdminValidationRules = {
   shortTitleMaxChars: 150,
   shortTitleMaxWords: 25,
-  shortTextMaxChars: 300,
-  shortTextMaxWords: 60,
+  shortTextMaxChars: 2000, // ~300 words for descriptions
+  shortTextMaxWords: 300,
   nameMaxChars: 80,
   nameMaxWords: 10,
   roleMaxChars: 80,
   roleMaxWords: 12,
   authorsMaxChars: 200,
   authorsMaxWords: 35,
-  contentMaxChars: 20000,
+  contentMaxChars: 35000, // ~5000 words max
 } as const;
 
 const digitsRegex = /\d/;

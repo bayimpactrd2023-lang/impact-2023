@@ -89,6 +89,7 @@ export const useHighlightsOperations = (
       description: '',
       imageUrl: '',
       iconName: 'Globe',
+      publishedDate: new Date().toISOString().split('T')[0], // Default to today
     };
     setEditingHighlight(newHighlight);
     setIsHighlightModalOpen(true);
