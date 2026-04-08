@@ -19,8 +19,8 @@ import {
 } from '@/app/context/ContentContext';
 
 export const AdminValidationRules = {
-  shortTitleMaxChars: 150,
-  shortTitleMaxWords: 25,
+  shortTitleMaxChars: 1000,
+  shortTitleMaxWords: 1000,
   shortTextMaxChars: 2000, // ~300 words for descriptions
   shortTextMaxWords: 300,
   nameMaxChars: 80,

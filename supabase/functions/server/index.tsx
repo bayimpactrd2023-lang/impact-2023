@@ -59,6 +59,13 @@ async function requireUser(c: any) {
   // Use ANON_KEY for JWT verification, not SERVICE_ROLE_KEY
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
   
+  // Log environment status (safely)
+  console.log("[Auth] Environment check:", {
+    hasSupabaseUrl: !!supabaseUrl,
+    hasAnonKey: !!anonKey,
+    urlPrefix: supabaseUrl ? supabaseUrl.substring(0, 20) + "..." : "missing",
+  });
+  
   if (!supabaseUrl || !anonKey) {
     console.error("[Auth] Missing SUPABASE_URL or ANON_KEY in environment");
     return null;
@@ -73,11 +80,29 @@ async function requireUser(c: any) {
 
   const token = authHeader.replace("Bearer ", "");
   
+  // Log token info for debugging (safely)
+  try {
+    const tokenParts = token.split(".");
+    if (tokenParts.length === 3) {
+      const payload = JSON.parse(atob(tokenParts[1]));
+      const now = Math.floor(Date.now() / 1000);
+      console.log("[Auth] Token debug:", {
+        exp: payload.exp,
+        now: now,
+        expired: payload.exp < now,
+        issuer: payload.iss,
+        hasUserId: !!payload.sub,
+      });
+    }
+  } catch (e) {
+    console.log("[Auth] Could not parse token for debug");
+  }
+  
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error) {
-      console.error("[Auth] getUser verification failed:", error.message);
+      console.error("[Auth] getUser verification failed:", error.message, "code:", error.code);
       return null;
     }
     

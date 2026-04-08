@@ -59,17 +59,20 @@ echo "🔧 Setting Edge Function secrets..."
 echo "   You will need:"
 echo "   - R2_WORKER_URL (from Cloudflare Worker)"
 echo "   - R2_WORKER_TOKEN (from Cloudflare Worker)"
+echo "   - SUPABASE_ANON_KEY (from Supabase Dashboard → Project Settings → API → anon/public key)"
 echo "   - INTERNAL_SERVICE_ROLE_KEY (from Supabase Dashboard → Project Settings → API → service_role key)"
 echo ""
 
 read -p "Enter R2_WORKER_URL: " R2_WORKER_URL
 read -p "Enter R2_WORKER_TOKEN: " R2_WORKER_TOKEN
+read -p "Enter SUPABASE_ANON_KEY (anon key): " ANON_KEY
 read -p "Enter INTERNAL_SERVICE_ROLE_KEY (service_role key): " SERVICE_ROLE_KEY
 
 echo ""
 echo "📝 Setting secrets..."
 supabase secrets set R2_WORKER_URL="$R2_WORKER_URL" --project-ref "$PROJECT_REF"
 supabase secrets set R2_WORKER_TOKEN="$R2_WORKER_TOKEN" --project-ref "$PROJECT_REF"
+supabase secrets set SUPABASE_ANON_KEY="$ANON_KEY" --project-ref "$PROJECT_REF"
 supabase secrets set INTERNAL_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" --project-ref "$PROJECT_REF"
 supabase secrets set SUPABASE_URL="https://$PROJECT_REF.supabase.co" --project-ref "$PROJECT_REF"
 

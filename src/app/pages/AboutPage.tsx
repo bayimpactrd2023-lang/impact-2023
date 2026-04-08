@@ -248,7 +248,9 @@ export const AboutPage: React.FC = () => {
               <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
                 <div
                   dangerouslySetInnerHTML={{
-                    __html: content.aboutDescription || content.aboutText || "IMPACT R&D is a research organization dedicated to transforming scientific research into practical solutions."
+                    __html: (content.aboutDescription || content.aboutText || "IMPACT R&D is a research organization dedicated to transforming scientific research into practical solutions.")
+                      .replace(/\n\n/g, '</p><p>')
+                      .replace(/\n/g, '<br>')
                   }}
                   className="prose prose-lg max-w-none"
                 />
