@@ -7,7 +7,7 @@
 import { X, CheckCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { Label } from '@/app/components/ui/label';
 import {
   Dialog,
@@ -66,26 +66,24 @@ export function HeroModal({
 
         <div className="space-y-6 py-2">
           {/* Title Field */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Title</Label>
-            <Textarea
-              value={heroTitle}
-              onChange={e => onUpdateTitle(e.target.value)}
-              rows={2}
-              placeholder="Enter hero title"
-            />
-          </div>
+          <InteractiveRichEditor
+            id="hero-title"
+            label="Title"
+            value={heroTitle}
+            onChange={onUpdateTitle}
+            rows={2}
+            placeholder="Enter hero title"
+          />
 
           {/* Subtitle Field */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Subtitle</Label>
-            <Textarea
-              value={heroSubtitle}
-              onChange={e => onUpdateSubtitle(e.target.value)}
-              rows={2}
-              placeholder="Enter hero subtitle"
-            />
-          </div>
+          <InteractiveRichEditor
+            id="hero-subtitle"
+            label="Subtitle"
+            value={heroSubtitle}
+            onChange={onUpdateSubtitle}
+            rows={2}
+            placeholder="Enter hero subtitle"
+          />
 
           {/* Background Image URL */}
           <div className="space-y-2">

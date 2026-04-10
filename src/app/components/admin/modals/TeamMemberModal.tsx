@@ -9,7 +9,7 @@ import { BaseEditModal } from './BaseEditModal';
 import { TeamMember } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 
@@ -71,16 +71,14 @@ export function TeamMemberModal({
           </div>
 
           {/* Description Field */}
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Description</Label>
-            <Textarea
-              value={item.description}
-              onChange={e => updateField('description', e.target.value)}
-              rows={4}
-              className="resize-none mt-1.5"
-              placeholder="Enter description or bio"
-            />
-          </div>
+          <InteractiveRichEditor
+            id="team-description"
+            label="Description"
+            value={item.description}
+            onChange={value => updateField('description', value)}
+            rows={4}
+            placeholder="Enter description or bio"
+          />
 
           {/* Member Photo */}
           <div className="space-y-3">

@@ -1,6 +1,46 @@
 import React from 'react';
 
-// Parse [[text]] syntax and convert to blue spans
+// URL regex pattern - matches http, https, and www URLs
+const URL_REGEX = /(https?:\/\/[^\s<>"{}|\^`\[\]]+|www\.[^\s<>"{}|\^`\[\]]+\.[a-zA-Z]{2,}[^\s<>"{}|\^`\[\]]*)/g;
+
+// Parse URLs and convert to clickable links
+const parseUrls = (text: string): React.ReactNode[] => {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = URL_REGEX.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    const url = match[0];
+    const href = url.startsWith('http') ? url : `https://${url}`;
+    const displayUrl = url.replace(/^https?:\/\//, '').replace(/^www\./, '');
+
+    parts.push(
+      <a
+        key={`url-${match.index}`}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[#1887FC] hover:text-[#0d6fd8] underline underline-offset-2 font-medium break-all"
+        title={href}
+      >
+        {displayUrl.length > 50 ? displayUrl.slice(0, 47) + '...' : displayUrl}
+      </a>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts;
+};
+
+// Parse [[text]] syntax and convert to blue spans (processes URLs inside as well)
 const parseHighlights = (text: string): React.ReactNode[] => {
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
@@ -9,7 +49,8 @@ const parseHighlights = (text: string): React.ReactNode[] => {
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+      // Parse URLs in the text before this highlight
+      parts.push(...parseUrls(text.slice(lastIndex, match.index)));
     }
     parts.push(
       <span key={match.index} className="text-[#1887FC] font-semibold">
@@ -20,7 +61,8 @@ const parseHighlights = (text: string): React.ReactNode[] => {
   }
 
   if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+    // Parse URLs in the remaining text
+    parts.push(...parseUrls(text.slice(lastIndex)));
   }
 
   return parts;
@@ -71,13 +113,14 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
     const line = lines[i];
     const trimmed = line.trim();
 
-    // Check for bullet list item
+    // Check for bullet list item (must be at start of line, but preserve content spacing)
     if (trimmed.startsWith('- ')) {
       if (!currentList || currentList.type !== 'ul') {
         flushList();
         currentList = { type: 'ul', items: [] };
       }
-      currentList.items.push(trimmed.slice(2));
+      // Use trimmed content for list items to remove the "- " prefix but keep the rest as-is
+      currentList.items.push(line.trimStart().slice(2));
       continue;
     }
 
@@ -88,20 +131,23 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
         flushList();
         currentList = { type: 'ol', items: [] };
       }
-      currentList.items.push(trimmed.slice(numberedMatch[0].length));
+      // Use trimmed content to remove the "1. " prefix but keep the rest as-is
+      currentList.items.push(line.trimStart().slice(numberedMatch[0].length));
       continue;
     }
 
-    // Regular paragraph text
+    // Regular paragraph text - preserve the original line including leading spaces
     if (trimmed) {
       flushList();
       elements.push(
-        <p key={`p-${i}`} className="mb-2 last:mb-0">
+        <p key={`p-${i}`} className="mb-2 last:mb-0 whitespace-pre-wrap">
           {parseHighlights(line)}
         </p>
       );
     } else {
+      // Empty line - add spacing between paragraphs
       flushList();
+      elements.push(<div key={`spacer-${i}`} className="h-4" />);
     }
   }
 
@@ -113,6 +159,6 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
 // Admin helper tip component
 export const RichTextHelperTip: React.FC = () => (
   <p className="text-xs text-[#1887FC] mb-2">
-    Tip: Use [[text]] to highlight in blue. Start lines with "- " for bullets or "1. " for numbered lists.
+    Tip: Use [[text]] to highlight in blue. Start lines with "- " for bullets or "1. " for numbered lists. URLs are automatically converted to clickable links.
   </p>
 );

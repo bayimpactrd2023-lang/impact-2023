@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Publication, PublicationForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -25,7 +25,6 @@ import { uploadPDF, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidatePublicationsCache } from '@/utils/cacheInvalidation';
-import { RichTextHelperTip } from '@/app/components/RichTextContent';
 
 interface PublicationsManagerProps {
   publications: Publication[];
@@ -354,19 +353,16 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="pub-content">Abstract/Description</Label>
-                  <RichTextHelperTip />
-                  <Textarea
-                    id="pub-content"
-                    value={editingPublication.content || ''}
-                    onChange={(e) =>
-                      setEditingPublication({ ...editingPublication, content: e.target.value })
-                    }
-                    rows={4}
-                    placeholder="Enter publication abstract or description"
-                  />
-                </div>
+                <InteractiveRichEditor
+                  id="pub-content"
+                  label="Abstract/Description"
+                  value={editingPublication.content || ''}
+                  onChange={(value) =>
+                    setEditingPublication({ ...editingPublication, content: value })
+                  }
+                  rows={4}
+                  placeholder="Enter publication abstract or description"
+                />
 
                 <div>
                   <Label htmlFor="pub-link">External Link</Label>

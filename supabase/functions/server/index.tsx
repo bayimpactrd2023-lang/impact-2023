@@ -57,12 +57,13 @@ async function requireUser(c: any) {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   // Use ANON_KEY for JWT verification, not SERVICE_ROLE_KEY
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   
   // Log environment status (safely)
   console.log("[Auth] Environment check:", {
     hasSupabaseUrl: !!supabaseUrl,
-    hasAnonKey: !!anonKey,
+    hasAnonKey: !!Deno.env.get("SUPABASE_ANON_KEY"),
+    hasServiceKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
     urlPrefix: supabaseUrl ? supabaseUrl.substring(0, 20) + "..." : "missing",
   });
   
@@ -102,7 +103,12 @@ async function requireUser(c: any) {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error) {
-      console.error("[Auth] getUser verification failed:", error.message, "code:", error.code);
+      console.error("[Auth] getUser verification failed:", {
+        message: error.message,
+        code: error.code,
+        status: error.status,
+        name: error.name
+      });
       return null;
     }
     

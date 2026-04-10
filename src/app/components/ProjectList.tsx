@@ -361,7 +361,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                               Project Context
                             </h4>
                             <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
-                              {project.context}
+                              <RichTextContent text={project.context} enabled={isRichTextEnabled(project.category)} />
                             </p>
                           </div>
                         )}

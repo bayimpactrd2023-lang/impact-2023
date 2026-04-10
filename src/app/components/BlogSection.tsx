@@ -105,7 +105,7 @@ export const BlogSection: React.FC = () => {
                 </h3>
 
                 {/* Story Preview - First 3 lines of content */}
-                <p className="text-gray-700 text-base sm:text-lg leading-relaxed line-clamp-3 mb-4">
+                <p className="text-gray-700 text-base sm:text-lg leading-relaxed line-clamp-3 mb-4 whitespace-pre-wrap">
                   {blog.content}
                 </p>
 

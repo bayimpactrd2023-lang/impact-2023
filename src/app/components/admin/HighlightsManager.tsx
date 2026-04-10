@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Highlight, HighlightForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -23,10 +22,10 @@ import {
   getHighlightsPaginated,
   getAllHighlights,
 } from '@/services/supabaseService';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
-import { RichTextHelperTip } from '@/app/components/RichTextContent';
 
 interface HighlightsManagerProps {
   highlights: Highlight[];
@@ -443,16 +442,16 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                 </div>
 
                 <div>
-                  <Label htmlFor="highlight-description">Description *</Label>
-                  <RichTextHelperTip />
-                  <Textarea
+                  <InteractiveRichEditor
                     id="highlight-description"
+                    label="Description"
                     value={editingHighlight.description}
-                    onChange={(e) =>
-                      setEditingHighlight({ ...editingHighlight, description: e.target.value })
+                    onChange={(val) =>
+                      setEditingHighlight({ ...editingHighlight, description: val })
                     }
                     rows={4}
                     placeholder="Enter highlight description"
+                    required
                   />
                 </div>
 

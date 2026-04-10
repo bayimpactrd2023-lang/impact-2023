@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { PublicationForm } from '@/app/context/ContentContext';
 import { createPublication } from '@/services/supabaseService';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { uploadPDF } from '@/utils/storageUpload';
 
 import {
@@ -27,8 +28,6 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { RichTextHelperTip } from '@/app/components/RichTextContent';
-import { Textarea } from '@/app/components/ui/textarea';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 
 type QuickPublicationDraft = Omit<PublicationForm, 'pdfUrl'> & {
@@ -197,28 +196,24 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="pub-excerpt">Excerpt</Label>
-            <Textarea
-              id="pub-excerpt"
-              value={draft.excerpt}
-              onChange={(e) => setDraft({ ...draft, excerpt: e.target.value })}
-              placeholder="Brief excerpt or summary"
-              rows={2}
-            />
-          </div>
+          <InteractiveRichEditor
+            id="pub-excerpt"
+            label="Excerpt"
+            value={draft.excerpt || ''}
+            onChange={(val) => setDraft({ ...draft, excerpt: val })}
+            placeholder="Brief excerpt or summary"
+            rows={2}
+          />
 
-          <div>
-            <Label htmlFor="pub-content">Content *</Label>
-            <RichTextHelperTip />
-            <Textarea
-              id="pub-content"
-              value={draft.content}
-              onChange={(e) => setDraft({ ...draft, content: e.target.value })}
-              placeholder="Full publication content..."
-              rows={6}
-            />
-          </div>
+          <InteractiveRichEditor
+            id="pub-content"
+            label="Content"
+            value={draft.content || ''}
+            onChange={(val) => setDraft({ ...draft, content: val })}
+            placeholder="Full publication content..."
+            rows={6}
+            required
+          />
 
           <div>
             <Label>PDF Document</Label>

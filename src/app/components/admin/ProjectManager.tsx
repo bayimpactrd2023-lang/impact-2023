@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { Project, ProjectForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
@@ -24,6 +23,8 @@ import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateProjectsCache } from '@/utils/cacheInvalidation';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { getImageUrl } from '@/utils/r2Upload';
+
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 
 import { 
   AdminValidationRules,
@@ -342,52 +343,39 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="project-description">Project overview (Required) *</Label>
-                  {(category === 'locally_funded' || category === 'internationally_funded') && (
-                    <p className="text-xs text-[#1887FC] mb-2">
-                      Tip: Use [[text]] to highlight in blue. Start lines with "- " for bullets or "1. " for numbered lists.
-                    </p>
-                  )}
-                  <Textarea
-                    id="project-description"
-                    value={editingProject.description}
-                    onChange={(e) =>
-                      setEditingProject({ ...editingProject, description: e.target.value })
-                    }
-                    rows={6}
-                    placeholder="Enter project description"
-                  />
-                </div>
+                <InteractiveRichEditor
+                  id="project-description"
+                  label="Project overview (Required)"
+                  value={editingProject.description}
+                  onChange={(val) =>
+                    setEditingProject({ ...editingProject, description: val })
+                  }
+                  rows={6}
+                  placeholder="Enter project description"
+                  required
+                />
 
                 {/* Project Context - Only show for categories other than international and local */}
                 {category !== 'internationally_funded' && category !== 'locally_funded' && (
-                  <div>
-                    <Label htmlFor="project-context">Project Context</Label>
-                    <Textarea
-                      id="project-context"
-                      value={editingProject.context || ''}
-                      onChange={(e) =>
-                        setEditingProject({ ...editingProject, context: e.target.value })
-                      }
-                      rows={4}
-                      placeholder="Enter project context"
-                    />
-                  </div>
+                  <InteractiveRichEditor
+                    id="project-context"
+                    label="Project Context"
+                    value={editingProject.context || ''}
+                    onChange={(val) =>
+                      setEditingProject({ ...editingProject, context: val })
+                    }
+                    rows={4}
+                    placeholder="Enter project context"
+                  />
                 )}
 
                 <div>
-                  <Label htmlFor="project-objectives">Objectives</Label>
-                  {(category === 'locally_funded' || category === 'internationally_funded') && (
-                    <p className="text-xs text-[#1887FC] mb-2">
-                      Tip: Use [[text]] to highlight in blue. Start lines with "- " for bullets or "1. " for numbered lists.
-                    </p>
-                  )}
-                  <Textarea
+                  <InteractiveRichEditor
                     id="project-objectives"
+                    label="Objectives"
                     value={editingProject.objectives || ''}
-                    onChange={(e) =>
-                      setEditingProject({ ...editingProject, objectives: e.target.value })
+                    onChange={(val) =>
+                      setEditingProject({ ...editingProject, objectives: val })
                     }
                     rows={4}
                     placeholder="Enter project objectives"
@@ -395,17 +383,12 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                 </div>
 
                 <div>
-                  <Label htmlFor="project-methodology">Methodology and Activities</Label>
-                  {(category === 'locally_funded' || category === 'internationally_funded') && (
-                    <p className="text-xs text-[#1887FC] mb-2">
-                      Tip: Use [[text]] to highlight in blue. Start lines with "- " for bullets or "1. " for numbered lists.
-                    </p>
-                  )}
-                  <Textarea
+                  <InteractiveRichEditor
                     id="project-methodology"
+                    label="Methodology and Activities"
                     value={editingProject.methodology || ''}
-                    onChange={(e) =>
-                      setEditingProject({ ...editingProject, methodology: e.target.value })
+                    onChange={(val) =>
+                      setEditingProject({ ...editingProject, methodology: val })
                     }
                     rows={4}
                     placeholder="Enter methodology and activities"

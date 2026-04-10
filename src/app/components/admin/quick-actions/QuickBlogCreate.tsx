@@ -25,8 +25,7 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { Textarea } from '@/app/components/ui/textarea';
-import { RichTextHelperTip } from '@/app/components/RichTextContent';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 
@@ -193,17 +192,15 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
             />
           </div>
 
-          <div>
-            <Label htmlFor="blog-content">Content *</Label>
-            <RichTextHelperTip />
-            <Textarea
-              id="blog-content"
-              value={draft.content}
-              onChange={(e) => setDraft({ ...draft, content: e.target.value })}
-              placeholder="Write your blog content..."
-              rows={6}
-            />
-          </div>
+          <InteractiveRichEditor
+            id="blog-content"
+            label="Content *"
+            value={draft.content}
+            onChange={(value) => setDraft({ ...draft, content: value })}
+            rows={6}
+            placeholder="Write your blog content..."
+            required
+          />
 
           <div>
             <Label>Featured Image</Label>

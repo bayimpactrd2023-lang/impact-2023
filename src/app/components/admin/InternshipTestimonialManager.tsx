@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { InternshipTestimonial, InternshipTestimonialForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -367,31 +367,28 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="testimonial-quote">Quote/Short Testimonial *</Label>
-                  <Textarea
-                    id="testimonial-quote"
-                    value={editingTestimonial.quote}
-                    onChange={(e) =>
-                      setEditingTestimonial({ ...editingTestimonial, quote: e.target.value })
-                    }
-                    rows={3}
-                    placeholder="Enter a short quote or testimonial..."
-                  />
-                </div>
+                <InteractiveRichEditor
+                  id="testimonial-quote"
+                  label="Quote/Short Testimonial *"
+                  value={editingTestimonial.quote}
+                  onChange={(value) =>
+                    setEditingTestimonial({ ...editingTestimonial, quote: value })
+                  }
+                  rows={3}
+                  placeholder="Enter a short quote or testimonial..."
+                  required
+                />
 
-                <div>
-                  <Label htmlFor="testimonial-fulltext">Full Testimonial</Label>
-                  <Textarea
-                    id="testimonial-fulltext"
-                    value={editingTestimonial.fullText}
-                    onChange={(e) =>
-                      setEditingTestimonial({ ...editingTestimonial, fullText: e.target.value })
-                    }
-                    rows={6}
-                    placeholder="Enter the full testimonial text..."
-                  />
-                </div>
+                <InteractiveRichEditor
+                  id="testimonial-fulltext"
+                  label="Full Testimonial"
+                  value={editingTestimonial.fullText || ''}
+                  onChange={(value) =>
+                    setEditingTestimonial({ ...editingTestimonial, fullText: value })
+                  }
+                  rows={6}
+                  placeholder="Enter the full testimonial text..."
+                />
 
                 <div>
                   <Label htmlFor="testimonial-year">Year *</Label>

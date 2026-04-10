@@ -15,6 +15,7 @@ import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 import { toast } from 'sonner';
 import { RichTextContent, RichTextHelperTip } from '@/app/components/RichTextContent';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { ProjectManager } from '@/app/components/admin/ProjectManager';
 import { FinancialStatementManager } from '@/app/components/admin/FinancialStatementManager';
 import { InternshipTestimonialManager } from '@/app/components/admin/InternshipTestimonialManager';
@@ -1214,11 +1215,13 @@ export const AdminPanel: React.FC = () => {
                 <div className="space-y-6 py-2">
                   <div className="space-y-2"><Label className="text-sm font-medium">Title</Label><Input value={editingNews.title} onChange={(e) => { const u={...editingNews,title:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'title',e.target.value); }} /></div>
                   <div className="space-y-2"><Label className="text-sm font-medium">Date</Label><Input type="date" value={editingNews.date} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => { const u={...editingNews,date:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'date',e.target.value); }} /></div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Content</Label>
-                    <RichTextHelperTip />
-                    <Textarea value={editingNews.content} onChange={(e) => { const u={...editingNews,content:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'content',e.target.value); }} rows={8} className="resize-none" />
-                  </div>
+                  <InteractiveRichEditor
+                    id="news-content"
+                    label="Content"
+                    value={editingNews.content}
+                    onChange={(value) => { const u={...editingNews,content:value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'content',value); }}
+                    rows={8}
+                  />
                   
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Cover Image (Drag & Drop)</Label>
@@ -1583,21 +1586,15 @@ export const AdminPanel: React.FC = () => {
               </div>
 
               {/* Content */}
-              <div className="space-y-1.5">
-                <Label htmlFor="qb-content" className="text-sm font-semibold">
-                  Content <span className="text-red-500">*</span>
-                </Label>
-                <RichTextHelperTip />
-                <Textarea
-                  id="qb-content"
-                  value={draft.content}
-                  onChange={(e) => setDraft(p => ({ ...p, content: e.target.value }))}
-                  rows={10}
-                  placeholder="Write your blog post content here..."
-                  className="resize-none focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC] text-sm leading-relaxed min-h-[200px]"
-                />
-                <p className="text-xs text-gray-400 text-right">{draft.content.length} characters</p>
-              </div>
+              <InteractiveRichEditor
+                id="qb-content"
+                label="Content"
+                value={draft.content}
+                onChange={(value) => setDraft(p => ({ ...p, content: value }))}
+                rows={10}
+                placeholder="Write your blog post content here..."
+                required
+              />
 
               {/* Author + Role */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1742,21 +1739,15 @@ export const AdminPanel: React.FC = () => {
               </div>
 
               {/* Content */}
-              <div className="space-y-1.5">
-                <Label htmlFor="qp-content" className="text-sm font-semibold">
-                  Content <span className="text-red-500">*</span>
-                </Label>
-                <RichTextHelperTip />
-                <Textarea
-                  id="qp-content"
-                  value={publicationDraft.content}
-                  onChange={(e) => setPublicationDraft(p => ({ ...p, content: e.target.value }))}
-                  rows={10}
-                  placeholder="Write your publication content here..."
-                  className="resize-none focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC] text-sm leading-relaxed min-h-[200px]"
-                />
-                <p className="text-xs text-gray-400 text-right">{(publicationDraft.content || '').length} characters</p>
-              </div>
+              <InteractiveRichEditor
+                id="qp-content"
+                label="Content"
+                value={publicationDraft.content || ''}
+                onChange={(value) => setPublicationDraft(p => ({ ...p, content: value }))}
+                rows={10}
+                placeholder="Write your publication content here..."
+                required
+              />
 
               {/* Published Date */}
               <div className="space-y-1.5">

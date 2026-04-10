@@ -5,11 +5,11 @@
  * Extends BaseEditModal with highlight-specific form fields.
  */
 
+import { InteractiveRichEditor } from '../InteractiveRichEditor';
 import { BaseEditModal } from './BaseEditModal';
 import { Highlight } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
 import { Label } from '@/app/components/ui/label';
 import {
   Select,
@@ -70,16 +70,15 @@ export function HighlightModal({
           </div>
 
           {/* Description Field */}
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Description</Label>
-            <Textarea
-              value={item.description}
-              onChange={e => updateField('description', e.target.value)}
-              rows={3}
-              className="resize-none mt-1.5"
-              placeholder="Enter highlight description"
-            />
-          </div>
+          <InteractiveRichEditor
+            id="highlight-description"
+            label="Description"
+            value={item.description}
+            onChange={val => updateField('description', val)}
+            rows={3}
+            placeholder="Enter highlight description"
+            required
+          />
 
           {/* Icon Selector */}
           <div className="space-y-3">
@@ -101,16 +100,14 @@ export function HighlightModal({
           </div>
 
           {/* Detailed Content Field */}
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Detailed Content</Label>
-            <Textarea
-              value={item.content || ''}
-              onChange={e => updateField('content', e.target.value)}
-              rows={6}
-              className="resize-none mt-1.5"
-              placeholder="Enter detailed content (optional)"
-            />
-          </div>
+          <InteractiveRichEditor
+            id="highlight-content"
+            label="Detailed Content"
+            value={item.content || ''}
+            onChange={val => updateField('content', val)}
+            rows={6}
+            placeholder="Enter detailed content (optional)"
+          />
 
           {/* Published Date Field */}
           <div className="space-y-3">

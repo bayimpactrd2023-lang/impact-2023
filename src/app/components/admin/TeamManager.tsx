@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { TeamMember, TeamMemberForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -19,11 +18,11 @@ import {
   getTeamMembersPaginated,
 } from '@/services/supabaseService';
 
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { uploadImage, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateTeamCache } from '@/utils/cacheInvalidation';
-import { RichTextHelperTip } from '@/app/components/RichTextContent';
 
 interface TeamManagerProps {
   teamMembers: TeamMember[];
@@ -280,13 +279,12 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
                 </div>
 
                 <div>
-                  <Label htmlFor="member-bio">Biography</Label>
-                  <RichTextHelperTip />
-                  <Textarea
+                  <InteractiveRichEditor
                     id="member-bio"
+                    label="Biography"
                     value={editingMember.description || ''}
-                    onChange={(e) =>
-                      setEditingMember({ ...editingMember, description: e.target.value })
+                    onChange={(val) =>
+                      setEditingMember({ ...editingMember, description: val })
                     }
                     rows={4}
                     placeholder="Enter member biography"

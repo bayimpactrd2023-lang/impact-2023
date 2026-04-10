@@ -3,7 +3,6 @@ import { FinancialStatement, FinancialStatementForm } from '@/app/context/Conten
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { Textarea } from '@/app/components/ui/textarea';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
@@ -18,6 +17,7 @@ import {
   deleteFinancialStatement as deleteStatementFromDb,
   getFinancialStatementsPaginated,
 } from '@/services/supabaseService';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateFinancialCache } from '@/utils/cacheInvalidation';
@@ -304,18 +304,16 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="statement-description">Description (Optional)</Label>
-                <Textarea
-                  id="statement-description"
-                  value={editingStatement.description || ''}
-                  onChange={(e) =>
-                    setEditingStatement({ ...editingStatement, description: e.target.value })
-                  }
-                  placeholder="Enter a brief description of this financial statement"
-                  rows={3}
-                />
-              </div>
+              <InteractiveRichEditor
+                id="statement-description"
+                label="Description (Optional)"
+                value={editingStatement.description || ''}
+                onChange={(val) =>
+                  setEditingStatement({ ...editingStatement, description: val })
+                }
+                placeholder="Enter a brief description of this financial statement"
+                rows={3}
+              />
 
               <div>
                 <Label>PDF File (Drag & Drop) *</Label>

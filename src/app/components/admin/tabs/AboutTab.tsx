@@ -6,8 +6,7 @@
 
 import { CheckCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { Textarea } from '@/app/components/ui/textarea';
-import { Label } from '@/app/components/ui/label';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import {
   Card,
   CardContent,
@@ -44,17 +43,14 @@ export function AboutTab({ aboutText, onUpdateAbout, onSave }: AboutTabProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="about-text">About Text</Label>
-            <Textarea
-              id="about-text"
-              value={aboutText}
-              onChange={e => onUpdateAbout(e.target.value)}
-              rows={10}
-              className="mt-2"
-              placeholder="Enter your organization's about text..."
-            />
-          </div>
+          <InteractiveRichEditor
+            id="about-text"
+            label="About Text"
+            value={aboutText}
+            onChange={onUpdateAbout}
+            rows={10}
+            placeholder="Enter your organization's about text..."
+          />
 
           <Button
             className="w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"

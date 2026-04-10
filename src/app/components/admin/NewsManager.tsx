@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NewsItem, NewsItemForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -24,7 +24,6 @@ import {
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
-import { RichTextHelperTip } from '@/app/components/RichTextContent';
 
 interface NewsManagerProps {
   news: NewsItem[];
@@ -319,19 +318,17 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="news-content">Content *</Label>
-                  <RichTextHelperTip />
-                  <Textarea
-                    id="news-content"
-                    value={editingNews.content}
-                    onChange={(e) =>
-                      setEditingNews({ ...editingNews, content: e.target.value })
-                    }
-                    rows={6}
-                    placeholder="Enter news content"
-                  />
-                </div>
+                <InteractiveRichEditor
+                  id="news-content"
+                  label="Content *"
+                  value={editingNews.content}
+                  onChange={(value) =>
+                    setEditingNews({ ...editingNews, content: value })
+                  }
+                  rows={6}
+                  placeholder="Enter news content"
+                  required
+                />
 
                 <div>
                   <Label>Cover Image (Drag & Drop)</Label>

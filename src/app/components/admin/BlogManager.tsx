@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { Textarea } from '@/app/components/ui/textarea';
+import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
 import { Plus, Trash2, FileText, Edit, CheckCircle, X } from 'lucide-react';
 import {
   Dialog,
@@ -28,7 +28,6 @@ import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
 import { invalidateBlogCache } from '@/utils/cacheInvalidation';
 import { AdminValidationRules, mergeValidationResults, validateMaxChars, validateMaxWords, validateNoDigits, validateRequiredTrimmed } from '@/app/components/admin/utils/adminHelpers';
-import { RichTextHelperTip } from '@/app/components/RichTextContent';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 
 interface BlogManagerProps {
@@ -280,7 +279,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                   <h4 className="font-semibold text-sm line-clamp-2 mb-2">
                     {post.title || "Untitled Post"}
                   </h4>
-                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                  <p className="text-xs text-gray-600 mb-2 line-clamp-2 whitespace-pre-wrap">
                     {post.content}
                   </p>
                   {post.date && (
@@ -352,22 +351,16 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="modal-blog-content" className="text-sm font-semibold">
-                    Content
-                  </Label>
-                  <RichTextHelperTip />
-                  <Textarea
-                    id="modal-blog-content"
-                    value={editingPost.content}
-                    onChange={(e) =>
-                      setEditingPost({ ...editingPost, content: e.target.value })
-                    }
-                    rows={12}
-                    placeholder="Write your blog post content here..."
-                    className="font-sans text-base leading-relaxed resize-none focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC] min-h-[300px]"
-                  />
-                </div>
+                <InteractiveRichEditor
+                  id="modal-blog-content"
+                  label="Content"
+                  value={editingPost.content}
+                  onChange={(value) =>
+                    setEditingPost({ ...editingPost, content: value })
+                  }
+                  rows={12}
+                  placeholder="Write your blog post content here..."
+                />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
