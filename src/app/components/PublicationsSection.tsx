@@ -66,7 +66,7 @@ export const PublicationsSection: React.FC = React.memo(() => {
           <div className="w-16 sm:w-20 md:w-24 h-1 bg-gradient-to-r from-transparent via-[#1887FC] to-transparent mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full" />
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {featuredPublications.map((publication, index) => (
             <motion.div
               key={publication.id}
@@ -74,11 +74,14 @@ export const PublicationsSection: React.FC = React.memo(() => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.15 }}
               viewport={{ once: true }}
-              className="backdrop-blur-xl bg-white/10 rounded-2xl border border-white/20 hover:border-[#1887FC]/40 shadow-lg hover:shadow-xl hover:shadow-[#1887FC]/10 transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col h-full"
+              className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100/50 mx-0 sm:mx-0 cursor-pointer"
               onClick={() => handleReadPublication(publication)}
             >
+              {/* Top gradient line */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] z-10" />
+              
               {/* Publication Image/Book Cover */}
-              <div className="relative h-56 overflow-hidden">
+              <div className="relative h-64 sm:h-56 overflow-hidden">
                 {publication.imageUrl ? (
                   <ImageWithFallback
                     src={publication.imageUrl}
@@ -86,57 +89,33 @@ export const PublicationsSection: React.FC = React.memo(() => {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
-                    <BookOpen className="w-14 h-14 text-[#1887FC] transition-transform duration-300 group-hover:scale-110" />
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                    <BookOpen className="w-16 h-16 text-[#1887FC]" />
                   </div>
                 )}
-                
-                {/* Subtle gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                
-                {/* Featured badge */}
-                <div className="absolute top-3 right-3 backdrop-blur-md bg-[#1887FC]/80 px-2.5 py-1 rounded-md border border-white/30">
-                  <span className="text-[10px] font-bold text-white uppercase tracking-wide">Featured</span>
-                </div>
               </div>
 
               {/* Publication Content */}
-              <div className="p-5 flex flex-col flex-grow">
-                <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 leading-snug group-hover:text-[#60a5fa] transition-colors">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 leading-tight">
                   {publication.title}
                 </h3>
-                <p className="text-sm text-white/60 mb-4 line-clamp-1">
+                <p className="text-sm text-gray-600 mb-4 line-clamp-1">
                   By {publication.authors}
                 </p>
-                <div className="mt-auto flex gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleReadPublication(publication);
-                    }}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1887FC] text-white rounded-lg font-medium text-sm hover:bg-[#3b82f6] transition-colors"
-                  >
-                    <span>View Details</span>
-                    <ExternalLink className="w-4 h-4" />
-                  </motion.button>
-                  {publication.link && publication.link !== '#' && (
-                    <motion.a
-                      href={publication.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.15)' }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center justify-center w-10 h-10 bg-white/10 border border-white/20 text-white rounded-lg transition-all duration-300"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </motion.a>
-                  )}
-                </div>
+                <motion.button
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReadPublication(publication);
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold shadow-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105"
+                >
+                  <span>Learn More</span>
+                  <ExternalLink className="w-5 h-5" />
+                </motion.button>
               </div>
             </motion.div>
           ))}

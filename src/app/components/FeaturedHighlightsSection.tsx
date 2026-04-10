@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { useContent } from '@/app/context/ContentContext';
 import { Highlight } from '@/app/context/ContentContext';
 import * as Icons from 'lucide-react';
-import { Star, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { HighlightDetailModal } from '@/app/components/HighlightDetailModal';
 import { RichTextContent } from '@/app/components/RichTextContent';
 import { useNavigate } from 'react-router';
@@ -33,7 +33,7 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
   }, []);
 
   const getIcon = React.useCallback((iconName: string) => {
-    const Icon = (Icons as any)[iconName] || Star;
+    const Icon = (Icons as any)[iconName] || Icons.Star;
     return Icon;
   }, []);
 
@@ -79,7 +79,7 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {featuredHighlights.map((highlight, index) => {
               const Icon = getIcon(highlight.iconName);
               
@@ -90,52 +90,48 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.15 }}
                   viewport={{ once: true }}
-                  className="card-futuristic group cursor-pointer"
+                  className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100/50 mx-0 sm:mx-0 cursor-pointer"
                   onClick={() => handleHighlightClick(highlight)}
                 >
+                  {/* Top gradient line */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] z-10" />
+                  
                   {/* Highlight Image */}
-                  <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden rounded-xl mb-5">
+                  <div className="relative h-64 sm:h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                     {highlight.imageUrl ? (
                       <ImageWithFallback
                         src={highlight.imageUrl}
                         alt={highlight.title}
-                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1887FC] via-[#3b82f6] to-[#60a5fa]">
-                        <Icon className="w-20 h-20 text-white transition-all duration-500 group-hover:scale-125 group-hover:rotate-12 drop-shadow-2xl animate-float-slow" />
+                        <Icon className="w-16 h-16 text-white" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
-                    
-                    {/* Floating badge for featured */}
-                    <div className="absolute top-3 right-3 backdrop-blur-md bg-white/90 px-3 py-1.5 rounded-full shadow-lg border border-white/50">
-                      <span className="text-xs font-bold text-[#1887FC]">★ FEATURED</span>
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   </div>
 
                   {/* Highlight Content */}
-                  <div className="px-6 pb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-[#1887FC] transition-colors">
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight">
                       {highlight.title}
                     </h3>
-                    <div className="text-sm text-gray-600 mb-5 line-clamp-3">
-                      <RichTextContent text={highlight.description} className="text-sm line-clamp-3" />
+                    <div className="text-gray-600 mb-4 line-clamp-3">
+                      <RichTextContent text={highlight.description} className="text-sm sm:text-base line-clamp-3" />
                     </div>
-                    <div className="flex gap-3">
-                      <motion.button
-                        whileHover={{ x: 5 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleHighlightClick(highlight);
-                        }}
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300"
-                      >
-                        <span>Learn More</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </motion.button>
-                    </div>
+                    <motion.button
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleHighlightClick(highlight);
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold shadow-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105"
+                    >
+                      <span>Learn More</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </motion.button>
                   </div>
                 </motion.div>
               );

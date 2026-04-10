@@ -58,12 +58,12 @@ export const NewsModal: React.FC<NewsModalProps> = ({ isOpen, onClose, newsItem 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl lg:max-w-6xl max-h-[95vh] overflow-y-auto scrollbar-hide bg-white border-none shadow-2xl">
+      <DialogContent className="w-full max-w-full sm:max-w-5xl lg:max-w-6xl max-h-[95vh] overflow-y-auto scrollbar-hide bg-white border-none shadow-2xl p-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="p-6 md:p-8"
+          className="p-4 sm:p-6 md:p-8"
         >
           <div className="mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-2">

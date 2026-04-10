@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import { Project } from "@/app/context/ContentContext";
 import {
   ChevronDown,
@@ -58,6 +58,36 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   const [galleryIndex, setGalleryIndex] = useState(0);
 
   const [showOnlyOneImage, setShowOnlyOneImage] = useState(false);
+
+  // Mouse drag-to-scroll refs for gallery
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Mouse drag handlers for gallery
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!galleryRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - galleryRef.current.offsetLeft);
+    setScrollLeft(galleryRef.current.scrollLeft);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !galleryRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - galleryRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Scroll speed multiplier
+    galleryRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
 
   // Production-ready scroll-to-top using native browser API
   const scrollRef = useScrollToTop([pagination?.currentPage || currentPage]);
@@ -275,10 +305,17 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                       : [];
 
                 return (
-                  <div
+                  <motion.div
                     key={project.id}
-                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    viewport={{ once: true }}
+                    className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100/50"
                   >
+                    {/* Top gradient line */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] z-10" />
+                    
                     {/* Collapsed View - Title with Image */}
                     <div className="flex flex-col md:flex-row gap-4 p-6">
                       {/* Image - Clickable */}
@@ -287,18 +324,14 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                           onClick={(e) =>
                             handleImageClick(project, e, coverImage, false)
                           }
-                          className="relative group overflow-hidden rounded-lg w-full h-48 md:h-40"
+                          className="relative group overflow-hidden rounded-xl sm:rounded-2xl w-full h-56 md:h-40"
                         >
                           <ImageWithFallback
                             src={coverImage}
                             alt={project.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                            <span className="text-white opacity-0 group-hover:opacity-100 font-semibold px-4 py-2 bg-black/50 rounded">
-                              View Full Size
-                            </span>
-                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                         </button>
                       </div>
 
@@ -311,19 +344,21 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             }
                             className="text-left w-full group"
                           >
-                            <h3 className="text-2xl font-bold text-[#1887FC] group-hover:text-[#0d6fd8] transition-colors flex items-center justify-between">
-                              {project.title}
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className={`text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-[#1887FC] transition-colors leading-tight ${isExpanded ? '' : 'line-clamp-2'}`}>
+                                {project.title}
+                              </h3>
                               {isExpanded ? (
-                                <ChevronUp className="w-6 h-6 flex-shrink-0 ml-2" />
+                                <ChevronUp className="w-6 h-6 flex-shrink-0 mt-1" />
                               ) : (
-                                <ChevronDown className="w-6 h-6 flex-shrink-0 ml-2" />
+                                <ChevronDown className="w-6 h-6 flex-shrink-0 mt-1" />
                               )}
-                            </h3>
+                            </div>
                           </button>
                           {!isExpanded && project.description && (
-                            <p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">
+                            <div className="text-gray-600 mt-3 line-clamp-2 whitespace-pre-line">
                               <RichTextContent text={project.description} enabled={isRichTextEnabled(project.category)} />
-                            </p>
+                            </div>
                           )}
                         </div>
                         {!isExpanded && (
@@ -331,9 +366,10 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             onClick={() =>
                               toggleExpand(project.id)
                             }
-                            className="text-[#1887FC] hover:underline mt-2 text-left font-medium"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 mt-4 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 w-full md:w-fit"
                           >
-                            View Details →
+                            <span>View Details</span>
+                            <ChevronDown className="w-5 h-5" />
                           </button>
                         )}
                       </div>
@@ -341,16 +377,16 @@ export const ProjectList: React.FC<ProjectListProps> = ({
 
                     {/* Expanded View - Full Details */}
                     {isExpanded && (
-                      <div className="px-6 pb-6 space-y-6 border-t pt-6">
+                      <div className="px-6 pb-6 space-y-6 border-t border-gray-100 pt-6">
                         {/* Description */}
                         {project.description && (
                           <div>
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
                               Project Overview
                             </h4>
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
+                            <div className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
                               <RichTextContent text={project.description} enabled={isRichTextEnabled(project.category)} />
-                            </p>
+                            </div>
                           </div>
                         )}
 
@@ -360,9 +396,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
                               Project Context
                             </h4>
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
+                            <div className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
                               <RichTextContent text={project.context} enabled={isRichTextEnabled(project.category)} />
-                            </p>
+                            </div>
                           </div>
                         )}
 
@@ -372,9 +408,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
                               Objectives
                             </h4>
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
+                            <div className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
                               <RichTextContent text={project.objectives} enabled={isRichTextEnabled(project.category)} />
-                            </p>
+                            </div>
                           </div>
                         )}
 
@@ -384,26 +420,36 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-2">
                               Methodology and Activities
                             </h4>
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
+                            <div className="text-gray-700 leading-relaxed whitespace-pre-line text-justify">
                               <RichTextContent text={project.methodology} enabled={isRichTextEnabled(project.category)} />
-                            </p>
+                            </div>
                           </div>
                         )}
 
-                        {/* Image Gallery (if multiple images) */}
+                        {/* Image Gallery (if multiple images) - Horizontal Swipeable */}
                         {displayImages.length > 1 && (
                           <div>
                             <h4 className="text-lg font-semibold text-[#1887FC] mb-4">
                               Project Gallery
                             </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {/* Horizontal scrollable gallery with snap */}
+                            <div 
+                              ref={galleryRef}
+                              className={`flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory -mx-6 sm:-mx-0 cursor-grab ${isDragging ? 'cursor-grabbing' : ''}`}
+                              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                              onMouseDown={handleMouseDown}
+                              onMouseMove={handleMouseMove}
+                              onMouseUp={handleMouseUp}
+                              onMouseLeave={handleMouseLeave}
+                            >
                               {displayImages.map((img, idx) => (
                                 <button
                                   key={idx}
                                   onClick={(e) =>
                                     handleImageClick(project, e, img, true)
                                   }
-                                  className="relative group overflow-hidden rounded-lg border-2 border-blue-200 hover:border-[#1887FC] transition-all aspect-video"
+                                  className="relative group overflow-hidden rounded-2xl sm:rounded-3xl flex-shrink-0 snap-start first:ml-6 last:mr-6 sm:first:ml-0 sm:last:mr-0"
+                                  style={{ width: 'calc(100vw - 3rem)', maxWidth: '360px', height: '260px' }}
                                 >
                                   <ImageWithFallback
                                     src={
@@ -411,29 +457,32 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                                       "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400"
                                     }
                                     alt={`${project.title} - Image ${idx + 1}`}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
+                                    className="w-full h-full object-cover cursor-pointer"
                                   />
-                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                                  {/* Image counter badge */}
+                                  <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/70 text-white text-sm font-semibold rounded-full backdrop-blur-sm min-w-[3rem] text-center">
+                                    {idx + 1}/{displayImages.length}
+                                  </div>
                                 </button>
                               ))}
                             </div>
                             <p className="text-xs text-gray-500 mt-2 italic">
-                              Click on any photo to view in
-                              slideshow
+                              Swipe to see more photos • Click to view full size
                             </p>
                           </div>
                         )}
 
                         <button
                           onClick={() => toggleExpand(project.id)}
-                          className="text-[#1887FC] hover:underline font-medium flex items-center gap-2"
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200 w-full md:w-fit"
                         >
                           <ChevronUp className="w-5 h-5" />
                           Collapse Details
                         </button>
                       </div>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

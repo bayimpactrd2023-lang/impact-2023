@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Highlight } from '@/app/context/ContentContext';
-import * as Icons from 'lucide-react';
-import { Star, Calendar, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronRight } from 'lucide-react';
 import { RichTextContent } from '@/app/components/RichTextContent';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from "@/app/components/SectionTheme";
@@ -48,11 +47,6 @@ export const HighlightsPage: React.FC = () => {
 
   const handleNextPage = () => {
     pagination.nextPage();
-  };
-
-  const getIcon = (iconName: string) => {
-    const Icon = (Icons as any)[iconName] || Star;
-    return Icon;
   };
 
   const formatDate = (dateString?: string) => {
@@ -205,7 +199,6 @@ export const HighlightsPage: React.FC = () => {
               <div key={pagination.currentPage}>
                 <div className="space-y-6">
                   {pagination.data.map((highlight, index) => {
-                    const Icon = getIcon(highlight.iconName);
                     const isImageOnRight = index % 2 === 1;
 
                     return (
@@ -255,30 +248,6 @@ export const HighlightsPage: React.FC = () => {
                                       {formatDate(highlight.publishedDate)}
                                     </span>
                                   </div>
-                                </div>
-
-                                {/* Featured Badge */}
-                                {highlight.featured && (
-                                  <div className="absolute top-4 left-4">
-                                    <div className="bg-[#1887FC] text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
-                                      <Star className="w-3.5 h-3.5 fill-current" />
-                                      Featured
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Icon Badge */}
-                                <div className="absolute bottom-4 left-4">
-                                  <motion.div
-                                    className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-[#1887FC] to-[#0b5ab8] rounded-xl shadow-lg"
-                                    whileHover={{
-                                      rotate: 10,
-                                      scale: 1.1,
-                                    }}
-                                    transition={{ duration: 0.3 }}
-                                  >
-                                    <Icon className="w-7 h-7 text-white" />
-                                  </motion.div>
                                 </div>
                               </div>
 
