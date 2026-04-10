@@ -9,7 +9,7 @@ import { BaseEditModal } from './BaseEditModal';
 import { NewsItem } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';
 import { Input } from '@/app/components/ui/input';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
@@ -76,11 +76,11 @@ export function NewsModal({
           </div>
 
           {/* Content Field */}
-          <InteractiveRichEditor
+          <VisualRichEditor
             id="news-content"
             label="Content"
             value={item.content}
-            onChange={value => updateField('content', value)}
+            onChange={(value: string) => updateField('content', value)}
             rows={8}
             placeholder="Enter news content"
           />

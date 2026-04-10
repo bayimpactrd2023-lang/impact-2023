@@ -25,7 +25,7 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 
@@ -192,11 +192,11 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
             />
           </div>
 
-          <InteractiveRichEditor
+          <VisualRichEditor
             id="blog-content"
             label="Content *"
             value={draft.content}
-            onChange={(value) => setDraft({ ...draft, content: value })}
+            onChange={(value: string) => setDraft({ ...draft, content: value })}
             rows={6}
             placeholder="Write your blog content..."
             required

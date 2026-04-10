@@ -7,7 +7,7 @@
 import { X, CheckCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Label } from '@/app/components/ui/label';
 import {
   Dialog,
@@ -66,7 +66,7 @@ export function HeroModal({
 
         <div className="space-y-6 py-2">
           {/* Title Field */}
-          <InteractiveRichEditor
+          <VisualRichEditor
             id="hero-title"
             label="Title"
             value={heroTitle}
@@ -76,7 +76,7 @@ export function HeroModal({
           />
 
           {/* Subtitle Field */}
-          <InteractiveRichEditor
+          <VisualRichEditor
             id="hero-subtitle"
             label="Subtitle"
             value={heroSubtitle}

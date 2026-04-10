@@ -9,7 +9,7 @@ import { BaseEditModal } from './BaseEditModal';
 import { TeamMember } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';
 import { Input } from '@/app/components/ui/input';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 
@@ -71,11 +71,11 @@ export function TeamMemberModal({
           </div>
 
           {/* Description Field */}
-          <InteractiveRichEditor
+          <VisualRichEditor
             id="team-description"
             label="Description"
             value={item.description}
-            onChange={value => updateField('description', value)}
+            onChange={(value: string) => updateField('description', value)}
             rows={4}
             placeholder="Enter description or bio"
           />

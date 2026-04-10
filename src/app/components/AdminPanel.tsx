@@ -15,7 +15,7 @@ import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 import { toast } from 'sonner';
 import { RichTextContent, RichTextHelperTip } from '@/app/components/RichTextContent';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { ProjectManager } from '@/app/components/admin/ProjectManager';
 import { FinancialStatementManager } from '@/app/components/admin/FinancialStatementManager';
 import { InternshipTestimonialManager } from '@/app/components/admin/InternshipTestimonialManager';
@@ -1215,11 +1215,11 @@ export const AdminPanel: React.FC = () => {
                 <div className="space-y-6 py-2">
                   <div className="space-y-2"><Label className="text-sm font-medium">Title</Label><Input value={editingNews.title} onChange={(e) => { const u={...editingNews,title:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'title',e.target.value); }} /></div>
                   <div className="space-y-2"><Label className="text-sm font-medium">Date</Label><Input type="date" value={editingNews.date} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => { const u={...editingNews,date:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'date',e.target.value); }} /></div>
-                  <InteractiveRichEditor
+                  <VisualRichEditor
                     id="news-content"
                     label="Content"
                     value={editingNews.content}
-                    onChange={(value) => { const u={...editingNews,content:value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'content',value); }}
+                    onChange={(value: string) => { const u={...editingNews,content:value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'content',value); }}
                     rows={8}
                   />
                   
@@ -1586,11 +1586,11 @@ export const AdminPanel: React.FC = () => {
               </div>
 
               {/* Content */}
-              <InteractiveRichEditor
+              <VisualRichEditor
                 id="qb-content"
                 label="Content"
                 value={draft.content}
-                onChange={(value) => setDraft(p => ({ ...p, content: value }))}
+                onChange={(value: string) => setDraft(p => ({ ...p, content: value }))}
                 rows={10}
                 placeholder="Write your blog post content here..."
                 required
@@ -1739,11 +1739,11 @@ export const AdminPanel: React.FC = () => {
               </div>
 
               {/* Content */}
-              <InteractiveRichEditor
+              <VisualRichEditor
                 id="qp-content"
                 label="Content"
                 value={publicationDraft.content || ''}
-                onChange={(value) => setPublicationDraft(p => ({ ...p, content: value }))}
+                onChange={(value: string) => setPublicationDraft(p => ({ ...p, content: value }))}
                 rows={10}
                 placeholder="Write your publication content here..."
                 required

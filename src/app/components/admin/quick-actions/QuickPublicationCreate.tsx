@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { PublicationForm } from '@/app/context/ContentContext';
 import { createPublication } from '@/services/supabaseService';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { uploadPDF } from '@/utils/storageUpload';
 
 import {
@@ -196,20 +196,20 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
             </div>
           </div>
 
-          <InteractiveRichEditor
+          <VisualRichEditor
             id="pub-excerpt"
             label="Excerpt"
             value={draft.excerpt || ''}
-            onChange={(val) => setDraft({ ...draft, excerpt: val })}
+            onChange={(val: string) => setDraft({ ...draft, excerpt: val })}
             placeholder="Brief excerpt or summary"
             rows={2}
           />
 
-          <InteractiveRichEditor
+          <VisualRichEditor
             id="pub-content"
             label="Content"
             value={draft.content || ''}
-            onChange={(val) => setDraft({ ...draft, content: val })}
+            onChange={(val: string) => setDraft({ ...draft, content: val })}
             placeholder="Full publication content..."
             rows={6}
             required

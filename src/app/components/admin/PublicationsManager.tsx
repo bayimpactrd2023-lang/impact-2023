@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Publication, PublicationForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -353,11 +353,11 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                   />
                 </div>
 
-                <InteractiveRichEditor
+                <VisualRichEditor
                   id="pub-content"
                   label="Abstract/Description"
                   value={editingPublication.content || ''}
-                  onChange={(value) =>
+                  onChange={(value: string) =>
                     setEditingPublication({ ...editingPublication, content: value })
                   }
                   rows={4}

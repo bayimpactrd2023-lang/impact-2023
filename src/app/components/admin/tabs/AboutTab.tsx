@@ -6,7 +6,7 @@
 
 import { CheckCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import {
   Card,
   CardContent,
@@ -43,7 +43,7 @@ export function AboutTab({ aboutText, onUpdateAbout, onSave }: AboutTabProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <InteractiveRichEditor
+          <VisualRichEditor
             id="about-text"
             label="About Text"
             value={aboutText}

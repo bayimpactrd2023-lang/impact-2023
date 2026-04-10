@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { InternshipTestimonial, InternshipTestimonialForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -367,11 +367,11 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   />
                 </div>
 
-                <InteractiveRichEditor
+                <VisualRichEditor
                   id="testimonial-quote"
                   label="Quote/Short Testimonial *"
                   value={editingTestimonial.quote}
-                  onChange={(value) =>
+                  onChange={(value: string) =>
                     setEditingTestimonial({ ...editingTestimonial, quote: value })
                   }
                   rows={3}
@@ -379,11 +379,11 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   required
                 />
 
-                <InteractiveRichEditor
+                <VisualRichEditor
                   id="testimonial-fulltext"
                   label="Full Testimonial"
                   value={editingTestimonial.fullText || ''}
-                  onChange={(value) =>
+                  onChange={(value: string) =>
                     setEditingTestimonial({ ...editingTestimonial, fullText: value })
                   }
                   rows={6}

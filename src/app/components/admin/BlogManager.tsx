@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Plus, Trash2, FileText, Edit, CheckCircle, X } from 'lucide-react';
 import {
   Dialog,
@@ -351,11 +351,11 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                   />
                 </div>
 
-                <InteractiveRichEditor
+                <VisualRichEditor
                   id="modal-blog-content"
                   label="Content"
                   value={editingPost.content}
-                  onChange={(value) =>
+                  onChange={(value: string) =>
                     setEditingPost({ ...editingPost, content: value })
                   }
                   rows={12}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NewsItem, NewsItemForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -318,11 +318,11 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
                   />
                 </div>
 
-                <InteractiveRichEditor
+                <VisualRichEditor
                   id="news-content"
                   label="Content *"
                   value={editingNews.content}
-                  onChange={(value) =>
+                  onChange={(value: string) =>
                     setEditingNews({ ...editingNews, content: value })
                   }
                   rows={6}

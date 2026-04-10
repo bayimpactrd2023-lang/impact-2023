@@ -6,6 +6,7 @@ import {
   List, 
   ListOrdered, 
   Highlighter,
+  Bold,
   ChevronDown
 } from 'lucide-react';
 import {
@@ -48,6 +49,9 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
     const text = textareaRef.current.value;
     const selectedText = text.substring(start, end);
 
+    // Do nothing if no text is selected
+    if (start === end) return;
+
     const newText = 
       text.substring(0, start) + 
       before + 
@@ -75,6 +79,9 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
     const end = textarea.selectionEnd;
     const text = textarea.value;
     const originalSelLength = end - start;
+
+    // Do nothing if no text is selected
+    if (originalSelLength === 0) return;
     
     // Find line boundaries
     const beforeText = text.substring(0, start);
@@ -125,6 +132,10 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
     insertText('[[', ']]');
   };
 
+  const applyBold = () => {
+    insertText('**', '**');
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -133,6 +144,20 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
         </Label>
         
         <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-md border border-gray-200">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-gray-600 hover:text-[#1887FC] font-bold"
+            onClick={applyBold}
+            title="Bold selection"
+          >
+            <Bold className="w-4 h-4 mr-1" />
+            <span className="text-xs">Bold</span>
+          </Button>
+
+          <div className="w-[1px] h-4 bg-gray-300 mx-1" />
+
           <Button
             type="button"
             variant="ghost"
@@ -184,7 +209,7 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
         className="font-sans text-sm leading-relaxed resize-y focus-visible:ring-[#1887FC]"
       />
       <p className="text-[10px] text-gray-400 italic">
-        Tip: Select any text and click "Highlight" to wrap it in blue, or "List" to bullet/number all selected lines.
+        Tip: Select text and click "Bold" for **bold**, "Highlight" for blue, or "List" for bullets/numbers.
       </p>
     </div>
   );
