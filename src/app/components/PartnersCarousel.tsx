@@ -10,7 +10,7 @@ export const PartnersCarousel: React.FC = React.memo(() => {
   const settings = useMemo(() => ({
     dots: false,
     infinite: true,
-    speed: 4000,
+    speed: 3000,
     slidesToShow: 4,
     slidesToScroll: 1,
     autoplay: true,
@@ -18,110 +18,81 @@ export const PartnersCarousel: React.FC = React.memo(() => {
     cssEase: 'linear',
     pauseOnHover: true,
     arrows: false,
+    swipe: true,
+    touchMove: true,
+    swipeToSlide: true,
     responsive: [
+      {
+        breakpoint: 1280,
+        settings: {
+          slidesToShow: 4,
+          speed: 3500,
+        }
+      },
       {
         breakpoint: 1024,
         settings: {
           slidesToShow: 3,
+          speed: 3000,
         }
       },
       {
         breakpoint: 768,
         settings: {
           slidesToShow: 2,
+          speed: 2500,
+          autoplaySpeed: 2000,
         }
       },
       {
         breakpoint: 480,
         settings: {
           slidesToShow: 1,
+          speed: 2000,
+          autoplaySpeed: 2500,
+          centerMode: true,
+          centerPadding: '40px',
         }
       }
     ]
   }), []);
 
   return (
-    <section className="pt-16 pb-20 relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.98) 30%, rgba(255,255,255,1) 100%)'
-      }}
-    >
-      {/* Background Elements */}
-      <div className="absolute inset-0 opacity-20" style={{
-        backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(24, 135, 252, 0.08) 1px, transparent 0)',
-        backgroundSize: '32px 32px'
+    <section className="py-12 sm:py-16 md:pt-16 md:pb-20 relative overflow-hidden">
+      {/* Subtle background pattern - simplified for mobile performance */}
+      <div className="absolute inset-0 opacity-10 hidden sm:block" style={{
+        backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(24, 135, 252, 0.1) 1px, transparent 0)',
+        backgroundSize: '24px 24px'
       }} />
-      
-      {/* Floating Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-blue-400/8 to-[#1887FC]/5 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-br from-[#1887FC]/8 to-blue-400/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true, margin: "-50px" }}
+          className="text-center mb-8 sm:mb-10 md:mb-12"
         >
-          <motion.div
-            initial={{ scale: 0.9 }}
-            whileInView={{ scale: 1 }}
+          <motion.h2
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="inline-block relative"
+            transition={{ duration: 0.4 }}
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 text-gradient"
           >
-            {/* Decorative gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/5 via-blue-50/50 to-[#3b82f6]/5 blur-2xl rounded-full transform scale-150" />
-            
-            <h2 className="relative text-4xl sm:text-5xl font-bold mb-4"
-              style={{
-                background: 'linear-gradient(135deg, #1887FC 0%, #3b82f6 50%, #60a5fa 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Our Partners
-            </h2>
-          </motion.div>
-          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-[#1887FC] to-transparent mx-auto mb-5 rounded-full shadow-lg" />
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto font-medium">
+            Our Partners
+          </motion.h2>
+          <div className="w-16 sm:w-20 md:w-24 h-1 bg-gradient-to-r from-transparent via-[#1887FC] to-transparent mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full" />
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto font-medium px-4">
             Collaborating with leading organizations to maximize research impact
           </p>
         </motion.div>
 
-        <div className="partners-carousel mt-8">
+        <div className="partners-carousel mt-6 sm:mt-8">
           <Slider {...settings}>
             {content.partners.map((partner, index) => (
-              <div key={partner.id} className="px-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -8, scale: 1.03 }}
-                  className="card-futuristic p-8 flex flex-col items-center justify-center h-48 group cursor-pointer"
-                >
-                  {/* Accent Line */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  <div className="h-24 w-full flex items-center justify-center mb-4 relative overflow-hidden">
-                    {/* Glow Effect Behind Logo */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/20 to-[#3b82f6]/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                    <ImageWithFallback
-                      src={partner.logoUrl}
-                      alt={partner.name}
-                      className="max-w-full max-h-20 object-contain transition-all duration-500 transform group-hover:scale-110 relative z-10 drop-shadow-lg"
-                      style={{ width: 'auto', height: 'auto' }}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-700 text-center font-semibold group-hover:text-[#1887FC] transition-colors duration-300">
-                    {partner.name}
-                  </p>
-                </motion.div>
+              <div key={partner.id} className="px-2 sm:px-3 md:px-4 outline-none">
+                <PartnerCard partner={partner} index={index} />
               </div>
             ))}
           </Slider>
@@ -130,18 +101,78 @@ export const PartnersCarousel: React.FC = React.memo(() => {
 
       <style>{`
         .partners-carousel .slick-slide {
-          padding: 0 8px;
+          padding: 0 4px;
         }
-        
+
         .partners-carousel .slick-list {
-          margin: 0 -8px;
+          margin: 0 -4px;
+          overflow: visible;
         }
-        
+
         .partners-carousel .slick-track {
           display: flex;
-          align-items: center;
+          align-items: stretch;
+        }
+
+        .partners-carousel .slick-slide > div {
+          height: 100%;
+        }
+
+        @media (min-width: 640px) {
+          .partners-carousel .slick-slide {
+            padding: 0 8px;
+          }
+          .partners-carousel .slick-list {
+            margin: 0 -8px;
+          }
+        }
+
+        /* Touch optimization */
+        .partners-carousel .slick-slider {
+          touch-action: pan-y pinch-zoom;
+        }
+
+        .partners-carousel .slick-slide {
+          touch-action: pan-y;
         }
       `}</style>
     </section>
+  );
+});
+
+// Separate component for partner card to optimize re-renders
+interface PartnerCardProps {
+  partner: { id: string; name: string; logoUrl: string };
+  index: number;
+}
+
+const PartnerCard: React.FC<PartnerCardProps> = React.memo(({ partner, index }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
+      viewport={{ once: true, margin: "-30px" }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center h-32 sm:h-36 md:h-44 lg:h-48 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer select-none"
+    >
+      {/* Subtle top accent line */}
+      <div className="absolute top-0 left-4 right-4 sm:left-6 sm:right-6 h-0.5 bg-gradient-to-r from-transparent via-[#1887FC]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
+
+      <div className="h-12 sm:h-14 md:h-16 lg:h-20 w-full flex items-center justify-center mb-2 sm:mb-3 relative">
+        {/* Subtle glow on hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/5 to-[#3b82f6]/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        <ImageWithFallback
+          src={partner.logoUrl}
+          alt={partner.name}
+          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
+          style={{ width: 'auto', height: 'auto', maxHeight: '100%' }}
+        />
+      </div>
+      <p className="text-xs sm:text-sm text-gray-700 text-center font-medium group-hover:text-[#1887FC] transition-colors duration-200 line-clamp-2 px-1">
+        {partner.name}
+      </p>
+    </motion.div>
   );
 });

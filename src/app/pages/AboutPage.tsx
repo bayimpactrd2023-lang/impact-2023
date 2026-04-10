@@ -155,9 +155,9 @@ export const AboutPage: React.FC = () => {
         </section>
       </SectionTheme>
 
-      {/* Mission & Vision */}
-      <SectionTheme theme="light">
-        <section className="py-20">
+      {/* Mission & Vision - Light/White Background */}
+      <SectionTheme theme="transparent">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-2 gap-8">
               <motion.div
@@ -220,9 +220,9 @@ export const AboutPage: React.FC = () => {
         </section>
       </SectionTheme>
 
-      {/* About Section */}
-      <SectionTheme theme="light">
-        <section className="py-20 bg-white">
+      {/* About Section - Dark Background */}
+      <SectionTheme theme="transparent">
+        <section className="py-20 bg-[#2a2a2a]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -233,18 +233,18 @@ export const AboutPage: React.FC = () => {
             >
               <div className="flex items-center justify-center gap-4 mb-8">
                 <motion.div
-                  className="w-14 h-14 bg-gradient-to-br from-[#1887FC] to-[#0b5ab8] rounded-2xl flex items-center justify-center shadow-lg"
+                  className="w-14 h-14 bg-gradient-to-br from-[#1887FC] to-[#3b82f6] rounded-2xl flex items-center justify-center shadow-lg"
                   whileHover={{ rotate: 180 }}
                   transition={{ duration: 0.5 }}
                 >
                   <BookOpen className="w-7 h-7 text-white" />
                 </motion.div>
-                <h2 className="text-3xl font-bold text-gray-900">
+                <h2 className="text-3xl font-bold text-white">
                   Our Story
                 </h2>
               </div>
 
-              <div className="space-y-6 text-gray-700 text-lg leading-relaxed text-justify">
+              <div className="space-y-6 text-gray-300 text-lg leading-relaxed text-justify">
                 <RichTextContent 
                   text={content.aboutDescription || content.aboutText || "IMPACT R&D is a research organization dedicated to transforming scientific research into practical solutions."}
                   className="text-lg leading-relaxed text-justify"
@@ -255,9 +255,9 @@ export const AboutPage: React.FC = () => {
         </section>
       </SectionTheme>
 
-      {/* Team Section */}
-      <SectionTheme theme="light">
-        <section className="py-20 bg-gradient-to-br from-blue-50 via-blue-50 to-white">
+      {/* Team Section - Light/White Background */}
+      <SectionTheme theme="transparent">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

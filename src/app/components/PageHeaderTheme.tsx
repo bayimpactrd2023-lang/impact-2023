@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useHeaderTheme } from '@/app/context/HeaderThemeContext';
 
-type HeaderTheme = 'transparent' | 'light' | 'blue' | 'blue-to-white';
+type HeaderTheme = 'transparent' | 'light' | 'blue' | 'blue-to-white' | 'dark';
 
 export const PageHeaderTheme: React.FC<{ theme: HeaderTheme; scrollThreshold?: number }> = ({ theme, scrollThreshold = 50 }) => {
   const { setTheme, setScrollThreshold } = useHeaderTheme();

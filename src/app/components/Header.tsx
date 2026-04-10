@@ -50,11 +50,23 @@ export const Header: React.FC = () => {
       return 'text-white bg-gradient-to-r from-[#1887FC] to-[#3b82f6] shadow-lg';
     }
 
+    if (theme === 'dark') {
+      return 'text-white/90 hover:text-white hover:bg-white/10';
+    }
+
     return 'text-gray-900 hover:text-[#1887FC] hover:bg-blue-50/50';
   };
 
   // Get header styles based on theme and scroll state
   const getHeaderStyles = () => {
+    if (theme === 'dark') {
+      return {
+        background: 'rgba(38, 38, 38, 0.8)', // Lighter gray for glass effect
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+      };
+    }
+    
     if (theme === 'transparent') {
       if (scrolled) {
         // Scrolled state for transparent theme - more solid with gradient
@@ -138,7 +150,9 @@ export const Header: React.FC = () => {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-md hover:bg-gray-100 text-gray-900"
+            className={`md:hidden p-2 rounded-md transition-colors ${
+              theme === 'dark' ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-900'
+            }`}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>

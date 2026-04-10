@@ -3,7 +3,7 @@ import { useInView } from 'react-intersection-observer';
 import { useHeaderTheme } from '@/app/context/HeaderThemeContext';
 
 // Re-export type for convenience
-type HeaderTheme = 'transparent' | 'light' | 'blue' | 'blue-to-white';
+type HeaderTheme = 'transparent' | 'light' | 'blue' | 'blue-to-white' | 'dark';
 
 interface SectionThemeProps {
   theme: HeaderTheme;

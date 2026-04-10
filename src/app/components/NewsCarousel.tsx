@@ -72,10 +72,7 @@ export const NewsCarousel: React.FC = React.memo(() => {
 
   return (
     <>
-      <section id="news" className="py-24 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.98) 30%, rgba(255,255,255,1) 100%)'
-        }}
+      <section id="news" className="py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden"
       >
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-20" style={{

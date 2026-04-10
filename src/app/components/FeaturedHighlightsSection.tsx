@@ -39,10 +39,7 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
 
   return (
     <>
-      <section className="py-20 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.98) 30%, rgba(255,255,255,1) 100%)'
-        }}
+      <section className="py-12 sm:py-14 md:py-16 lg:py-20 relative overflow-hidden"
       >
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-20" style={{
@@ -56,12 +53,27 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-12 md:mb-14 lg:mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Our Highlights
-            </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-[#1887FC] to-[#4da3fd] mx-auto" />
+            <motion.div
+              initial={{ scale: 0.9 }}
+              whileInView={{ scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="inline-block relative"
+            >
+              {/* Decorative gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/5 via-blue-50/50 to-[#3b82f6]/5 blur-2xl rounded-full transform scale-150" />
+              
+              <h2 className="relative text-4xl sm:text-5xl font-bold mb-4 text-[#1887FC]"
+                style={{
+                  letterSpacing: '-0.02em'
+                }}
+              >
+                Our Highlights
+              </h2>
+            </motion.div>
+            <div className="w-16 sm:w-20 md:w-24 h-1 bg-gradient-to-r from-transparent via-[#1887FC] to-transparent mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full" />
             <p className="text-lg text-gray-600 mt-6 max-w-3xl mx-auto">
               Discover our key achievements and ongoing initiatives that drive impact across the Philippines
             </p>

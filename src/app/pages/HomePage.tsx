@@ -88,11 +88,11 @@ export const HomePage: React.FC = () => {
               playsInline
               preload="auto"
             >
-              <source src={new URL('../../assets/vid_hero.mp4', import.meta.url).toString()} type="video/mp4" />
+              <source src={new URL('../../assets/home_bg.mp4', import.meta.url).toString()} type="video/mp4" />
             </video>
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/30 via-blue-400/20 to-[#60a5fa]/25" />
 
           <div
             className="absolute inset-0"
@@ -149,7 +149,7 @@ export const HomePage: React.FC = () => {
                 loading="eager"
                 style={{
                   filter:
-                    "drop-shadow(0 20px 40px rgba(0,0,0,0.15))",
+                    "drop-shadow(0 20px 40px rgba(0,0,0,0.15)) drop-shadow(0 0 8px rgba(255,255,255,0.8)) drop-shadow(0 0 16px rgba(255,255,255,0.6)) drop-shadow(0 0 24px rgba(255,255,255,0.4))",
                   zIndex: 1,
                 }}
               />
@@ -277,31 +277,31 @@ export const HomePage: React.FC = () => {
         </div>
       </SectionTheme>
 
-      <SectionTheme theme="light" className="py-16 md:py-20">
+      <SectionTheme theme="light" className="py-6 sm:py-8 md:py-10 bg-white">
         <Suspense fallback={<SectionSkeleton />}>
           <NewsCarousel />
         </Suspense>
       </SectionTheme>
 
-      <SectionTheme theme="light" className="py-16 md:py-20">
+      <SectionTheme theme="dark" className="py-6 sm:py-8 md:py-10 bg-[#333333]">
         <Suspense fallback={<SectionSkeleton />}>
           <PublicationsSection />
         </Suspense>
       </SectionTheme>
 
-      <SectionTheme theme="light" className="py-16 md:py-20" id="highlights">
+      <SectionTheme theme="light" className="py-6 sm:py-8 md:py-10 bg-white" id="highlights">
         <Suspense fallback={<SectionSkeleton />}>
           <FeaturedHighlightsSection />
         </Suspense>
       </SectionTheme>
 
-      <SectionTheme theme="light" className="py-16 md:py-20">
+      <SectionTheme theme="dark" className="py-6 sm:py-8 md:py-10 bg-[#333333]">
         <Suspense fallback={<SectionSkeleton />}>
           <ResearchBayanihanSection />
         </Suspense>
       </SectionTheme>
 
-      <SectionTheme theme="light" className="py-16 md:py-20 pb-20">
+      <SectionTheme theme="light" className="py-6 sm:py-8 md:py-10 bg-white">
         <Suspense fallback={<SectionSkeleton />}>
           <PartnersCarousel />
         </Suspense>

@@ -27,10 +27,7 @@ export const PublicationsSection: React.FC = React.memo(() => {
   );
 
   return (
-    <section id="publications" className="py-24 relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.98) 30%, rgba(255,255,255,1) 100%)'
-      }}
+    <section id="publications" className="py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden"
     >
       {/* Background Elements */}
       <div className="absolute inset-0 opacity-20" style={{
@@ -44,7 +41,7 @@ export const PublicationsSection: React.FC = React.memo(() => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-10 sm:mb-12 md:mb-14 lg:mb-16"
         >
           <motion.div
             initial={{ scale: 0.9 }}
@@ -58,17 +55,15 @@ export const PublicationsSection: React.FC = React.memo(() => {
             
             <h2 className="relative text-4xl sm:text-5xl font-bold mb-4"
               style={{
-                background: 'linear-gradient(135deg, #1887FC 0%, #3b82f6 50%, #60a5fa 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                color: 'white',
                 letterSpacing: '-0.02em',
+                textShadow: '0 2px 10px rgba(0,0,0,0.3)'
               }}
             >
               New Publications
             </h2>
           </motion.div>
-          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-[#1887FC] to-transparent mx-auto rounded-full shadow-lg" />
+          <div className="w-16 sm:w-20 md:w-24 h-1 bg-gradient-to-r from-transparent via-[#1887FC] to-transparent mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full" />
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -79,49 +74,51 @@ export const PublicationsSection: React.FC = React.memo(() => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.15 }}
               viewport={{ once: true }}
-              className="card-futuristic group cursor-pointer"
+              className="backdrop-blur-xl bg-white/10 rounded-2xl border border-white/20 hover:border-[#1887FC]/40 shadow-lg hover:shadow-xl hover:shadow-[#1887FC]/10 transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col h-full"
               onClick={() => handleReadPublication(publication)}
             >
-              {/* Publication Image */}
-              <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden rounded-xl mb-5">
+              {/* Publication Image/Book Cover */}
+              <div className="relative h-56 overflow-hidden">
                 {publication.imageUrl ? (
                   <ImageWithFallback
                     src={publication.imageUrl}
                     alt={publication.title}
-                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1887FC] via-[#3b82f6] to-[#60a5fa]">
-                    <BookOpen className="w-20 h-20 text-white transition-all duration-500 group-hover:scale-125 group-hover:rotate-12 drop-shadow-2xl animate-float-slow" />
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
+                    <BookOpen className="w-14 h-14 text-[#1887FC] transition-transform duration-300 group-hover:scale-110" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
                 
-                {/* Floating badge for featured */}
-                <div className="absolute top-3 right-3 backdrop-blur-md bg-white/90 px-3 py-1.5 rounded-full shadow-lg border border-white/50">
-                  <span className="text-xs font-bold text-[#1887FC]">★ FEATURED</span>
+                {/* Subtle gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                
+                {/* Featured badge */}
+                <div className="absolute top-3 right-3 backdrop-blur-md bg-[#1887FC]/80 px-2.5 py-1 rounded-md border border-white/30">
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wide">Featured</span>
                 </div>
               </div>
 
               {/* Publication Content */}
-              <div className="px-6 pb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-[#1887FC] transition-colors">
+              <div className="p-5 flex flex-col flex-grow">
+                <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 leading-snug group-hover:text-[#60a5fa] transition-colors">
                   {publication.title}
                 </h3>
-                <p className="text-sm text-gray-600 mb-5 font-medium">
-                  {publication.authors}
+                <p className="text-sm text-white/60 mb-4 line-clamp-1">
+                  By {publication.authors}
                 </p>
-                <div className="flex gap-3">
+                <div className="mt-auto flex gap-2">
                   <motion.button
-                    whileHover={{ x: 5 }}
+                    whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleReadPublication(publication);
                     }}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1887FC] text-white rounded-lg font-medium text-sm hover:bg-[#3b82f6] transition-colors"
                   >
-                    <span>Details</span>
+                    <span>View Details</span>
                     <ExternalLink className="w-4 h-4" />
                   </motion.button>
                   {publication.link && publication.link !== '#' && (
@@ -129,10 +126,10 @@ export const PublicationsSection: React.FC = React.memo(() => {
                       href={publication.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.15)' }}
                       whileTap={{ scale: 0.98 }}
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border-2 border-[#1887FC] text-[#1887FC] rounded-xl font-semibold hover:bg-blue-50 transition-all duration-300"
+                      className="inline-flex items-center justify-center w-10 h-10 bg-white/10 border border-white/20 text-white rounded-lg transition-all duration-300"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

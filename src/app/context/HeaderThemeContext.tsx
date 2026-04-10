@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type HeaderTheme = 'transparent' | 'light' | 'blue' | 'blue-to-white';
+type HeaderTheme = 'transparent' | 'light' | 'blue' | 'blue-to-white' | 'dark';
 
 interface HeaderThemeContextType {
   theme: HeaderTheme;
