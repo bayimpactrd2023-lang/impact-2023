@@ -12,6 +12,7 @@ import { Input } from '@/app/components/ui/input';
 import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
+import { Users } from 'lucide-react';
 
 interface TeamMemberModalProps {
   isOpen: boolean;
@@ -45,28 +46,32 @@ export function TeamMemberModal({
       successMessage="Team member saved!"
       validate={EntityValidator.validateTeamMember}
       onUpdateItem={onUpdateItem}
+      icon={<Users className="w-5 h-5" />}
     >
       {(item, updateField) => (
         <>
           {/* Name Field */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Name</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              Name <span className="text-red-500 ml-0.5">*</span>
+            </Label>
             <Input
               value={item.name}
               onChange={e => updateField('name', e.target.value)}
               placeholder="Enter team member name"
-              className="mt-1.5"
+              className="text-lg font-semibold"
             />
           </div>
 
           {/* Role Field */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Role</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              Role <span className="text-red-500 ml-0.5">*</span>
+            </Label>
             <Input
               value={item.role}
               onChange={e => updateField('role', e.target.value)}
               placeholder="Enter role or position"
-              className="mt-1.5"
             />
           </div>
 
@@ -82,7 +87,10 @@ export function TeamMemberModal({
 
           {/* Member Photo */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Member Photo</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1">Member Photo</Label>
+            <p className="text-xs text-gray-500 mb-3">
+              Upload a high-quality photo for this team member
+            </p>
             <ImageDropzone
               value={item.imageUrl || ''}
               onChange={url => updateField('imageUrl', url)}

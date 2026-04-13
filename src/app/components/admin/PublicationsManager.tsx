@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Publication, PublicationForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { VisualRichEditor } from './VisualRichEditor';
+import { SharedToolbar } from './SharedToolbar';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
+import { useConfirm } from '@/shared/hooks';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
 import {
@@ -39,9 +41,20 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
   const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
   const [featuredPublications, setFeaturedPublications] = useState<Publication[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState(false);
+  const [activeField, setActiveField] = useState<string | null>(null);
+
+  const handleCommand = (cmd: string, val?: string) => {
+    if (activeField) {
+      const event = new CustomEvent(`editor-command-${activeField}`, { 
+        detail: { command: cmd, value: val } 
+      });
+      window.dispatchEvent(event);
+    }
+  };
   
   // Initialize delete confirmation hook
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
+  const { showConfirm, ConfirmDialog: ConfirmUnfeatureDialog } = useConfirm();
 
   // Use server-side pagination with 6 items per page
   const pagination = useServerPagination<Publication>({
@@ -80,7 +93,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
     if (!confirmed) return;
 
     try {
-      if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+      if (!id.startsWith('temp-') && !id.match(/^\d{13}$/)) {
         // Find the publication to get its PDF URL for storage cleanup
         const pubToDelete = pagination.data.find(p => p.id === id);
         if (pubToDelete?.pdfUrl) {
@@ -143,7 +156,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
         pdf_access_type: editingPublication.pdfAccessType || 'download',
       };
       
-      if (editingPublication.id && !editingPublication.id.startsWith('temp-') && !editingPublication.id.match(/^\\d{13}$/)) {
+      if (editingPublication.id && !editingPublication.id.startsWith('temp-') && !editingPublication.id.match(/^\d{13}$/)) {
         await updatePublicationInDb(editingPublication.id, pubData);
         toast.success('Publication updated!');
       } else {
@@ -185,6 +198,19 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
   };
 
   const toggleFeatured = async (id: string, currentFeaturedStatus: boolean) => {
+    // If currently featured and trying to un-feature, show confirmation
+    if (currentFeaturedStatus) {
+      const confirmed = await showConfirm({
+        title: 'Remove from Featured?',
+        message: 'Are you sure you want to remove this publication from the featured list? This will remove it from the home page highlights section.',
+        confirmText: 'Remove',
+        cancelText: 'Keep Featured',
+        variant: 'danger'
+      });
+      
+      if (!confirmed) return;
+    }
+
     try {
       await updatePublicationInDb(id, { featured: !currentFeaturedStatus });
       
@@ -212,7 +238,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Manage Publications</h3>
         <div className="flex gap-2">
-          <Button onClick={handleShowFeatured} variant="outline" size="sm">
+          <Button onClick={handleShowFeatured} variant="default" size="sm" className="bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md">
             <Star className="w-4 h-4 mr-2" /> Show All Featured
           </Button>
           <Button onClick={addPublication} size="sm">
@@ -314,23 +340,72 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
 
       {/* Publication Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>
-              {editingPublication?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Publication
-            </DialogTitle>
-            <DialogDescription>
-              {editingPublication?.id?.startsWith('temp-')
-                ? 'Create a new publication entry'
-                : 'Update the details for this publication'}
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                  {editingPublication?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Publication
+                </DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  {editingPublication?.id?.startsWith('temp-')
+                    ? 'Create a new publication entry'
+                    : 'Update the details for this publication'}
+                </DialogDescription>
+              </div>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <SharedToolbar 
+                onCommand={handleCommand} 
+              />
+              
+              {editingPublication && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const newStatus = !editingPublication.featured;
+                    if (newStatus) {
+                      const allPublications = await getAllPublications();
+                      const currentFeatured = allPublications.filter((p: any) => 
+                        p.featured === true && p.id !== editingPublication.id
+                      );
+                      
+                      if (currentFeatured.length >= 3) {
+                        toast.error('Maximum 3 featured publications allowed. Please unselect an existing featured item first.');
+                        setFeaturedPublications(currentFeatured);
+                        setIsFeaturedModalOpen(true);
+                        return;
+                      }
+                    }
+                    setEditingPublication({ ...editingPublication, featured: newStatus });
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 group ${
+                    editingPublication.featured 
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
+                      : 'bg-white border-blue-200 text-blue-600 hover:border-blue-400 hover:bg-blue-50'
+                  }`}
+                >
+                  <Star className={`w-4 h-4 transition-transform group-hover:scale-110 ${editingPublication.featured ? 'fill-white' : 'fill-transparent'}`} />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    {editingPublication.featured ? 'Featured' : 'Feature This'}
+                  </span>
+                </button>
+              )}
+            </div>
           </DialogHeader>
 
           {editingPublication && (
-            <div className="overflow-y-auto max-h-[calc(90vh-140px)] px-1">
-              <div className="space-y-4 py-4">
+            <div
+              className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+            >
+              <div className="space-y-8 py-6">
                 <div>
-                  <Label htmlFor="pub-title">Title *</Label>
+                  <Label htmlFor="pub-title" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Title <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
                   <Input
                     id="pub-title"
                     value={editingPublication.title}
@@ -338,11 +413,14 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                       setEditingPublication({ ...editingPublication, title: e.target.value })
                     }
                     placeholder="Enter publication title"
+                    className="text-lg font-semibold"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="pub-authors">Authors *</Label>
+                  <Label htmlFor="pub-authors" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Authors <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
                   <Input
                     id="pub-authors"
                     value={editingPublication.authors}
@@ -362,22 +440,45 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                   }
                   rows={4}
                   placeholder="Enter publication abstract or description"
+                  showToolbar={false}
+                  onCommand={(cmd) => {
+                    if (cmd === 'focus') {
+                      setActiveField('pub-content');
+                    }
+                  }}
                 />
 
-                <div>
-                  <Label htmlFor="pub-link">External Link</Label>
-                  <Input
-                    id="pub-link"
-                    value={editingPublication.link || ''}
-                    onChange={(e) =>
-                      setEditingPublication({ ...editingPublication, link: e.target.value })
-                    }
-                    placeholder="https://..."
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="pub-link" className="text-sm font-semibold text-gray-700 mb-1">External Link</Label>
+                    <Input
+                      id="pub-link"
+                      value={editingPublication.link || ''}
+                      onChange={(e) =>
+                        setEditingPublication({ ...editingPublication, link: e.target.value })
+                      }
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="pub-date" className="text-sm font-semibold text-gray-700 mb-1">Published Date</Label>
+                    <Input
+                      id="pub-date"
+                      type="date"
+                      value={editingPublication.publishedDate || ''}
+                      onChange={(e) =>
+                        setEditingPublication({ ...editingPublication, publishedDate: e.target.value })
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Label>PDF File</Label>
+                  <Label className="text-sm font-semibold text-gray-700 mb-1">PDF File (Drag & Drop)</Label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Upload the PDF file for this publication (PDF only)
+                  </p>
                   <PDFDropzone
                     value={editingPublication.pdfUrl}
                     onChange={(value) =>
@@ -389,7 +490,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
 
                 {editingPublication.pdfUrl && (
                   <div>
-                    <Label htmlFor="pdf-access-type">PDF Access Type</Label>
+                    <Label htmlFor="pdf-access-type" className="text-sm font-semibold text-gray-700 mb-1">PDF Access Type</Label>
                     <Select
                       value={editingPublication.pdfAccessType || 'download'}
                       onValueChange={(value: 'view' | 'download') =>
@@ -404,127 +505,119 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                         <SelectItem value="view">View Only - Users can only view</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-2 font-medium">
                       Choose whether users can download the PDF or only view it
                     </p>
                   </div>
                 )}
-
-                <div>
-                  <Label htmlFor="pub-date">Published Date</Label>
-                  <Input
-                    id="pub-date"
-                    type="date"
-                    value={editingPublication.publishedDate || ''}
-                    onChange={(e) =>
-                      setEditingPublication({ ...editingPublication, publishedDate: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="pub-featured"
-                    checked={editingPublication.featured || false}
-                    onCheckedChange={(checked) =>
-                      setEditingPublication({ ...editingPublication, featured: checked })
-                    }
-                  />
-                  <Label htmlFor="pub-featured" className="cursor-pointer">
-                    Featured Publication
-                  </Label>
-                </div>
-
-                <div className="flex gap-3 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setEditingPublication(null);
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" /> Cancel
-                  </Button>
-                  <Button
-                    className="flex-1 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb]"
-                    disabled={isSaving}
-                    onClick={handleSavePublication}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Publication'}
-                  </Button>
-                </div>
               </div>
             </div>
           )}
+
+          <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingPublication(null);
+              }}
+            >
+              <X className="w-5 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
+              disabled={isSaving}
+              onClick={handleSavePublication}
+            >
+              <CheckCircle className="w-5 h-5 mr-2" /> {isSaving ? 'Saving...' : 'Save Publication'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Featured Publications Modal */}
       <Dialog open={isFeaturedModalOpen} onOpenChange={setIsFeaturedModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-[#1887FC]" />
-              Featured Publications
-            </DialogTitle>
-            <DialogDescription>
-              Toggle featured status for publications. Maximum of 3 featured items allowed. Changes are saved immediately.
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <Star className="w-6 h-6 fill-current" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">Featured Publications</DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  Toggle featured status for publications. Maximum of 3 featured items allowed. Changes are saved immediately.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
-          <div className="overflow-y-auto max-h-[calc(90vh-140px)] px-1">
-            {loadingFeatured ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-4 border-[#1887FC] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-500">Loading featured publications...</p>
-                </div>
-              </div>
-            ) : featuredPublications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Star className="w-12 h-12 text-gray-300 mb-3" />
-                <p className="text-sm font-medium text-gray-500">No featured publications yet</p>
-                <p className="text-xs text-gray-400 mt-1">Toggle the featured switch when editing a publication</p>
-              </div>
-            ) : (
-              <>
-                {/* Featured count warning */}
-                {featuredPublications.length >= 3 && (
-                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800">
-                      <strong>Note:</strong> You have reached the maximum of 3 featured publications. To add a new featured item, please unselect one below.
-                    </p>
+          <div 
+            className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+          >
+            <div className="pt-4">
+              {loadingFeatured ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-4 border-[#1887FC] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-500">Loading featured publications...</p>
                   </div>
-                )}
-                
-                <div className="space-y-3 py-4">
-                  {featuredPublications.map((pub) => (
-                    <div
-                      key={pub.id}
-                      className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-sm">{pub.title}</h4>
-                        <p className="text-xs text-gray-500">{pub.authors}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">Featured</span>
-                        <Switch
-                          checked={pub.featured || false}
-                          onCheckedChange={() => toggleFeatured(pub.id, pub.featured || false)}
-                        />
-                      </div>
-                    </div>
-                  ))}
                 </div>
-              </>
-            )}
+              ) : featuredPublications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <Star className="w-12 h-12 text-gray-300 mb-3" />
+                  <p className="text-sm font-medium text-gray-500">No featured publications yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Toggle the featured switch when editing a publication</p>
+                </div>
+              ) : (
+                <>
+                  {/* Featured count warning */}
+                  {featuredPublications.length >= 3 && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Note:</strong> You have reached the maximum of 3 featured publications. To add a new featured item, please unselect one below.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-3 py-4">
+                    {featuredPublications.map((pub) => (
+                      <div
+                        key={pub.id}
+                        className="flex items-center gap-4 p-4 border rounded-2xl hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm">{pub.title}</h4>
+                          <p className="text-xs text-gray-500 line-clamp-1">{pub.authors}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-end mr-2">
+                            <span className={`text-[10px] font-bold uppercase tracking-wider ${pub.featured ? 'text-blue-600' : 'text-gray-400'}`}>
+                              {pub.featured ? 'Featured' : 'Inactive'}
+                            </span>
+                          </div>
+                          <Switch
+                            checked={pub.featured || false}
+                            onCheckedChange={() => toggleFeatured(pub.id, pub.featured || false)}
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-
-          <div className="flex justify-end pt-4 border-t">
+          
+          <div className="flex justify-end p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
             <Button
               variant="outline"
+              className="px-8 h-11 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white transition-all"
               onClick={() => setIsFeaturedModalOpen(false)}
             >
               Close
@@ -534,6 +627,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
       </Dialog>
 
       <DeleteConfirmDialog />
+      <ConfirmUnfeatureDialog />
     </div>
   );
 };

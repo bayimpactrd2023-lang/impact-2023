@@ -45,6 +45,9 @@ export interface BaseEditModalProps<T extends { id: string }> {
   /** Success message after save */
   successMessage: string;
   
+  /** Optional icon to display in the header */
+  icon?: ReactNode;
+
   /** Child render function for form fields */
   children: (
     item: T,
@@ -78,6 +81,7 @@ export function BaseEditModal<T extends { id: string }>({
   title,
   description,
   successMessage,
+  icon,
   children,
   validate,
   onUpdateItem,
@@ -156,35 +160,42 @@ export function BaseEditModal<T extends { id: string }>({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">{title}</DialogTitle>
-          <DialogDescription className="text-sm text-gray-600 mt-2">
-            {description}
-          </DialogDescription>
+      <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+        <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+              {icon || <CheckCircle className="w-6 h-6" />}
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">{title}</DialogTitle>
+              <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                {description}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-180px)] px-6 pb-6 scrollbar-hide">
-          <div className="space-y-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
+          <div className="space-y-8 py-6">
             {/* Render form fields */}
             {children(editingItem, handleUpdateField)}
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 px-6 pb-6 pt-4 border-t border-gray-100 bg-gray-50">
+        <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
           <Button
             variant="outline"
-            className="flex-1 w-full"
+            className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all"
             onClick={handleClose}
           >
-            <X className="w-4 h-4 mr-2" /> Cancel
+            <X className="w-5 h-4 mr-2" /> Cancel
           </Button>
           <Button
-            className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+            className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
             onClick={handleSave}
           >
-            <CheckCircle className="w-4 h-4 mr-2" /> Save
+            <CheckCircle className="w-5 h-5 mr-2" /> Save Changes
           </Button>
         </div>
       </DialogContent>

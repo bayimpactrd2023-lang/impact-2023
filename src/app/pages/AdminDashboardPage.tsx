@@ -241,27 +241,37 @@ export const AdminDashboardPage: React.FC = () => {
       <AnimatePresence>
         {showInactivityWarning && (
           <Dialog open={showInactivityWarning} onOpenChange={setShowInactivityWarning}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Session About to Expire</DialogTitle>
-                <DialogDescription>
-                  Your session will expire in a few seconds due to inactivity. Do you want to stay logged in?
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={handleStayLoggedIn}
-                >
-                  Stay Logged In
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </DialogFooter>
+            <DialogContent className="sm:max-w-[480px] bg-white rounded-2xl shadow-2xl p-0 border-none overflow-hidden">
+              <div className="p-8">
+                <DialogHeader className="flex flex-col items-start gap-4 space-y-0">
+                  <div className="flex items-center gap-4 w-full">
+                    <DialogTitle className="text-xl font-bold text-gray-900 tracking-tight">
+                      Session About to Expire
+                    </DialogTitle>
+                  </div>
+                  <DialogDescription className="text-base text-gray-500 font-medium leading-relaxed pt-2">
+                    Your session will expire in a few seconds due to inactivity. Do you want to stay logged in?
+                  </DialogDescription>
+                </DialogHeader>
+
+                <DialogFooter className="mt-10 flex flex-row gap-4 sm:justify-center w-full">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleStayLoggedIn}
+                    className="flex-1 h-12 rounded-xl border-gray-200 text-[#1887FC] font-bold hover:bg-blue-50/50 hover:text-[#1887FC] text-base border-2"
+                  >
+                    Stay Logged In
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex-1 h-12 rounded-xl font-bold text-base shadow-lg transition-all active:scale-95 bg-[#DC1E3C] hover:bg-[#B91932] text-white shadow-red-100"
+                  >
+                    Logout
+                  </Button>
+                </DialogFooter>
+              </div>
             </DialogContent>
           </Dialog>
         )}

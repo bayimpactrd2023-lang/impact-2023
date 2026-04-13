@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Highlight, HighlightForm } from '@/app/context/ContentContext';
+import { HighlightForm, Highlight as AppHighlight } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -11,10 +11,12 @@ import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
+import { useConfirm } from '@/shared/hooks';
 import { invalidateHighlightsCache } from '@/utils/cacheInvalidation';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { getImageUrl } from '@/utils/r2Upload';
 import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import {
   createHighlight,
   updateHighlight as updateHighlightInDb,
@@ -22,14 +24,15 @@ import {
   getHighlightsPaginated,
   getAllHighlights,
 } from '@/services/supabaseService';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from './VisualRichEditor';
+import { SharedToolbar } from './SharedToolbar';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 
 interface HighlightsManagerProps {
-  highlights: Highlight[];
-  onUpdate: (highlights: Highlight[]) => void;
+  highlights: AppHighlight[];
+  onUpdate: (highlights: AppHighlight[]) => void;
   refreshContent?: () => Promise<void>;
 }
 
@@ -38,19 +41,30 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
   const [editingHighlight, setEditingHighlight] = useState<HighlightForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
-  const [featuredHighlights, setFeaturedHighlights] = useState<Highlight[]>([]);
+  const [featuredHighlights, setFeaturedHighlights] = useState<AppHighlight[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState(false);
+  const [activeField, setActiveField] = useState<string | null>(null);
+
+  const handleCommand = (cmd: string, val?: string) => {
+    if (activeField) {
+      const event = new CustomEvent(`editor-command-${activeField}`, { 
+        detail: { command: cmd, value: val } 
+      });
+      window.dispatchEvent(event);
+    }
+  };
 
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
+  const { showConfirm, ConfirmDialog: ConfirmUnfeatureDialog } = useConfirm();
 
   // Use server-side pagination with 6 items per page
-  const pagination = useServerPagination<Highlight>({
+  const pagination = useServerPagination<AppHighlight>({
     fetchFunction: getHighlightsPaginated,
     itemsPerPage: 6,
   });
 
   const addHighlight = () => {
-    const newHighlight: Highlight = {
+    const newHighlight: HighlightForm = {
       id: `temp-${Date.now()}`,
       title: '',
       description: '',
@@ -63,8 +77,8 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
     setIsModalOpen(true);
   };
 
-  const handleEdit = (highlight: Highlight) => {
-    setEditingHighlight({ ...highlight });
+  const handleEdit = (highlight: AppHighlight) => {
+    setEditingHighlight({ ...highlight } as HighlightForm);
     setIsModalOpen(true);
   };
 
@@ -211,7 +225,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
         // If failed and we sent published_date, try without it
         if (highlightData.published_date !== undefined) {
           delete highlightData.published_date;
-          if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\\d{13}$/)) {
+          if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\d{13}$/)) {
             result = await updateHighlightInDb(editingHighlight.id, highlightData);
           } else {
             result = await createHighlight(highlightData);
@@ -263,6 +277,19 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
   };
 
   const toggleFeatured = async (id: string, currentFeaturedStatus: boolean) => {
+    // If currently featured and trying to un-feature, show confirmation
+    if (currentFeaturedStatus) {
+      const confirmed = await showConfirm({
+        title: 'Remove from Featured?',
+        message: 'Are you sure you want to remove this highlight from the featured list? This will remove it from the home page highlights section.',
+        confirmText: 'Remove',
+        cancelText: 'Keep Featured',
+        variant: 'danger'
+      });
+      
+      if (!confirmed) return;
+    }
+    
     try {
       await updateHighlightInDb(id, { featured: !currentFeaturedStatus });
       
@@ -295,7 +322,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Manage Highlights</h3>
         <div className="flex gap-2">
-          <Button onClick={handleShowFeatured} variant="outline" size="sm">
+          <Button onClick={handleShowFeatured} variant="default" size="sm" className="bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md">
             <Star className="w-4 h-4 mr-2" /> Show All Featured
           </Button>
           <Button onClick={addHighlight} size="sm">
@@ -373,9 +400,9 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                   <h4 className="font-semibold text-sm line-clamp-2 mb-2">
                     {highlight.title || 'Untitled'}
                   </h4>
-                  <p className="text-xs text-gray-600 line-clamp-2">
-                    {highlight.description}
-                  </p>
+                  <div className="text-xs text-gray-600 line-clamp-2">
+                    <RichTextContent text={highlight.description} className="text-xs text-gray-600" />
+                  </div>
                   {highlight.publishedDate && (
                     <div className="flex items-center gap-1 mt-2">
                       <Calendar className="w-3 h-3 text-blue-500" />
@@ -414,23 +441,72 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
 
       {/* Highlight Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>
-              {editingHighlight?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Highlight
-            </DialogTitle>
-            <DialogDescription>
-              {editingHighlight?.id?.startsWith('temp-')
-                ? 'Create a new highlight entry'
-                : 'Update the details for this highlight'}
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                  {editingHighlight?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Highlight
+                </DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  {editingHighlight?.id?.startsWith('temp-')
+                    ? 'Create a new highlight entry'
+                    : 'Update the details for this highlight'}
+                </DialogDescription>
+              </div>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <SharedToolbar 
+                onCommand={handleCommand} 
+              />
+              
+              {editingHighlight && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const newStatus = !editingHighlight.featured;
+                    if (newStatus) {
+                      const allHighlights = await getAllHighlights();
+                      const currentFeatured = allHighlights.filter((h: any) => 
+                        h.featured === true && h.id !== editingHighlight.id
+                      );
+                      
+                      if (currentFeatured.length >= 3) {
+                        toast.error('Maximum 3 featured highlights allowed. Please unselect an existing featured item first.');
+                        setFeaturedHighlights(currentFeatured);
+                        setIsFeaturedModalOpen(true);
+                        return;
+                      }
+                    }
+                    setEditingHighlight({ ...editingHighlight, featured: newStatus });
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 group ${
+                    editingHighlight.featured 
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
+                      : 'bg-white border-blue-200 text-blue-600 hover:border-blue-400 hover:bg-blue-50'
+                  }`}
+                >
+                  <Star className={`w-4 h-4 transition-transform group-hover:scale-110 ${editingHighlight.featured ? 'fill-white' : 'fill-transparent'}`} />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    {editingHighlight.featured ? 'Featured' : 'Feature This'}
+                  </span>
+                </button>
+              )}
+            </div>
           </DialogHeader>
 
           {editingHighlight && (
-            <div className="overflow-y-auto max-h-[calc(90vh-140px)] px-1">
-              <div className="space-y-4 py-4">
+            <div
+              className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+            >
+              <div className="space-y-8 py-6">
                 <div>
-                  <Label htmlFor="highlight-title">Title *</Label>
+                  <Label htmlFor="highlight-title" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Title <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
                   <Input
                     id="highlight-title"
                     value={editingHighlight.title}
@@ -438,11 +514,12 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                       setEditingHighlight({ ...editingHighlight, title: e.target.value })
                     }
                     placeholder="Enter highlight title"
+                    className="text-lg font-semibold"
                   />
                 </div>
 
                 <div>
-                  <InteractiveRichEditor
+                  <VisualRichEditor
                     id="highlight-description"
                     label="Description"
                     value={editingHighlight.description}
@@ -452,13 +529,19 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                     rows={4}
                     placeholder="Enter highlight description"
                     required
+                    showToolbar={false}
+                    onCommand={(cmd) => {
+                      if (cmd === 'focus') {
+                        setActiveField('highlight-description');
+                      }
+                    }}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="highlight-published-date">
-                    Published Date *{' '}
-                    <span className="text-xs text-gray-400">(2000 - {new Date().toISOString().split('T')[0]})</span>
+                  <Label htmlFor="highlight-published-date" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Published Date <span className="text-red-500 ml-0.5">*</span>
+                    <span className="text-xs text-gray-400 font-normal ml-2">(2000 - {new Date().toISOString().split('T')[0]})</span>
                   </Label>
                   <Input
                     id="highlight-published-date"
@@ -478,14 +561,13 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                     }}
                     min="2000-01-01"
                     max={new Date().toISOString().split('T')[0]}
-                    className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label>Cover Image (Drag & Drop)</Label>
-                  <p className="text-xs text-gray-500 mb-2">
-                    Upload a cover image for this highlight
+                  <Label className="text-sm font-semibold text-gray-700 mb-1">Cover Image (Drag & Drop)</Label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Upload a high-quality cover image for this highlight
                   </p>
                   <ImageDropzone
                     value={editingHighlight.imageUrl || ''}
@@ -497,8 +579,11 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                 </div>
 
                 <div>
-                  <Label>Gallery Images (Drag & Drop)</Label>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <Label className="text-sm font-semibold text-gray-700 mb-1 flex justify-between">
+                    <span>Gallery Images (Drag & Drop)</span>
+                    <span className="text-xs text-gray-400 font-normal">{editingHighlight.images?.length || 0} images</span>
+                  </Label>
+                  <p className="text-xs text-gray-500 mb-3">
                     Upload additional images for the gallery
                   </p>
                   <MultiImageDropzone
@@ -512,117 +597,119 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                     label="Highlight Images"
                   />
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="highlight-featured"
-                    checked={editingHighlight.featured || false}
-                    onCheckedChange={(checked) =>
-                      setEditingHighlight({ ...editingHighlight, featured: checked })
-                    }
-                  />
-                  <Label htmlFor="highlight-featured" className="cursor-pointer">
-                    Featured Highlight
-                  </Label>
-                </div>
-
-                <div className="flex gap-3 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setEditingHighlight(null);
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" /> Cancel
-                  </Button>
-                  <Button
-                    className="flex-1 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb]"
-                    disabled={isSaving}
-                    onClick={handleSave}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Highlight'}
-                  </Button>
-                </div>
               </div>
             </div>
           )}
+
+          <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingHighlight(null);
+              }}
+            >
+              <X className="w-5 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
+              disabled={isSaving}
+              onClick={handleSave}
+            >
+              <CheckCircle className="w-5 h-5 mr-2" /> {isSaving ? 'Saving...' : 'Save Highlight'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Featured Highlights Modal */}
       <Dialog open={isFeaturedModalOpen} onOpenChange={setIsFeaturedModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-[#1887FC]" />
-              Featured Highlights
-            </DialogTitle>
-            <DialogDescription>
-              Toggle featured status for highlights. Maximum of 3 featured items allowed. Changes are saved immediately.
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <Star className="w-6 h-6 fill-current" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">Featured Highlights</DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  Toggle featured status for highlights. Maximum of 3 featured items allowed. Changes are saved immediately.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
-          <div className="overflow-y-auto max-h-[calc(90vh-140px)] px-1">
-            {loadingFeatured ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-4 border-[#1887FC] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-500">Loading featured highlights...</p>
-                </div>
-              </div>
-            ) : featuredHighlights.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Star className="w-12 h-12 text-gray-300 mb-3" />
-                <p className="text-sm font-medium text-gray-500">No featured highlights yet</p>
-                <p className="text-xs text-gray-400 mt-1">Toggle the featured switch when editing a highlight</p>
-              </div>
-            ) : (
-              <>
-                {/* Featured count warning */}
-                {featuredHighlights.length >= 3 && (
-                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800">
-                      <strong>Note:</strong> You have reached the maximum of 3 featured highlights. To add a new featured item, please unselect one below.
-                    </p>
+          <div 
+            className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+          >
+            <div className="pt-4">
+              {loadingFeatured ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-4 border-[#1887FC] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-500">Loading featured highlights...</p>
                   </div>
-                )}
-                
-                <div className="space-y-3 py-4">
-                  {featuredHighlights.map((highlight) => (
-                    <div
-                      key={highlight.id}
-                      className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      {highlight.imageUrl && (
-                        <img
-                          src={getImageUrl(highlight.imageUrl)}
-                          alt={highlight.title}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-sm">{highlight.title}</h4>
-                        <p className="text-xs text-gray-500 line-clamp-1">{highlight.description}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">Featured</span>
-                        <Switch
-                          checked={highlight.featured || false}
-                          onCheckedChange={() => toggleFeatured(highlight.id, highlight.featured || false)}
-                        />
-                      </div>
-                    </div>
-                  ))}
                 </div>
-              </>
-            )}
+              ) : featuredHighlights.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <Star className="w-12 h-12 text-gray-300 mb-3" />
+                  <p className="text-sm font-medium text-gray-500">No featured highlights yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Toggle the featured switch when editing a highlight</p>
+                </div>
+              ) : (
+                <>
+                  {/* Featured count warning */}
+                  {featuredHighlights.length >= 3 && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800 font-medium">
+                        <strong>Note:</strong> You have reached the maximum of 3 featured highlights. To add a new featured item, please unselect one below.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-3 py-4">
+                    {featuredHighlights.map((highlight) => (
+                      <div
+                        key={highlight.id}
+                        className="flex items-center gap-4 p-4 border rounded-2xl hover:bg-gray-50 transition-colors"
+                      >
+                        {highlight.imageUrl && (
+                          <img
+                            src={getImageUrl(highlight.imageUrl as string)}
+                            alt={highlight.title}
+                            className="w-16 h-16 object-cover rounded-xl shadow-sm"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm">{highlight.title}</h4>
+                          <div className="text-xs text-gray-500 line-clamp-1">
+                            <RichTextContent text={highlight.description} className="text-xs text-gray-500" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-end mr-2">
+                            <span className={`text-[10px] font-bold uppercase tracking-wider ${highlight.featured ? 'text-blue-600' : 'text-gray-400'}`}>
+                              {highlight.featured ? 'Featured' : 'Inactive'}
+                            </span>
+                          </div>
+                          <Switch
+                            checked={highlight.featured || false}
+                            onCheckedChange={() => toggleFeatured(highlight.id, highlight.featured || false)}
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-
-          <div className="flex justify-end pt-4 border-t">
+          <div className="flex justify-end p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
             <Button
               variant="outline"
+              className="px-8 h-11 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white transition-all"
               onClick={() => setIsFeaturedModalOpen(false)}
             >
               Close
@@ -632,6 +719,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
       </Dialog>
 
       <DeleteConfirmDialog />
+      <ConfirmUnfeatureDialog />
     </div>
   );
 };

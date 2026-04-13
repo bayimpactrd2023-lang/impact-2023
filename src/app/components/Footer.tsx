@@ -30,7 +30,7 @@ export const Footer: FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#1887FC] flex-shrink-0" />
-                <span className="text-gray-300">+63 XXX XXX XXXX</span>
+                <span className="text-gray-300">(049) 547 7357</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#1887FC] flex-shrink-0" />

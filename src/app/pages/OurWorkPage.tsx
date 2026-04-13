@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router';
-import { Globe, Briefcase, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { Globe, Briefcase, Users, DollarSign } from 'lucide-react';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
@@ -19,7 +19,8 @@ export const OurWorkPage: React.FC = () => {
       description: 'Project overview required i and add below it Objectives and Methodology and Activities',
       icon: Globe,
       path: '/our-work/internationally-funded',
-      gradient: 'from-blue-500 to-blue-600'
+      gradient: 'from-blue-600 via-blue-500 to-indigo-600',
+      textColor: 'text-blue-600'
     },
     {
       id: 'locally-funded',
@@ -27,31 +28,17 @@ export const OurWorkPage: React.FC = () => {
       description: 'Project overview required i and add below it Objectives and Methodology and Activities',
       icon: Briefcase,
       path: '/our-work/locally-funded',
-      gradient: 'from-green-500 to-green-600'
-    },
-    {
-      id: 'community-transformation',
-      title: 'Community Transformation',
-      description: 'Empowering communities through sustainable development and transformation programs.',
-      icon: Users,
-      path: '/our-work/community-transformation',
-      gradient: 'from-purple-500 to-purple-600'
+      gradient: 'from-emerald-600 via-emerald-500 to-teal-600',
+      textColor: 'text-emerald-600'
     },
     {
       id: 'internship-program',
-      title: 'Internship Program',
+      title: 'Community Transformation',
       description: 'Real stories, real growth. Testimonials from our interns about their transformative experiences.',
       icon: Users,
       path: '/our-work/internship-program',
-      gradient: 'from-pink-500 to-pink-600'
-    },
-    {
-      id: 'study-findings',
-      title: 'Study Findings',
-      description: 'Research insights and discoveries shaping agricultural innovation and development.',
-      icon: TrendingUp,
-      path: '/our-work/study-findings',
-      gradient: 'from-orange-500 to-orange-600'
+      gradient: 'from-violet-600 via-purple-500 to-fuchsia-600',
+      textColor: 'text-purple-600'
     },
     {
       id: 'financial-statements',
@@ -59,7 +46,8 @@ export const OurWorkPage: React.FC = () => {
       description: 'Transparent financial reports demonstrating our commitment to accountability and governance.',
       icon: DollarSign,
       path: '/our-work/financial-statements',
-      gradient: 'from-emerald-500 to-emerald-600'
+      gradient: 'from-amber-600 via-orange-500 to-yellow-600',
+      textColor: 'text-orange-600'
     }
   ];
 
@@ -153,45 +141,82 @@ export const OurWorkPage: React.FC = () => {
 
       {/* Work Sections Grid */}
       <SectionTheme theme="light">
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <section className="py-24 relative overflow-hidden">
+          {/* Decorative Background Elements */}
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40">
+            <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-blue-100/30 rounded-full blur-[100px]" />
+            <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-indigo-100/30 rounded-full blur-[100px]" />
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
               {workSections.map((section, index) => {
                 const Icon = section.icon;
                 return (
                   <motion.div
                     key={section.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.6 }}
+                    transition={{ 
+                      delay: index * 0.15, 
+                      duration: 0.8,
+                      ease: [0.21, 0.47, 0.32, 0.98] 
+                    }}
                     viewport={{ once: true }}
-                    whileHover={{ y: -8 }}
                     onClick={() => navigate(section.path)}
-                    className="cursor-pointer"
+                    className="group cursor-pointer"
                   >
-                    <Card className="h-full hover:shadow-2xl transition-all duration-300 border-0 shadow-md overflow-hidden group">
-                      <CardContent className="p-6 sm:p-8">
-                        <motion.div 
-                          className={`w-16 h-16 bg-gradient-to-br ${section.gradient} rounded-2xl flex items-center justify-center mb-6 shadow-elegant`}
-                          whileHover={{ rotate: 10, scale: 1.1 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Icon className="w-8 h-8 text-white" />
-                        </motion.div>
+                    <Card className="h-full border-none shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] transition-all duration-500 overflow-hidden bg-white/80 backdrop-blur-sm rounded-[2rem] relative">
+                      {/* Decorative Gradient Border on Hover */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${section.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`} />
+                      
+                      <CardContent className="p-10 flex flex-col h-full">
+                        <div className="flex items-start justify-between mb-8">
+                          <motion.div 
+                            className={`w-20 h-20 bg-gradient-to-br ${section.gradient} rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 group-hover:scale-110 transition-all duration-500`}
+                          >
+                            <Icon className="w-10 h-10 text-white" />
+                          </motion.div>
+                          
+                          <div className={`text-4xl font-black opacity-5 group-hover:opacity-10 transition-opacity duration-500 ${section.textColor}`}>
+                            0{index + 1}
+                          </div>
+                        </div>
                         
-                        <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-[#1887FC] transition-colors">
+                        <h3 className="text-3xl font-black text-gray-900 mb-4 group-hover:text-[#1887FC] transition-colors leading-tight">
                           {section.title}
                         </h3>
                         
-                        <p className="text-gray-600 mb-6 leading-relaxed">
+                        <p className="text-gray-600 text-lg mb-8 leading-relaxed flex-grow">
                           {section.description}
                         </p>
                         
-                        <div className="flex items-center justify-between">
-                          <span className="text-[#1887FC] font-semibold group-hover:translate-x-2 transition-transform">
-                            Explore →
+                        <div className="mt-auto flex items-center gap-2">
+                          <span className={`text-xl font-bold ${section.textColor} flex items-center gap-2 group-hover:translate-x-2 transition-transform duration-300`}>
+                            Explore Project
+                            <svg 
+                              width="24" 
+                              height="24" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-6 h-6"
+                            >
+                              <path 
+                                d="M5 12H19M19 12L13 6M19 12L13 18" 
+                                stroke="currentColor" 
+                                strokeWidth="2.5" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                            </svg>
                           </span>
                         </div>
+
+                        {/* Bottom Accent Bar */}
+                        <motion.div 
+                          className={`absolute bottom-0 left-0 h-1.5 bg-gradient-to-r ${section.gradient} w-0 group-hover:w-full transition-all duration-500`}
+                        />
                       </CardContent>
                     </Card>
                   </motion.div>

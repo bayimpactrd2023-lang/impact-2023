@@ -14,18 +14,18 @@ import { Card, CardContent } from '@/app/components/ui/card';
  */
 export const AdminCardSkeleton: React.FC = () => {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden border-none shadow-md">
       {/* Image placeholder - matches the card image structure */}
-      <Skeleton className="w-full h-48 rounded-t-lg rounded-b-none" />
+      <Skeleton className="w-full h-48 rounded-t-lg rounded-b-none bg-blue-50/50" />
       
       {/* Content placeholder */}
       <CardContent className="p-4 space-y-3">
-        <Skeleton className="h-5 w-3/4" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-5 w-3/4 bg-gray-100" />
+        <Skeleton className="h-4 w-full bg-gray-100" />
+        <Skeleton className="h-4 w-5/6 bg-gray-100" />
         <div className="flex gap-2 mt-4">
-          <Skeleton className="h-3 w-3 rounded-full" />
-          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-3 w-3 rounded-full bg-blue-100" />
+          <Skeleton className="h-3 w-20 bg-blue-50" />
         </div>
       </CardContent>
     </Card>
@@ -123,20 +123,25 @@ export const AdminModalSkeleton: React.FC = () => {
  */
 export const AdminPageSkeleton: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-20">
-      <div className="space-y-4 w-full max-w-md">
-        <Skeleton className="h-12 w-3/4 mx-auto" />
-        <Skeleton className="h-6 w-1/2 mx-auto" />
-        
-        <div className="flex justify-center gap-2 pt-4">
-          <Skeleton className="h-2 w-2 rounded-full" />
-          <Skeleton className="h-2 w-2 rounded-full" />
-          <Skeleton className="h-2 w-2 rounded-full" />
+    <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-2xl border border-gray-100/50 shadow-sm backdrop-blur-sm">
+      <div className="relative mb-8">
+        <div className="absolute inset-0 bg-blue-400/20 blur-3xl rounded-full scale-150 animate-pulse" />
+        <div className="relative flex flex-col items-center gap-6 w-full max-w-md">
+          {/* Main skeleton bars */}
+          <div className="w-64 h-10 bg-gradient-to-r from-blue-100 via-blue-50 to-blue-100 rounded-2xl animate-pulse" />
+          <div className="w-48 h-6 bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 rounded-xl animate-pulse" />
+          
+          {/* Pulsing dots */}
+          <div className="flex justify-center gap-3 pt-2">
+            <div className="h-3 w-3 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+            <div className="h-3 w-3 bg-blue-400/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
+            <div className="h-3 w-3 bg-blue-400/30 rounded-full animate-bounce" />
+          </div>
         </div>
       </div>
       
       {message && (
-        <p className="mt-6 text-sm text-gray-500 text-center animate-pulse">
+        <p className="text-base font-semibold text-blue-600/80 tracking-wide animate-pulse">
           {message}
         </p>
       )}

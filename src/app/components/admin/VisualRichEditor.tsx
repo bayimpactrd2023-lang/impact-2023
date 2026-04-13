@@ -1,20 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Button } from '@/app/components/ui/button';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { Label } from '@/app/components/ui/label';
-import { 
-  List, 
-  ListOrdered, 
-  Highlighter,
-  Bold,
-  ChevronDown,
-  Type
-} from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/app/components/ui/dropdown-menu";
+import { cn } from "@/app/components/ui/utils";
 
 interface VisualRichEditorProps {
   id: string;
@@ -24,6 +11,8 @@ interface VisualRichEditorProps {
   placeholder?: string;
   rows?: number;
   required?: boolean;
+  showToolbar?: boolean;
+  onCommand?: (command: string, value?: string) => void;
 }
 
 export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
@@ -33,7 +22,9 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
   onChange,
   placeholder,
   rows = 4,
-  required = false
+  required = false,
+  showToolbar = true,
+  onCommand
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -56,25 +47,34 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
   };
 
   const execCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
+    // Ensure the editor is focused before applying the command
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+
+    if (onCommand) {
+      onCommand(command, value);
+    }
+
+    if (command === 'bold') {
+      document.execCommand('bold', false);
+    } else if (command === 'foreColor') {
+      document.execCommand('foreColor', false, value);
+    } else if (command === 'bullet') {
+      document.execCommand('insertUnorderedList', false);
+    } else if (command === 'number') {
+      document.execCommand('insertOrderedList', false);
+    }
+    
     handleInput();
-    editorRef.current?.focus();
   };
 
-  const toggleBold = () => execCommand('bold');
-  const applyBlueText = () => execCommand('foreColor', '#1887FC');
-  const applyBlackText = () => execCommand('foreColor', 'black');
-  const insertBulletList = () => execCommand('insertUnorderedList');
-  const insertNumberedList = () => execCommand('insertOrderedList');
-
-  // Handle paste to strip formatting
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
     document.execCommand('insertText', false, text);
   };
 
-  // Clear placeholder on first focus
   const handleFocus = () => {
     setIsFocused(true);
     if (showPlaceholder && editorRef.current) {
@@ -90,93 +90,37 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     }
   };
 
+  // Listen for commands from parent toolbar
+  useEffect(() => {
+    const handleToolbarCommand = (e: any) => {
+      const { command, value: cmdValue } = e.detail;
+      execCommand(command, cmdValue);
+    };
+
+    window.addEventListener(`editor-command-${id}`, handleToolbarCommand);
+    return () => {
+      window.removeEventListener(`editor-command-${id}`, handleToolbarCommand);
+    };
+  }, [id]);
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <Label htmlFor={id} className="text-sm font-semibold flex items-center gap-2">
-          {label} {required && <span className="text-red-500">*</span>}
+        <Label htmlFor={id} className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+          {label} {required && <span className="text-red-500 ml-0.5">*</span>}
         </Label>
         
-        <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-md border border-gray-200">
-          {/* Bold */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-gray-600 hover:text-[#1887FC] font-bold"
-            onClick={toggleBold}
-            title="Bold"
-          >
-            <Bold className="w-4 h-4 mr-1" />
-            <span className="text-xs">Bold</span>
-          </Button>
-
-          <div className="w-[1px] h-4 bg-gray-300 mx-1" />
-
-          {/* Highlight Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-gray-600 hover:text-[#1887FC]"
-              >
-                <Highlighter className="w-4 h-4 mr-1" style={{ color: '#1887FC' }} />
-                <span className="text-xs text-[#1887FC]">Blue Text</span>
-                <ChevronDown className="w-3 h-3 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={applyBlueText} className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded bg-[#1887FC]" />
-                <span className="text-[#1887FC]">Blue Text</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={applyBlackText} className="flex items-center gap-2">
-                <Type className="w-4 h-4" />
-                <span>Black Text (Normal)</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="w-[1px] h-4 bg-gray-300 mx-1" />
-
-          {/* List Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-gray-600 hover:text-[#1887FC]"
-              >
-                <List className="w-4 h-4 mr-1" />
-                <span className="text-xs">List</span>
-                <ChevronDown className="w-3 h-3 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={insertBulletList} className="flex items-center gap-2">
-                <List className="w-4 h-4" />
-                <span>Bullet List</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={insertNumberedList} className="flex items-center gap-2">
-                <ListOrdered className="w-4 h-4" />
-                <span>Numbered List</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {showToolbar && (
+          <SharedToolbar onCommand={execCommand} />
+        )}
       </div>
 
       <div
-        className={`
-          relative min-h-[${rows * 24}px] 
-          font-sans text-sm leading-relaxed
-          border rounded-md 
-          ${isFocused ? 'ring-2 ring-[#1887FC] border-[#1887FC]' : 'border-input'}
-          bg-white
-        `}
+        className={cn(
+          "relative font-sans text-sm leading-relaxed border rounded-2xl bg-white transition-all duration-300",
+          isFocused ? "ring-4 ring-blue-500/20 border-blue-500 shadow-sm" : "border-gray-200 hover:border-gray-300"
+        )}
+        style={{ minHeight: `${rows * 24}px` }}
       >
         {showPlaceholder && (
           <div className="absolute top-3 left-3 text-gray-400 pointer-events-none select-none">
@@ -188,20 +132,24 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
           id={id}
           contentEditable
           onInput={handleInput}
-          onFocus={handleFocus}
+          onFocus={() => {
+            handleFocus();
+            if (onCommand) onCommand('focus');
+          }}
           onBlur={handleBlur}
           onPaste={handlePaste}
-          className="w-full h-full min-h-[inherit] p-3 outline-none empty:before:content-[attr(data-placeholder)]"
+          className="w-full h-full min-h-[inherit] p-3 outline-none empty:before:content-[attr(data-placeholder)] prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4"
           style={{ minHeight: `${rows * 24}px` }}
           suppressContentEditableWarning
         />
       </div>
 
       <p className="text-[10px] text-gray-400 italic">
-        Tip: Select text and click Bold, Blue Text, or List to format. Selected text will appear with blue color.
+        Tip: Select text and click Bold, Highlight, or List to format.
       </p>
     </div>
   );
 };
+
 
 export default VisualRichEditor;

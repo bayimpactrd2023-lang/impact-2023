@@ -68,11 +68,11 @@ const variantIcons = {
  * Color classes for different variants
  */
 const variantColors = {
-  default: 'text-blue-600',
-  danger: 'text-red-600',
-  warning: 'text-yellow-600',
-  success: 'text-green-600',
-  info: 'text-blue-600',
+  default: 'text-blue-600 bg-blue-50',
+  danger: 'text-red-600 bg-red-50',
+  warning: 'text-yellow-600 bg-yellow-50',
+  success: 'text-green-600 bg-green-50',
+  info: 'text-blue-600 bg-blue-50',
 };
 
 /**
@@ -98,7 +98,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isLoading = false,
 }) => {
   const Icon = variantIcons[variant];
-  const iconColor = variantColors[variant];
+  const iconColorClasses = variantColors[variant];
   const buttonVariant = buttonVariants[variant] as 'default' | 'destructive';
 
   /**
@@ -111,41 +111,47 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-white rounded-lg shadow-lg">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className={`p-2 rounded-full bg-gray-50 ${iconColor}`}>
-              <Icon className="w-5 h-5" />
+      <DialogContent className="sm:max-w-[480px] bg-white rounded-2xl shadow-2xl p-0 border-none overflow-hidden">
+        <div className="p-8">
+          <DialogHeader className="flex flex-col items-start gap-4 space-y-0">
+            <div className="flex items-center gap-4">
+              <div className={`p-2 rounded-full flex items-center justify-center ${variant === 'danger' ? 'bg-red-50 text-red-500' : iconColorClasses}`}>
+                <Icon className="w-6 h-6" />
+              </div>
+              <DialogTitle className="text-xl font-bold text-gray-900 tracking-tight">
+                {title}
+              </DialogTitle>
             </div>
-            <DialogTitle className="text-lg font-semibold text-gray-900">
-              {title}
-            </DialogTitle>
-          </div>
-          <DialogDescription className="text-sm text-gray-600 leading-relaxed">
-            {message}
-          </DialogDescription>
-        </DialogHeader>
+            <DialogDescription className="text-base text-gray-500 font-medium leading-relaxed pt-2">
+              {message}
+            </DialogDescription>
+          </DialogHeader>
 
-        <DialogFooter className="mt-6 flex gap-2 sm:gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isLoading}
-            className="flex-1 sm:flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
-          >
-            {cancelText}
-          </Button>
-          <Button
-            type="button"
-            variant={buttonVariant}
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className="flex-1 sm:flex-1"
-          >
-            {isLoading ? 'Processing...' : confirmText}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="mt-10 flex flex-row gap-4 sm:justify-center w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+              className="flex-1 h-12 rounded-xl border-gray-200 text-gray-600 font-bold hover:bg-gray-50 text-base"
+            >
+              {cancelText}
+            </Button>
+            <Button
+              type="button"
+              variant={buttonVariant}
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className={`flex-1 h-12 rounded-xl font-bold text-base shadow-lg transition-all active:scale-95 ${
+                variant === 'danger' 
+                  ? 'bg-[#DC1E3C] hover:bg-[#B91932] text-white shadow-red-100' 
+                  : ''
+              }`}
+            >
+              {isLoading ? 'Processing...' : confirmText}
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

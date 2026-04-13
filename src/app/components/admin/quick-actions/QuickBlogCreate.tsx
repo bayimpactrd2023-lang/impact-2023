@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { X, CheckCircle, Newspaper } from 'lucide-react';
 import { BlogPostForm } from '@/app/context/ContentContext';
 import { createBlogPost } from '@/services/supabaseService';
 import {
@@ -26,6 +27,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 
@@ -43,6 +45,17 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
   onSuccess,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
+  const [activeField, setActiveField] = useState<string | null>(null);
+
+  const handleCommand = (cmd: string, val?: string) => {
+    if (activeField) {
+      const event = new CustomEvent(`editor-command-${activeField}`, { 
+        detail: { command: cmd, value: val } 
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
   const [draft, setDraft] = useState<BlogPostForm>({
     id: '',
     title: '',
@@ -143,97 +156,116 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Quick Create Blog Post</DialogTitle>
-          <DialogDescription>
-            Quickly create and publish a new blog post
-          </DialogDescription>
+      <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+        <DialogHeader className="p-5 pb-2 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
+              <Newspaper className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold text-gray-900">Quick Create Blog Post</DialogTitle>
+              <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                Quickly create and publish a new blog post
+              </DialogDescription>
+            </div>
+          </div>
+          <div className="pt-2">
+            <SharedToolbar onCommand={handleCommand} />
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="blog-title">Title *</Label>
-            <Input
-              id="blog-title"
-              value={draft.title}
-              onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-              placeholder="Enter blog title"
+        <div className="flex-1 overflow-y-auto px-5 pb-5">
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="blog-title">Title *</Label>
+              <Input
+                id="blog-title"
+                value={draft.title}
+                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                placeholder="Enter blog title"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="blog-author">Author</Label>
+              <Input
+                id="blog-author"
+                value={draft.author}
+                onChange={(e) => setDraft({ ...draft, author: e.target.value })}
+                placeholder="Author name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="blog-role">Author Role</Label>
+              <Input
+                id="blog-role"
+                value={draft.authorRole}
+                onChange={(e) => setDraft({ ...draft, authorRole: e.target.value })}
+                placeholder="Administrator"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="blog-date">Date</Label>
+              <Input
+                id="blog-date"
+                type="date"
+                value={draft.date}
+                onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+              />
+            </div>
+
+            <VisualRichEditor
+              id="blog-content"
+              label="Content *"
+              value={draft.content}
+              onChange={(value: string) => setDraft({ ...draft, content: value })}
+              rows={6}
+              placeholder="Write your blog content..."
+              required
+              showToolbar={false}
+              onCommand={(cmd) => {
+                if (cmd === 'focus') {
+                  setActiveField('blog-content');
+                }
+              }}
             />
-          </div>
 
-          <div>
-            <Label htmlFor="blog-author">Author</Label>
-            <Input
-              id="blog-author"
-              value={draft.author}
-              onChange={(e) => setDraft({ ...draft, author: e.target.value })}
-              placeholder="Author name"
-            />
-          </div>
+            <div>
+              <Label>Featured Image</Label>
+              <ImageDropzone
+                value={draft.imageUrl || ''}
+                onChange={(url) => setDraft({ ...draft, imageUrl: url })}
+              />
+            </div>
 
-          <div>
-            <Label htmlFor="blog-role">Author Role</Label>
-            <Input
-              id="blog-role"
-              value={draft.authorRole}
-              onChange={(e) => setDraft({ ...draft, authorRole: e.target.value })}
-              placeholder="Administrator"
-            />
+            <div>
+              <Label>Gallery Images</Label>
+              <MultiImageDropzone
+                images={draft.images || []}
+                onChange={(images) => setDraft({ ...draft, images })}
+              />
+            </div>
           </div>
+        </div>
 
-          <div>
-            <Label htmlFor="blog-date">Date</Label>
-            <Input
-              id="blog-date"
-              type="date"
-              value={draft.date}
-              onChange={(e) => setDraft({ ...draft, date: e.target.value })}
-            />
-          </div>
-
-          <VisualRichEditor
-            id="blog-content"
-            label="Content *"
-            value={draft.content}
-            onChange={(value: string) => setDraft({ ...draft, content: value })}
-            rows={6}
-            placeholder="Write your blog content..."
-            required
-          />
-
-          <div>
-            <Label>Featured Image</Label>
-            <ImageDropzone
-              value={draft.imageUrl || ''}
-              onChange={(url) => setDraft({ ...draft, imageUrl: url })}
-            />
-          </div>
-
-          <div>
-            <Label>Gallery Images</Label>
-            <MultiImageDropzone
-              images={draft.images || []}
-              onChange={(images) => setDraft({ ...draft, images })}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              onClick={handlePublish}
-              disabled={isSaving}
-              className="flex-1"
-            >
-              {isSaving ? 'Publishing...' : 'Publish'}
-            </Button>
-            <Button
-              onClick={onClose}
-              variant="outline"
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-3 p-5 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+          <Button
+            onClick={onClose}
+            variant="outline"
+            disabled={isSaving}
+            className="flex-1 w-full"
+          >
+            <X className="w-4 h-4 mr-2" /> Cancel
+          </Button>
+          <Button
+            onClick={handlePublish}
+            disabled={isSaving}
+            className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+          >
+            <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Publishing...' : 'Publish'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

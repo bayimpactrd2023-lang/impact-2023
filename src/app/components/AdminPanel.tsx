@@ -14,8 +14,8 @@ import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 import { toast } from 'sonner';
-import { RichTextContent, RichTextHelperTip } from '@/app/components/RichTextContent';
 import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { ProjectManager } from '@/app/components/admin/ProjectManager';
 import { FinancialStatementManager } from '@/app/components/admin/FinancialStatementManager';
 import { InternshipTestimonialManager } from '@/app/components/admin/InternshipTestimonialManager';
@@ -28,6 +28,7 @@ import { TeamManager } from '@/app/components/admin/TeamManager';
 import { ProductionStatusBanner } from '@/app/components/admin/ProductionStatusBanner';
 import { OurWorkTabs } from '@/app/components/admin/OurWorkTabs';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import {
   AdminValidationRules,
   mergeValidationResults,
@@ -118,6 +119,7 @@ export const AdminPanel: React.FC = () => {
 
   // ── Quick Create Blog modal ───────────────────────────────────────────────
   const [isQuickBlogOpen, setIsQuickBlogOpen] = useState(false);
+  const [quickBlogActiveField, setQuickBlogActiveField] = useState<string | null>(null);
   const [draft, setDraft] = useState<BlogPostForm>({
     id: '',
     title: '',
@@ -130,8 +132,18 @@ export const AdminPanel: React.FC = () => {
     likes: 0,
   });
 
+  const handleQuickBlogCommand = (cmd: string, val?: string) => {
+    if (quickBlogActiveField) {
+      const event = new CustomEvent(`editor-command-${quickBlogActiveField}`, {
+        detail: { command: cmd, value: val }
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
   // ── Quick Create Publication modal ────────────────────────────────────────
   const [isQuickPublicationOpen, setIsQuickPublicationOpen] = useState(false);
+  const [quickPubActiveField, setQuickPubActiveField] = useState<string | null>(null);
   const [publicationDraft, setPublicationDraft] = useState<PublicationForm>({
     id: '',
     title: '',
@@ -148,18 +160,57 @@ export const AdminPanel: React.FC = () => {
     reference: '',
   });
 
+  const handleQuickPubCommand = (cmd: string, val?: string) => {
+    if (quickPubActiveField) {
+      const event = new CustomEvent(`editor-command-${quickPubActiveField}`, {
+        detail: { command: cmd, value: val }
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
   // News modal state
   const [editingNews, setEditingNews] = useState<NewsItemForm | null>(null);
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [newsActiveField, setNewsActiveField] = useState<string | null>(null);
+
+  const handleNewsCommand = (cmd: string, val?: string) => {
+    if (newsActiveField) {
+      const event = new CustomEvent(`editor-command-${newsActiveField}`, {
+        detail: { command: cmd, value: val }
+      });
+      window.dispatchEvent(event);
+    }
+  };
 
   // Highlights modal state
   const [editingHighlight, setEditingHighlight] = useState<HighlightForm | null>(null);
   const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
   const [showMigrationWarning, setShowMigrationWarning] = useState(false);
+  const [highlightActiveField, setHighlightActiveField] = useState<string | null>(null);
+
+  const handleHighlightCommand = (cmd: string, val?: string) => {
+    if (highlightActiveField) {
+      const event = new CustomEvent(`editor-command-${highlightActiveField}`, {
+        detail: { command: cmd, value: val }
+      });
+      window.dispatchEvent(event);
+    }
+  };
 
   // Team modal state
   const [editingTeamMember, setEditingTeamMember] = useState<TeamMemberForm | null>(null);
   const [isTeamMemberModalOpen, setIsTeamMemberModalOpen] = useState(false);
+  const [teamActiveField, setTeamActiveField] = useState<string | null>(null);
+
+  const handleTeamCommand = (cmd: string, val?: string) => {
+    if (teamActiveField) {
+      const event = new CustomEvent(`editor-command-${teamActiveField}`, {
+        detail: { command: cmd, value: val }
+      });
+      window.dispatchEvent(event);
+    }
+  };
 
   // Partners modal state
   const [editingPartner, setEditingPartner] = useState<PartnerForm | null>(null);
@@ -365,6 +416,7 @@ export const AdminPanel: React.FC = () => {
         // Refresh from database
         await refreshContent();
         setIsQuickBlogOpen(false);
+        setActiveTab('blog');
         toast.success('Blog post saved to database!', {
           description: `"${draft.title}" was successfully created.`,
         });
@@ -451,6 +503,7 @@ export const AdminPanel: React.FC = () => {
         // Refresh from database
         await refreshContent();
         setIsQuickPublicationOpen(false);
+        setActiveTab('publications');
         toast.success('Publication saved to database!', {
           description: `"${publicationDraft.title}" was successfully created.`,
         });
@@ -954,9 +1007,17 @@ export const AdminPanel: React.FC = () => {
           <TabsContent value="home" className="space-y-6">
             {/* Tips + Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader><CardTitle className="text-lg">💡 Tips</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+              {/* Tips Card */}
+              <Card className="border border-gray-100 shadow-sm bg-white overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                      <span className="text-lg">💡</span>
+                    </div>
+                    <CardTitle className="text-base font-semibold text-gray-900">Tips</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
                   {[
                     "Click on any card in the grid views to open the edit modal",
                     "Use the Save buttons to persist your changes after editing",
@@ -964,23 +1025,32 @@ export const AdminPanel: React.FC = () => {
                   ].map((tip, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
-                      <p className="text-gray-700">{tip}</p>
+                      <p className="text-gray-600 leading-relaxed">{tip}</p>
                     </div>
                   ))}
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader><CardTitle className="text-lg">🎯 Content Overview</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+
+              {/* Content Overview Card */}
+              <Card className="border border-gray-100 shadow-sm bg-white overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+                      <span className="text-lg">🎯</span>
+                    </div>
+                    <CardTitle className="text-base font-semibold text-gray-900">Content Overview</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2 pt-0">
                   {[
                     { label: 'Highlights', value: dbCounts.highlights },
                     { label: 'Publications', value: dbCounts.publications },
                     { label: 'Projects (All)', value: dbCounts.projects },
                     { label: 'Testimonials', value: dbCounts.testimonials },
                   ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center text-sm">
+                    <div key={i} className="flex justify-between items-center text-sm py-2 border-b border-gray-50 last:border-0">
                       <span className="text-gray-600">{item.label}</span>
-                      <span className="font-semibold text-gray-900">{item.value} items</span>
+                      <span className="font-medium text-gray-900">{item.value} items</span>
                     </div>
                   ))}
                 </CardContent>
@@ -988,127 +1058,112 @@ export const AdminPanel: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common tasks and shortcuts</CardDescription>
+            <Card className="mt-6 border border-gray-100 shadow-sm bg-white overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-bold text-gray-900">Quick Actions</CardTitle>
+                <CardDescription className="text-sm text-gray-500 font-medium">Common tasks and shortcuts</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-                  {/* ★ Create Blog Post — opens modal, stays on Home tab */}
+                  {/* ★ Create Blog Post */}
                   <Button
                     variant="outline"
-                    className="justify-start h-auto py-4 px-4 hover:border-blue-400 hover:bg-blue-50 transition-colors group"
+                    className="justify-start h-auto py-5 px-5 hover:border-[#1887FC]/30 hover:bg-blue-50/30 transition-all group rounded-2xl border-gray-100 shadow-sm"
                     onClick={openQuickBlog}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors">
-                        <FileText className="w-5 h-5" />
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-[#1887FC] group-hover:bg-[#1887FC] group-hover:text-white transition-all shadow-sm">
+                        <FileText className="w-6 h-6" />
                       </div>
-                      <div className="text-left">
-                        <div className="font-semibold text-sm">Create Blog Post</div>
-                        <RichTextContent 
-                          text="Write a [[new article]]" 
-                          className="text-xs text-gray-500 !mb-0" 
-                        />
+                      <div className="text-left space-y-0.5">
+                        <div className="font-bold text-[15px] text-gray-900">Create Blog Post</div>
+                        <p className="text-xs text-gray-500 font-medium group-hover:text-[#1887FC]/80 transition-colors">Write a <span className="text-[#1887FC] underline underline-offset-2">new article</span></p>
                       </div>
                     </div>
                   </Button>
 
-                  {/* ★ Add News Update — opens modal directly */}
+                  {/* ★ Add News Update */}
                   <Button
                     variant="outline"
-                    className="justify-start h-auto py-4 px-4 hover:border-green-400 hover:bg-green-50 transition-colors group"
+                    className="justify-start h-auto py-5 px-5 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all group rounded-2xl border-gray-100 shadow-sm"
                     onClick={addNewsItem}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors">
-                        <Newspaper className="w-5 h-5" />
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
+                        <Newspaper className="w-6 h-6" />
                       </div>
-                      <div className="text-left">
-                        <div className="font-semibold text-sm">Add News Update</div>
-                        <RichTextContent 
-                          text="Post an [[announcement]]" 
-                          className="text-xs text-gray-500 !mb-0" 
-                        />
+                      <div className="text-left space-y-0.5">
+                        <div className="font-bold text-[15px] text-gray-900">Add News Update</div>
+                        <p className="text-xs text-gray-500 font-medium group-hover:text-emerald-600/80 transition-colors">Post an <span className="text-emerald-600 underline underline-offset-2">announcement</span></p>
                       </div>
                     </div>
                   </Button>
 
-                  {/* ★ Add Team Member — opens modal directly */}
+                  {/* ★ Add Team Member */}
                   <Button
                     variant="outline"
-                    className="justify-start h-auto py-4 px-4 hover:border-purple-400 hover:bg-purple-50 transition-colors group"
+                    className="justify-start h-auto py-5 px-5 hover:border-violet-200 hover:bg-violet-50/30 transition-all group rounded-2xl border-gray-100 shadow-sm"
                     onClick={addTeamMember}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-purple-100 text-purple-600 group-hover:bg-purple-200 transition-colors">
-                        <Users className="w-5 h-5" />
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-violet-50 text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-all shadow-sm">
+                        <Users className="w-6 h-6" />
                       </div>
-                      <div className="text-left">
-                        <div className="font-semibold text-sm">Add Team Member</div>
-                        <RichTextContent 
-                          text="Manage your [[team]]" 
-                          className="text-xs text-gray-500 !mb-0" 
-                        />
+                      <div className="text-left space-y-0.5">
+                        <div className="font-bold text-[15px] text-gray-900">Add Team Member</div>
+                        <p className="text-xs text-gray-500 font-medium group-hover:text-violet-600/80 transition-colors">Manage your <span className="text-violet-600 underline underline-offset-2">team</span></p>
                       </div>
                     </div>
                   </Button>
 
-                  {/* ★ Add Highlight — opens modal directly */}
+                  {/* ★ Add Highlight */}
                   <Button
                     variant="outline"
-                    className="justify-start h-auto py-4 px-4 hover:border-yellow-400 hover:bg-yellow-50 transition-colors group"
+                    className="justify-start h-auto py-5 px-5 hover:border-amber-200 hover:bg-amber-50/30 transition-all group rounded-2xl border-gray-100 shadow-sm"
                     onClick={addHighlight}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-yellow-100 text-yellow-600 group-hover:bg-yellow-200 transition-colors">
-                        <Sparkles className="w-5 h-5" />
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
+                        <Sparkles className="w-6 h-6" />
                       </div>
-                      <div className="text-left">
-                        <div className="font-semibold text-sm">Add Highlight</div>
-                        <RichTextContent 
-                          text="Feature your [[work]]" 
-                          className="text-xs text-gray-500 !mb-0" 
-                        />
+                      <div className="text-left space-y-0.5">
+                        <div className="font-bold text-[15px] text-gray-900">Add Highlight</div>
+                        <p className="text-xs text-gray-500 font-medium group-hover:text-amber-600/80 transition-colors">Feature your <span className="text-amber-600 underline underline-offset-2">work</span></p>
                       </div>
                     </div>
                   </Button>
 
-                  {/* ★ Add Partner — opens modal directly */}
+                  {/* ★ Add Partner */}
                   <Button
                     variant="outline"
-                    className="justify-start h-auto py-4 px-4 hover:border-orange-400 hover:bg-orange-50 transition-colors group"
+                    className="justify-start h-auto py-5 px-5 hover:border-orange-200 hover:bg-orange-50/30 transition-all group rounded-2xl border-gray-100 shadow-sm"
                     onClick={addPartner}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-orange-100 text-orange-600 group-hover:bg-orange-200 transition-colors">
-                        <Handshake className="w-5 h-5" />
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm">
+                        <Handshake className="w-6 h-6" />
                       </div>
-                      <div className="text-left">
-                        <div className="font-semibold text-sm">Add Partner</div>
-                        <div className="text-xs text-gray-500">Showcase collaborators</div>
+                      <div className="text-left space-y-0.5">
+                        <div className="font-bold text-[15px] text-gray-900">Add Partner</div>
+                        <div className="text-xs text-gray-500 font-medium group-hover:text-orange-600/80 transition-colors">Showcase collaborators</div>
                       </div>
                     </div>
                   </Button>
 
-                  {/* ★ Create Publication — opens modal directly */}
+                  {/* ★ Create Publication */}
                   <Button
                     variant="outline"
-                    className="justify-start h-auto py-4 px-4 hover:border-indigo-400 hover:bg-indigo-50 transition-colors group"
+                    className="justify-start h-auto py-5 px-5 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all group rounded-2xl border-gray-100 shadow-sm"
                     onClick={openQuickPublication}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200 transition-colors">
-                        <BookOpen className="w-5 h-5" />
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                        <BookOpen className="w-6 h-6" />
                       </div>
-                      <div className="text-left">
-                        <div className="font-semibold text-sm">Create Publication</div>
-                        <RichTextContent 
-                          text="Add [[new publication]]" 
-                          className="text-xs text-gray-500 !mb-0" 
-                        />
+                      <div className="text-left space-y-0.5">
+                        <div className="font-bold text-[15px] text-gray-900">Create Publication</div>
+                        <p className="text-xs text-gray-500 font-medium group-hover:text-indigo-600/80 transition-colors">Add <span className="text-indigo-600 underline underline-offset-2">new publication</span></p>
                       </div>
                     </div>
                   </Button>
@@ -1190,7 +1245,9 @@ export const AdminPanel: React.FC = () => {
                   {(editingNews as NewsItemForm).imageUrl ? (<div className="w-full h-48 overflow-hidden rounded-t-lg"><img src={(editingNews as NewsItemForm).imageUrl as string} alt={(editingNews as NewsItemForm).title} className="w-full h-full object-cover" /></div>) : (<div className="w-full h-48 bg-gray-100 rounded-t-lg flex items-center justify-center"><FileText className="w-12 h-12 text-gray-400" /></div>)}
                   <CardContent className="p-4">
                     <h4 className="font-semibold text-sm line-clamp-2 mb-2">{(editingNews as NewsItemForm).title}</h4>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{(editingNews as NewsItemForm).content}</p>
+                    <div className="text-xs text-gray-600 mb-2 line-clamp-2">
+                      <RichTextContent text={(editingNews as NewsItemForm).content} className="text-xs text-gray-600" />
+                    </div>
                     {(editingNews as NewsItemForm).date && <p className="text-xs text-gray-500">{new Date((editingNews as NewsItemForm).date).toLocaleDateString()}</p>}
                     <div className="mt-3 flex items-center gap-2"><Edit className="w-3 h-3 text-gray-400" /><span className="text-xs text-gray-500">Click to edit</span></div>
                   </CardContent>
@@ -1198,92 +1255,168 @@ export const AdminPanel: React.FC = () => {
               )}
             <div />
           </TabsContent>
+          {/* ── NEWS MODAL (accessible from Home tab Quick Actions) ──────────── */}
           <Dialog open={isNewsModalOpen} onOpenChange={setIsNewsModalOpen}>
-            <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-              <DialogHeader className="pb-4">
+            <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+              {/* Header */}
+              <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
                     <Newspaper className="w-5 h-5" />
                   </div>
                   <div>
-                    <DialogTitle className="text-xl font-semibold">Edit News Item</DialogTitle>
-                    <DialogDescription className="text-sm text-gray-600">Update the details for this news item and click Save to persist changes.</DialogDescription>
+                    <DialogTitle className="text-xl font-bold text-gray-900">
+                      {editingNews?.id?.startsWith('temp-') ? 'Create News Item' : 'Edit News Item'}
+                    </DialogTitle>
+                    <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                      {editingNews?.id?.startsWith('temp-') 
+                        ? 'Create a new news item for your announcements.' 
+                        : 'Update the details for this news item and click Save to persist changes.'}
+                    </DialogDescription>
                   </div>
+                </div>
+                {/* Shared Toolbar */}
+                <div className="pt-3">
+                  <SharedToolbar onCommand={handleNewsCommand} />
                 </div>
               </DialogHeader>
-              {editingNews && (
-                <div className="space-y-6 py-2">
-                  <div className="space-y-2"><Label className="text-sm font-medium">Title</Label><Input value={editingNews.title} onChange={(e) => { const u={...editingNews,title:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'title',e.target.value); }} /></div>
-                  <div className="space-y-2"><Label className="text-sm font-medium">Date</Label><Input type="date" value={editingNews.date} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => { const u={...editingNews,date:e.target.value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'date',e.target.value); }} /></div>
-                  <VisualRichEditor
-                    id="news-content"
-                    label="Content"
-                    value={editingNews.content}
-                    onChange={(value: string) => { const u={...editingNews,content:value}; setEditingNews(u); updateNewsItem((editingNews as NewsItemForm).id,'content',value); }}
-                    rows={8}
-                  />
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Cover Image (Drag & Drop)</Label>
-                    <p className="text-xs text-gray-500 mb-2">Upload a cover image for this news article</p>
-                    <ImageDropzone
-                      value={typeof (editingNews as NewsItemForm).imageUrl === 'string' ? ((editingNews as NewsItemForm).imageUrl as string) : ''}
-                      onChange={(url) => {
-                        const u = { ...editingNews, imageUrl: url };
-                        setEditingNews(u);
-                        if (typeof url === 'string') {
-                          updateNewsItem((editingNews as NewsItemForm).id, 'imageUrl', url);
-                        }
-                      }}
-                      label="Cover Image"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Gallery Images (Drag & Drop)</Label>
-                    <p className="text-xs text-gray-500 mb-2">Upload additional images for the gallery</p>
-                    <MultiImageDropzone images={(editingNews as NewsItemForm).images||[]} onChange={(images) => { const u={...editingNews,images}; setEditingNews(u); updateNewsItemImages((editingNews as NewsItemForm).id,images); }} label="News Article Images" />
-                  </div>
 
-                  {/* Save Button */}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
-                    <Button variant="outline" className="flex-1 w-full" onClick={() => setIsNewsModalOpen(false)}>
-                      <X className="w-4 h-4 mr-2" /> Cancel
-                    </Button>
-                    <Button 
-                      className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
-                      disabled={isSavingNews}
-                      onClick={async () => {
-                        if (editingNews && !isSavingNews) {
-                          setIsSavingNews(true);
-                          try {
-                            // Check if this is a new item (not in array)
-                            const exists = newsItems.find(item => item.id === editingNews.id);
-                            if (!exists) {
-                              // New item - add to array first
-                              const newsItemToAdd: NewsItem = {
-                                ...(editingNews as NewsItemForm),
-                                imageUrl: typeof (editingNews as NewsItemForm).imageUrl === 'string' ? ((editingNews as NewsItemForm).imageUrl as string) : undefined,
-                                images: ((editingNews as NewsItemForm).images || []).filter((img) => typeof img === 'string') as string[],
-                              };
-                              setNewsItems([...newsItems, newsItemToAdd]);
-                            }
-                            // Save to Supabase
-                            await handleSaveNews(editingNews);
-                            setIsNewsModalOpen(false);
-                          } catch (error) {
-                            // Error already handled in handleSaveNews
-                          } finally {
-                            setIsSavingNews(false);
-                          }
+              {/* Scrollable body */}
+              <div
+                className="flex-1 overflow-y-auto px-6 pb-6"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {editingNews && (
+                  <div className="space-y-5 pt-4">
+                    {/* Title */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="news-title" className="text-sm font-semibold">
+                        Title <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="news-title"
+                        value={editingNews.title}
+                        onChange={(e) => { 
+                          const u = { ...editingNews, title: e.target.value }; 
+                          setEditingNews(u); 
+                          updateNewsItem((editingNews as NewsItemForm).id, 'title', e.target.value); 
+                        }}
+                        placeholder="Enter news title..."
+                        className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                      />
+                    </div>
+
+                    {/* Date */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="news-date" className="text-sm font-semibold">
+                        Date <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="news-date"
+                        type="date"
+                        value={editingNews.date}
+                        min="2000-01-01"
+                        max={new Date().toISOString().split('T')[0]}
+                        onChange={(e) => { 
+                          const u = { ...editingNews, date: e.target.value }; 
+                          setEditingNews(u); 
+                          updateNewsItem((editingNews as NewsItemForm).id, 'date', e.target.value); 
+                        }}
+                        className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                      />
+                    </div>
+
+                    {/* Content (Abstract/Description) */}
+                    <VisualRichEditor
+                      id="news-content"
+                      label="Abstract/Description"
+                      value={editingNews.content}
+                      onChange={(value: string) => { 
+                        const u = { ...editingNews, content: value }; 
+                        setEditingNews(u); 
+                        updateNewsItem((editingNews as NewsItemForm).id, 'content', value); 
+                      }}
+                      rows={8}
+                      placeholder="Enter news abstract or description"
+                      required
+                      showToolbar={false}
+                      onCommand={(cmd) => {
+                        if (cmd === 'focus') {
+                          setNewsActiveField('news-content');
                         }
                       }}
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" /> {isSavingNews ? 'Saving...' : 'Save News'}
-                    </Button>
+                    />
+
+                    {/* Cover Image */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Cover Image (Drag & Drop)</Label>
+                      <p className="text-xs text-gray-500 mb-2">Upload a cover image for this news article</p>
+                      <ImageDropzone
+                        value={typeof (editingNews as NewsItemForm).imageUrl === 'string' ? ((editingNews as NewsItemForm).imageUrl as string) : ''}
+                        onChange={(url) => {
+                          const u = { ...editingNews, imageUrl: url };
+                          setEditingNews(u);
+                          if (typeof url === 'string') {
+                            updateNewsItem((editingNews as NewsItemForm).id, 'imageUrl', url);
+                          }
+                        }}
+                        label="Cover Image"
+                      />
+                    </div>
+
+                    {/* Gallery Images */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Gallery Images (Drag & Drop)</Label>
+                      <p className="text-xs text-gray-500 mb-2">Upload additional images for the gallery</p>
+                      <MultiImageDropzone
+                        images={(editingNews as NewsItemForm).images || []}
+                        onChange={(images) => { 
+                          const u = { ...editingNews, images }; 
+                          setEditingNews(u); 
+                          updateNewsItemImages((editingNews as NewsItemForm).id, images); 
+                        }}
+                        label="News Article Images"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* Sticky Footer */}
+              <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+                <Button variant="outline" className="flex-1 w-full" onClick={() => setIsNewsModalOpen(false)}>
+                  <X className="w-4 h-4 mr-2" /> Cancel
+                </Button>
+                <Button
+                  className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+                  disabled={isSavingNews}
+                  onClick={async () => {
+                    if (editingNews && !isSavingNews) {
+                      setIsSavingNews(true);
+                      try {
+                        const exists = newsItems.find(item => item.id === editingNews.id);
+                        if (!exists) {
+                          const newsItemToAdd: NewsItem = {
+                            ...(editingNews as NewsItemForm),
+                            imageUrl: typeof (editingNews as NewsItemForm).imageUrl === 'string' ? ((editingNews as NewsItemForm).imageUrl as string) : undefined,
+                            images: ((editingNews as NewsItemForm).images || []).filter((img) => typeof img === 'string') as string[],
+                          };
+                          setNewsItems([...newsItems, newsItemToAdd]);
+                        }
+                        await handleSaveNews(editingNews);
+                        setIsNewsModalOpen(false);
+                        setActiveTab('news');
+                      } catch (error) {
+                        // Error already handled in handleSaveNews
+                      } finally {
+                        setIsSavingNews(false);
+                      }
+                    }
+                  }}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" /> {isSavingNews ? 'Saving...' : 'Save News'}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
 
@@ -1547,9 +1680,9 @@ export const AdminPanel: React.FC = () => {
         It does NOT change the active tab — user stays on Home the whole time.
       */}
       <Dialog open={isQuickBlogOpen} onOpenChange={setIsQuickBlogOpen}>
-        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl">
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
           {/* Header */}
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
                 <FileText className="w-5 h-5" />
@@ -1561,12 +1694,16 @@ export const AdminPanel: React.FC = () => {
                 </DialogDescription>
               </div>
             </div>
+            {/* Shared Toolbar */}
+            <div className="pt-3">
+              <SharedToolbar onCommand={handleQuickBlogCommand} />
+            </div>
           </DialogHeader>
 
           {/* Scrollable body */}
           <div
-            className="overflow-y-auto px-6 pb-6"
-            style={{ maxHeight: 'calc(90vh - 170px)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex-1 overflow-y-auto px-6 pb-6"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             <div className="space-y-5 pt-4">
 
@@ -1594,6 +1731,12 @@ export const AdminPanel: React.FC = () => {
                 rows={10}
                 placeholder="Write your blog post content here..."
                 required
+                showToolbar={false}
+                onCommand={(cmd) => {
+                  if (cmd === 'focus') {
+                    setQuickBlogActiveField('qb-content');
+                  }
+                }}
               />
 
               {/* Author + Role */}
@@ -1635,34 +1778,30 @@ export const AdminPanel: React.FC = () => {
                   label="Blog Post Images"
                 />
               </div>
-
-              {/* Buttons */}
-              <div className="flex gap-3 pt-2 border-t border-gray-100">
-                <Button variant="outline" className="flex-1" onClick={() => setIsQuickBlogOpen(false)}>
-                  <X className="w-4 h-4 mr-2" /> Cancel
-                </Button>
-                <Button
-                  className="flex-1 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
-                  onClick={publishQuickBlog}
-                  disabled={isSavingQuickBlog}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" /> {isSavingQuickBlog ? 'Publishing...' : 'Publish Blog Post'}
-                </Button>
-              </div>
             </div>
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+            <Button variant="outline" className="flex-1 w-full" onClick={() => setIsQuickBlogOpen(false)}>
+              <X className="w-4 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+              onClick={publishQuickBlog}
+              disabled={isSavingQuickBlog}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" /> {isSavingQuickBlog ? 'Publishing...' : 'Publish Blog Post'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* ── QUICK CREATE PUBLICATION MODAL ──────────────────────────────────── */}
-      {/*
-        This dialog lives OUTSIDE <Tabs> so it renders on top of any tab.
-        It does NOT change the active tab — user stays on Home the whole time.
-      */}
       <Dialog open={isQuickPublicationOpen} onOpenChange={setIsQuickPublicationOpen}>
-        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl">
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
           {/* Header */}
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
                 <BookOpen className="w-5 h-5" />
@@ -1670,19 +1809,22 @@ export const AdminPanel: React.FC = () => {
               <div>
                 <DialogTitle className="text-xl font-bold text-gray-900">Create New Publication</DialogTitle>
                 <DialogDescription className="text-sm text-gray-500 mt-0.5">
-                  Your publication will appear instantly in the Publications tab — no need to switch tabs.
+                  Create a new publication entry. Your post will appear in the Pubs tab.
                 </DialogDescription>
               </div>
+            </div>
+            {/* Shared Toolbar */}
+            <div className="pt-3">
+              <SharedToolbar onCommand={handleQuickPubCommand} />
             </div>
           </DialogHeader>
 
           {/* Scrollable body */}
           <div
-            className="overflow-y-auto px-6 pb-6"
-            style={{ maxHeight: 'calc(90vh - 170px)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex-1 overflow-y-auto px-6 pb-6"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             <div className="space-y-5 pt-4">
-
               {/* Title */}
               <div className="space-y-1.5">
                 <Label htmlFor="qp-title" className="text-sm font-semibold">
@@ -1692,7 +1834,7 @@ export const AdminPanel: React.FC = () => {
                   id="qp-title"
                   value={publicationDraft.title}
                   onChange={(e) => setPublicationDraft(p => ({ ...p, title: e.target.value }))}
-                  placeholder="Enter a compelling title for your publication..."
+                  placeholder="Enter publication title"
                   className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                   autoFocus
                 />
@@ -1707,22 +1849,38 @@ export const AdminPanel: React.FC = () => {
                   id="qp-authors"
                   value={publicationDraft.authors}
                   onChange={(e) => setPublicationDraft(p => ({ ...p, authors: e.target.value }))}
-                  placeholder="Enter the authors' names..."
-                  className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                  placeholder="e.g., John Doe, Jane Smith"
+                  className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                 />
               </div>
 
-              {/* Link */}
+              {/* Content (Abstract/Description) */}
+              <VisualRichEditor
+                id="qp-content"
+                label="Abstract/Description"
+                value={publicationDraft.content || ''}
+                onChange={(value: string) => setPublicationDraft(p => ({ ...p, content: value }))}
+                rows={6}
+                placeholder="Enter publication abstract or description"
+                showToolbar={false}
+                onCommand={(cmd) => {
+                  if (cmd === 'focus') {
+                    setQuickPubActiveField('qp-content');
+                  }
+                }}
+              />
+
+              {/* Link (External Link) */}
               <div className="space-y-1.5">
                 <Label htmlFor="qp-link" className="text-sm font-semibold">
-                  Link <span className="text-red-500">*</span>
+                  External Link
                 </Label>
                 <Input
                   id="qp-link"
                   value={publicationDraft.link}
                   onChange={(e) => setPublicationDraft(p => ({ ...p, link: e.target.value }))}
-                  placeholder="Enter the publication link..."
-                  className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                  placeholder="https://..."
+                  className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                 />
               </div>
 
@@ -1738,138 +1896,252 @@ export const AdminPanel: React.FC = () => {
                 />
               </div>
 
-              {/* Content */}
-              <VisualRichEditor
-                id="qp-content"
-                label="Content"
-                value={publicationDraft.content || ''}
-                onChange={(value: string) => setPublicationDraft(p => ({ ...p, content: value }))}
-                rows={10}
-                placeholder="Write your publication content here..."
-                required
-              />
-
               {/* Published Date */}
               <div className="space-y-1.5">
-                <Label htmlFor="qp-publishedDate" className="text-sm font-semibold">Publish Date</Label>
-                <Input id="qp-publishedDate" type="date" value={publicationDraft.publishedDate} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => setPublicationDraft(p => ({ ...p, publishedDate: e.target.value }))} />
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-3 pt-2 border-t border-gray-100">
-                <Button variant="outline" className="flex-1" onClick={() => setIsQuickPublicationOpen(false)}>
-                  <X className="w-4 h-4 mr-2" /> Cancel
-                </Button>
-                <Button
-                  className="flex-1 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
-                  onClick={publishQuickPublication}
-                  disabled={isSavingQuickPublication}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" /> {isSavingQuickPublication ? 'Publishing...' : 'Publish Publication'}
-                </Button>
+                <Label htmlFor="qp-publishedDate" className="text-sm font-semibold">Published Date</Label>
+                <Input 
+                  id="qp-publishedDate" 
+                  type="date" 
+                  value={publicationDraft.publishedDate} 
+                  min="2000-01-01" 
+                  max={new Date().toISOString().split('T')[0]} 
+                  onChange={(e) => setPublicationDraft(p => ({ ...p, publishedDate: e.target.value }))}
+                  className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                />
               </div>
             </div>
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+            <Button variant="outline" className="flex-1 w-full" onClick={() => setIsQuickPublicationOpen(false)}>
+              <X className="w-4 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+              onClick={publishQuickPublication}
+              disabled={isSavingQuickPublication}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" /> {isSavingQuickPublication ? 'Publishing...' : 'Publish Publication'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* ── HIGHLIGHT MODAL (accessible from Home tab Quick Actions) ──────────── */}
-      <Dialog open={isHighlightModalOpen} onOpenChange={setIsHighlightModalOpen}>
-        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-          <DialogHeader className="pb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-semibold">Edit Highlight</DialogTitle>
-                <DialogDescription className="text-sm text-gray-600">Update the details for this highlight and click Save to persist changes.</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          {editingHighlight && (
-            <div className="space-y-6 py-2">
-              <div className="space-y-2"><Label className="text-sm font-medium">Title</Label><Input value={editingHighlight.title} onChange={(e) => { const u={...editingHighlight,title:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'title',e.target.value); }} /></div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Description</Label>
-                <RichTextHelperTip />
-                <Textarea value={editingHighlight.description} onChange={(e) => { const u={...editingHighlight,description:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'description',e.target.value); }} rows={3} className="resize-none" />
-              </div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Icon</Label><Select value={editingHighlight.iconName} onValueChange={(v) => { const u={...editingHighlight,iconName:v}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'iconName',v); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Satellite">Satellite</SelectItem><SelectItem value="Sprout">Sprout</SelectItem><SelectItem value="BarChart3">BarChart3</SelectItem><SelectItem value="Globe">Globe</SelectItem></SelectContent></Select></div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Detailed Content</Label>
-                <RichTextHelperTip />
-                <Textarea value={editingHighlight.content||''} onChange={(e) => { const u={...editingHighlight,content:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'content',e.target.value); }} rows={6} className="resize-none" />
-              </div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Published Date</Label><Input type="date" value={editingHighlight.publishedDate||''} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => { const u={...editingHighlight,publishedDate:e.target.value}; setEditingHighlight(u); updateHighlight(editingHighlight.id,'publishedDate',e.target.value); }} /></div>
-              
-              {/* Cover Image */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Cover Image (Drag & Drop)</Label>
-                <p className="text-xs text-gray-500 mb-2">Upload a cover image for this highlight</p>
-                <ImageDropzone
-                  value={typeof (editingHighlight as HighlightForm).imageUrl === 'string' ? ((editingHighlight as HighlightForm).imageUrl as string) : ''}
-                  onChange={(url) => {
-                    const u = { ...editingHighlight, imageUrl: url };
-                    setEditingHighlight(u);
-                    if (typeof url === 'string') {
-                      updateHighlight((editingHighlight as HighlightForm).id, 'imageUrl', url);
-                    }
-                  }}
-                  label="Cover Image"
-                />
-              </div>
-              
-              {/* Gallery Images */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Gallery Images (Drag & Drop)</Label>
-                <p className="text-xs text-gray-500 mb-2">Upload additional images for the gallery</p>
-                <MultiImageDropzone images={(editingHighlight as HighlightForm).images||[]} onChange={(images) => { const u={...editingHighlight,images}; setEditingHighlight(u); updateHighlightImages((editingHighlight as HighlightForm).id,images); }} label="Highlight Images" />
-              </div>
-              
-              {/* Featured Checkbox */}
-              <div className="flex items-center space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <input 
-                  type="checkbox" 
-                  id="featured-highlight"
-                  checked={editingHighlight.featured || false}
-                  onChange={(e) => {
-                    const featuredCount = highlights.filter(h => h.featured && h.id !== editingHighlight.id).length;
-                    if (e.target.checked && featuredCount >= 4) {
-                      alert('You can only have 4 featured highlights. Please unfeature another highlight first.');
-                      return;
-                    }
-                    const u = {...editingHighlight, featured: e.target.checked};
-                    setEditingHighlight(u);
-                    updateHighlight(editingHighlight.id, 'featured', e.target.checked);
-                  }}
-                  className="w-5 h-5 text-[#1887FC] border-gray-300 rounded focus:ring-[#1887FC]"
-                />
-                <div className="flex-1">
-                  <Label htmlFor="featured-highlight" className="text-sm font-semibold text-blue-900 cursor-pointer flex items-center gap-2">
-                    <Star className="w-4 h-4 text-blue-600" />
-                    Featured Highlight
-                  </Label>
-                  <p className="text-xs text-blue-700 mt-1">Display this highlight on the home page (max 4)</p>
+          {/* ── HIGHLIGHT MODAL (accessible from Home tab Quick Actions) ──────────── */}
+          <Dialog open={isHighlightModalOpen} onOpenChange={setIsHighlightModalOpen}>
+            <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+              {/* Header */}
+              <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-bold text-gray-900">
+                      {editingHighlight?.id?.startsWith('temp-') ? 'Create Highlight' : 'Edit Highlight'}
+                    </DialogTitle>
+                    <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                      {editingHighlight?.id?.startsWith('temp-')
+                        ? 'Create a new highlight to feature your work on the Home page.'
+                        : 'Update the details for this highlight and click Save to persist changes.'}
+                    </DialogDescription>
+                  </div>
                 </div>
+                {/* Shared Toolbar */}
+                <div className="pt-3">
+                  <SharedToolbar onCommand={handleHighlightCommand} />
+                </div>
+              </DialogHeader>
+
+              {/* Scrollable body */}
+              <div
+                className="flex-1 overflow-y-auto px-6 pb-6"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {editingHighlight && (
+                  <div className="space-y-5 pt-4">
+                    {/* Title */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="highlight-title" className="text-sm font-semibold">
+                        Title <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="highlight-title"
+                        value={editingHighlight.title}
+                        onChange={(e) => { 
+                          const u = { ...editingHighlight, title: e.target.value }; 
+                          setEditingHighlight(u); 
+                          updateHighlight(editingHighlight.id, 'title', e.target.value); 
+                        }}
+                        placeholder="Enter highlight title..."
+                        className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                      />
+                    </div>
+
+                    {/* Description */}
+                    <VisualRichEditor
+                      id="highlight-description"
+                      label="Description *"
+                      value={editingHighlight.description}
+                      onChange={(value: string) => { 
+                        const u = { ...editingHighlight, description: value }; 
+                        setEditingHighlight(u); 
+                        updateHighlight(editingHighlight.id, 'description', value); 
+                      }}
+                      rows={4}
+                      placeholder="Enter a brief description..."
+                      required
+                      showToolbar={false}
+                      onCommand={(cmd) => {
+                        if (cmd === 'focus') {
+                          setHighlightActiveField('highlight-description');
+                        }
+                      }}
+                    />
+
+                    {/* Icon */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="highlight-icon" className="text-sm font-semibold">Icon</Label>
+                      <Select
+                        value={editingHighlight.iconName}
+                        onValueChange={(v) => { 
+                          const u = { ...editingHighlight, iconName: v }; 
+                          setEditingHighlight(u); 
+                          updateHighlight(editingHighlight.id, 'iconName', v); 
+                        }}
+                      >
+                        <SelectTrigger id="highlight-icon" className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Satellite">Satellite</SelectItem>
+                          <SelectItem value="Sprout">Sprout</SelectItem>
+                          <SelectItem value="BarChart3">BarChart3</SelectItem>
+                          <SelectItem value="Globe">Globe</SelectItem>
+                          <SelectItem value="Star">Star</SelectItem>
+                          <SelectItem value="Award">Award</SelectItem>
+                          <SelectItem value="TrendingUp">TrendingUp</SelectItem>
+                          <SelectItem value="CheckCircle">CheckCircle</SelectItem>
+                          <SelectItem value="Info">Info</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Detailed Content */}
+                    <VisualRichEditor
+                      id="highlight-content"
+                      label="Detailed Content"
+                      value={editingHighlight.content || ''}
+                      onChange={(value: string) => { 
+                        const u = { ...editingHighlight, content: value }; 
+                        setEditingHighlight(u); 
+                        updateHighlight(editingHighlight.id, 'content', value); 
+                      }}
+                      rows={6}
+                      placeholder="Write detailed content here..."
+                      showToolbar={false}
+                      onCommand={(cmd) => {
+                        if (cmd === 'focus') {
+                          setHighlightActiveField('highlight-content');
+                        }
+                      }}
+                    />
+
+                    {/* Published Date */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="highlight-date" className="text-sm font-semibold">Published Date</Label>
+                      <Input
+                        id="highlight-date"
+                        type="date"
+                        value={editingHighlight.publishedDate || ''}
+                        min="2000-01-01"
+                        max={new Date().toISOString().split('T')[0]}
+                        onChange={(e) => { 
+                          const u = { ...editingHighlight, publishedDate: e.target.value }; 
+                          setEditingHighlight(u); 
+                          updateHighlight(editingHighlight.id, 'publishedDate', e.target.value); 
+                        }}
+                        className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                      />
+                    </div>
+
+                    {/* Cover Image */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Cover Image (Drag & Drop)</Label>
+                      <p className="text-xs text-gray-500 mb-2">Upload a cover image for this highlight</p>
+                      <ImageDropzone
+                        value={typeof (editingHighlight as HighlightForm).imageUrl === 'string' ? ((editingHighlight as HighlightForm).imageUrl as string) : ''}
+                        onChange={(url) => {
+                          const u = { ...editingHighlight, imageUrl: url };
+                          setEditingHighlight(u);
+                          if (typeof url === 'string') {
+                            updateHighlight((editingHighlight as HighlightForm).id, 'imageUrl', url);
+                          }
+                        }}
+                        label="Cover Image"
+                      />
+                    </div>
+
+                    {/* Gallery Images */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Gallery Images (Drag & Drop)</Label>
+                      <p className="text-xs text-gray-500 mb-2">Upload additional images for the gallery</p>
+                      <MultiImageDropzone
+                        images={(editingHighlight as HighlightForm).images || []}
+                        onChange={(images) => { 
+                          const u = { ...editingHighlight, images }; 
+                          setEditingHighlight(u); 
+                          updateHighlightImages((editingHighlight as HighlightForm).id, images); 
+                        }}
+                        label="Highlight Images"
+                      />
+                    </div>
+
+                    {/* Featured Checkbox */}
+                    <div className="flex items-center space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <input
+                        type="checkbox"
+                        id="featured-highlight-checkbox"
+                        checked={editingHighlight.featured || false}
+                        onChange={(e) => {
+                          const featuredCount = highlights.filter(h => h.featured && h.id !== editingHighlight.id).length;
+                          if (e.target.checked && featuredCount >= 4) {
+                            alert('You can only have 4 featured highlights. Please unfeature another highlight first.');
+                            return;
+                          }
+                          const u = { ...editingHighlight, featured: e.target.checked };
+                          setEditingHighlight(u);
+                          updateHighlight(editingHighlight.id, 'featured', e.target.checked);
+                        }}
+                        className="w-5 h-5 text-[#1887FC] border-gray-300 rounded focus:ring-[#1887FC]"
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="featured-highlight-checkbox" className="text-sm font-semibold text-blue-900 cursor-pointer flex items-center gap-2">
+                          <Star className="w-4 h-4 text-blue-600" />
+                          Featured Highlight
+                        </Label>
+                        <p className="text-xs text-blue-700 mt-1">Display this highlight on the home page (max 4)</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Save Button */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+              {/* Sticky Footer */}
+              <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
                 <Button variant="outline" className="flex-1 w-full" onClick={() => setIsHighlightModalOpen(false)}>
                   <X className="w-4 h-4 mr-2" /> Cancel
                 </Button>
-                <Button 
+                <Button
                   className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
                   disabled={isSavingHighlight}
                   onClick={async () => {
                     if (editingHighlight && !isSavingHighlight) {
                       setIsSavingHighlight(true);
                       try {
-                        // Check if this is a new item (not in array)
                         const exists = highlights.find(item => item.id === editingHighlight.id);
                         if (!exists) {
-                          // New item - add to array first
                           const highlightToAdd: Highlight = {
                             ...(editingHighlight as HighlightForm),
                             imageUrl: typeof (editingHighlight as HighlightForm).imageUrl === 'string' ? ((editingHighlight as HighlightForm).imageUrl as string) : '',
@@ -1877,9 +2149,9 @@ export const AdminPanel: React.FC = () => {
                           };
                           setHighlights([...highlights, highlightToAdd]);
                         }
-                        // Save to Supabase
                         await handleSaveHighlights(editingHighlight);
                         setIsHighlightModalOpen(false);
+                        setActiveTab('highlights');
                       } catch (error) {
                         // Error already handled in handleSaveHighlights
                       } finally {
@@ -1891,134 +2163,256 @@ export const AdminPanel: React.FC = () => {
                   <CheckCircle className="w-4 h-4 mr-2" /> {isSavingHighlight ? 'Saving...' : 'Save Highlight'}
                 </Button>
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            </DialogContent>
+          </Dialog>
 
       {/* ── TEAM MEMBER MODAL (accessible from Home tab Quick Actions) ──────────── */}
       <Dialog open={isTeamMemberModalOpen} onOpenChange={setIsTeamMemberModalOpen}>
-        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-          <DialogHeader className="pb-4">
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          {/* Header */}
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-semibold">Edit Team Member</DialogTitle>
-                <DialogDescription className="text-sm text-gray-600">Update the details for this team member and click Save to persist changes.</DialogDescription>
+                <DialogTitle className="text-xl font-bold text-gray-900">
+                  {editingTeamMember?.id?.startsWith('temp-') ? 'Create Team Member' : 'Edit Team Member'}
+                </DialogTitle>
+                <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                  {editingTeamMember?.id?.startsWith('temp-')
+                    ? 'Add a new team member to showcase on your website.'
+                    : 'Update the details for this team member and click Save to persist changes.'}
+                </DialogDescription>
               </div>
+            </div>
+            {/* Shared Toolbar */}
+            <div className="pt-3">
+              <SharedToolbar onCommand={handleTeamCommand} />
             </div>
           </DialogHeader>
-          {editingTeamMember && (
-            <div className="space-y-6 py-2">
-              <div className="space-y-2"><Label className="text-sm font-medium">Name</Label><Input value={editingTeamMember.name} onChange={(e) => { const u={...editingTeamMember,name:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'name',e.target.value); }} /></div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Role</Label><Input value={editingTeamMember.role} onChange={(e) => { const u={...editingTeamMember,role:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'role',e.target.value); }} /></div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Description</Label>
-                <RichTextHelperTip />
-                <Textarea value={editingTeamMember.description} onChange={(e) => { const u={...editingTeamMember,description:e.target.value}; setEditingTeamMember(u); updateTeamMember(editingTeamMember.id,'description',e.target.value); }} rows={4} className="resize-none" />
-              </div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Member Photo</Label><ImageDropzone value={typeof (editingTeamMember as TeamMemberForm).imageUrl === 'string' ? (((editingTeamMember as TeamMemberForm).imageUrl as string) || '') : ''} onChange={(url) => { const u={...editingTeamMember,imageUrl:url}; setEditingTeamMember(u); if (typeof url === 'string') { updateTeamMember((editingTeamMember as TeamMemberForm).id,'imageUrl',url); } }} /></div>
-              
-              {/* Save Button */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
-                <Button variant="outline" className="flex-1 w-full" onClick={() => setIsTeamMemberModalOpen(false)}>
-                  <X className="w-4 h-4 mr-2" /> Cancel
-                </Button>
-                <Button 
-                  className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
-                  disabled={isSavingTeamMember}
-                  onClick={async () => {
-                    if (editingTeamMember && !isSavingTeamMember) {
-                      setIsSavingTeamMember(true);
-                      try {
-                        // Check if this is a new item (not in array)
-                        const exists = teamMembers.find(item => item.id === editingTeamMember.id);
-                        if (!exists) {
-                          // New item - add to array first
-                          const memberToAdd: TeamMember = {
-                            ...(editingTeamMember as TeamMemberForm),
-                            imageUrl: typeof (editingTeamMember as TeamMemberForm).imageUrl === 'string' ? ((editingTeamMember as TeamMemberForm).imageUrl as string) : undefined,
-                          };
-                          setTeamMembers([...teamMembers, memberToAdd]);
-                        }
-                        // Save to Supabase
-                        await handleSaveTeamMembers(editingTeamMember);
-                        setIsTeamMemberModalOpen(false);
-                      } catch (error) {
-                        // Error already handled in handleSaveTeamMembers
-                      } finally {
-                        setIsSavingTeamMember(false);
-                      }
+
+          {/* Scrollable body */}
+          <div
+            className="flex-1 overflow-y-auto px-6 pb-6"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {editingTeamMember && (
+              <div className="space-y-5 pt-4">
+                {/* Name */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="team-name" className="text-sm font-semibold">
+                    Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="team-name"
+                    value={editingTeamMember.name}
+                    onChange={(e) => { 
+                      const u = { ...editingTeamMember, name: e.target.value }; 
+                      setEditingTeamMember(u); 
+                      updateTeamMember(editingTeamMember.id, 'name', e.target.value); 
+                    }}
+                    placeholder="Enter member name..."
+                    className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                  />
+                </div>
+
+                {/* Role */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="team-role" className="text-sm font-semibold">
+                    Role <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="team-role"
+                    value={editingTeamMember.role}
+                    onChange={(e) => { 
+                      const u = { ...editingTeamMember, role: e.target.value }; 
+                      setEditingTeamMember(u); 
+                      updateTeamMember(editingTeamMember.id, 'role', e.target.value); 
+                    }}
+                    placeholder="Enter member role..."
+                    className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                  />
+                </div>
+
+                {/* Description */}
+                <VisualRichEditor
+                  id="team-description"
+                  label="Description"
+                  value={editingTeamMember.description}
+                  onChange={(value: string) => { 
+                    const u = { ...editingTeamMember, description: value }; 
+                    setEditingTeamMember(u); 
+                    updateTeamMember(editingTeamMember.id, 'description', value); 
+                  }}
+                  rows={6}
+                  placeholder="Enter member description..."
+                  showToolbar={false}
+                  onCommand={(cmd) => {
+                    if (cmd === 'focus') {
+                      setTeamActiveField('team-description');
                     }
                   }}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" /> {isSavingTeamMember ? 'Saving...' : 'Save Team Member'}
-                </Button>
+                />
+
+                {/* Member Photo */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Member Photo</Label>
+                  <p className="text-xs text-gray-500 mb-2">Upload a photo for this team member</p>
+                  <ImageDropzone
+                    value={typeof (editingTeamMember as TeamMemberForm).imageUrl === 'string' ? (((editingTeamMember as TeamMemberForm).imageUrl as string) || '') : ''}
+                    onChange={(url) => { 
+                      const u = { ...editingTeamMember, imageUrl: url }; 
+                      setEditingTeamMember(u); 
+                      if (typeof url === 'string') { 
+                        updateTeamMember((editingTeamMember as TeamMemberForm).id, 'imageUrl', url); 
+                      } 
+                    }}
+                    label="Member Photo"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+            <Button variant="outline" className="flex-1 w-full" onClick={() => setIsTeamMemberModalOpen(false)}>
+              <X className="w-4 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+              disabled={isSavingTeamMember}
+              onClick={async () => {
+                if (editingTeamMember && !isSavingTeamMember) {
+                  setIsSavingTeamMember(true);
+                  try {
+                    const exists = teamMembers.find(item => item.id === editingTeamMember.id);
+                    if (!exists) {
+                      const memberToAdd: TeamMember = {
+                        ...(editingTeamMember as TeamMemberForm),
+                        imageUrl: typeof (editingTeamMember as TeamMemberForm).imageUrl === 'string' ? ((editingTeamMember as TeamMemberForm).imageUrl as string) : undefined,
+                      };
+                      setTeamMembers([...teamMembers, memberToAdd]);
+                    }
+                    await handleSaveTeamMembers(editingTeamMember);
+                    setIsTeamMemberModalOpen(false);
+                    setActiveTab('team');
+                  } catch (error) {
+                    // Error already handled in handleSaveTeamMembers
+                  } finally {
+                    setIsSavingTeamMember(false);
+                  }
+                }
+              }}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" /> {isSavingTeamMember ? 'Saving...' : 'Save Team Member'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* ── PARTNER MODAL (accessible from Home tab Quick Actions) ──────────── */}
       <Dialog open={isPartnerModalOpen} onOpenChange={setIsPartnerModalOpen}>
-        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-          <DialogHeader className="pb-4">
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          {/* Header */}
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
                 <Handshake className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-semibold">Edit Partner</DialogTitle>
-                <DialogDescription className="text-sm text-gray-600">Update the details for this partner and click Save to persist changes.</DialogDescription>
+                <DialogTitle className="text-xl font-bold text-gray-900">
+                  {editingPartner?.id?.startsWith('temp-') ? 'Create Partner' : 'Edit Partner'}
+                </DialogTitle>
+                <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                  {editingPartner?.id?.startsWith('temp-')
+                    ? 'Add a new partner to showcase your collaborations.'
+                    : 'Update the details for this partner and click Save to persist changes.'}
+                </DialogDescription>
               </div>
             </div>
           </DialogHeader>
-          {editingPartner && (
-            <div className="space-y-6 py-2">
-              <div className="space-y-2"><Label className="text-sm font-medium">Name</Label><Input value={editingPartner.name} onChange={(e) => { const u={...editingPartner,name:e.target.value}; setEditingPartner(u); updatePartner(editingPartner.id,'name',e.target.value); }} /></div>
-              <div className="space-y-2"><Label className="text-sm font-medium">Partner Logo</Label><ImageDropzone value={typeof editingPartner.logoUrl === 'string' ? editingPartner.logoUrl : ''} onChange={(url) => { const u={...editingPartner,logoUrl:url}; setEditingPartner(u); if (typeof url === 'string') { updatePartner(editingPartner.id,'logoUrl',url); } }} /></div>
-              
-              {/* Save Button */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
-                <Button variant="outline" className="flex-1 w-full" onClick={() => setIsPartnerModalOpen(false)}>
-                  <X className="w-4 h-4 mr-2" /> Cancel
-                </Button>
-                <Button 
-                  className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
-                  disabled={isSavingPartner}
-                  onClick={async () => {
-                    if (editingPartner && !isSavingPartner) {
-                      setIsSavingPartner(true);
-                      try {
-                        // Check if this is a new item (not in array)
-                        const exists = partners.find(item => item.id === editingPartner.id);
-                        if (!exists) {
-                          // New item - add to array first
-                          const partnerToAdd: Partner = {
-                            ...(editingPartner as PartnerForm),
-                            logoUrl: typeof (editingPartner as PartnerForm).logoUrl === 'string' ? ((editingPartner as PartnerForm).logoUrl as string) : '',
-                          };
-                          setPartners([...partners, partnerToAdd]);
-                        }
-                        // Save to Supabase
-                        await handleSavePartners(editingPartner);
-                        setIsPartnerModalOpen(false);
-                      } catch (error) {
-                        // Error already handled in handleSavePartners
-                      } finally {
-                        setIsSavingPartner(false);
-                      }
-                    }
-                  }}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" /> {isSavingPartner ? 'Saving...' : 'Save Partner'}
-                </Button>
+
+          {/* Scrollable body */}
+          <div
+            className="flex-1 overflow-y-auto px-6 pb-6"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {editingPartner && (
+              <div className="space-y-5 pt-4">
+                {/* Name */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="partner-name" className="text-sm font-semibold">
+                    Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="partner-name"
+                    value={editingPartner.name}
+                    onChange={(e) => { 
+                      const u = { ...editingPartner, name: e.target.value }; 
+                      setEditingPartner(u); 
+                      updatePartner(editingPartner.id, 'name', e.target.value); 
+                    }}
+                    placeholder="Enter partner name..."
+                    className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
+                  />
+                </div>
+
+                {/* Partner Logo */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Partner Logo</Label>
+                  <p className="text-xs text-gray-500 mb-2">Upload a logo for this partner</p>
+                  <ImageDropzone
+                    value={typeof editingPartner.logoUrl === 'string' ? editingPartner.logoUrl : ''}
+                    onChange={(url) => { 
+                      const u = { ...editingPartner, logoUrl: url }; 
+                      setEditingPartner(u); 
+                      if (typeof url === 'string') { 
+                        updatePartner(editingPartner.id, 'logoUrl', url); 
+                      } 
+                    }}
+                    label="Partner Logo"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+            <Button variant="outline" className="flex-1 w-full" onClick={() => setIsPartnerModalOpen(false)}>
+              <X className="w-4 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+              disabled={isSavingPartner}
+              onClick={async () => {
+                if (editingPartner && !isSavingPartner) {
+                  setIsSavingPartner(true);
+                  try {
+                    const exists = partners.find(item => item.id === editingPartner.id);
+                    if (!exists) {
+                      const partnerToAdd: Partner = {
+                        ...(editingPartner as PartnerForm),
+                        logoUrl: typeof (editingPartner as PartnerForm).logoUrl === 'string' ? ((editingPartner as PartnerForm).logoUrl as string) : '',
+                      };
+                      setPartners([...partners, partnerToAdd]);
+                    }
+                    await handleSavePartners(editingPartner);
+                    setIsPartnerModalOpen(false);
+                    setActiveTab('partners');
+                  } catch (error) {
+                    // Error already handled in handleSavePartners
+                  } finally {
+                    setIsSavingPartner(false);
+                  }
+                }
+              }}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" /> {isSavingPartner ? 'Saving...' : 'Save Partner'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
       

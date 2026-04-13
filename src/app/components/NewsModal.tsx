@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NewsItem } from '@/app/context/ContentContext';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -70,6 +70,7 @@ export const NewsModal: React.FC<NewsModalProps> = ({ isOpen, onClose, newsItem 
               {newsItem.title}
             </h2>
             <DialogTitle className="sr-only">{newsItem.title}</DialogTitle>
+            <DialogDescription className="sr-only">News article published on {formatDate(newsItem.date)}</DialogDescription>
           </div>
 
           {/* Image Gallery */}

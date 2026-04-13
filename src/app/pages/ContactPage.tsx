@@ -190,14 +190,14 @@ export const ContactPage: React.FC = () => {
 
       {/* Google Maps Modal */}
       <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
-        <DialogContent className="max-w-4xl w-[95%] p-0 overflow-hidden">
-          <DialogHeader className="p-6 pb-4">
-            <DialogTitle className="text-2xl font-bold text-gray-900">Our Location</DialogTitle>
-            <DialogDescription className="text-sm text-gray-600 mt-2">
+        <DialogContent className="max-w-4xl w-[95%] max-h-[90vh] p-0 overflow-hidden flex flex-col bg-white border-none shadow-2xl">
+          <DialogHeader className="p-4 sm:p-6 pb-2 sm:pb-4 flex-shrink-0 bg-white">
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Our Location</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">
               47 Razburg Bldg., Manese St., San Agustin, Bay, Laguna
             </DialogDescription>
           </DialogHeader>
-          <div className="w-full h-[500px] relative">
+          <div className="w-full h-[300px] sm:h-[400px] md:h-[450px] relative bg-gray-100">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d484.3755965966858!2d121.28220283808163!3d14.181032199999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd5f5745c2ca1b%3A0x13beaeb4f42ed7d1!2sRazburg%20Bldg.!5e0!3m2!1sen!2sph!4v1710800000000!5m2!1sen!2sph"
               width="100%"
@@ -209,18 +209,18 @@ export const ContactPage: React.FC = () => {
               title="IMPACT R&D Location - Razburg Building"
             />
           </div>
-          <div className="p-6 pt-4 flex justify-end gap-3 bg-gray-50">
+          <div className="p-4 sm:p-6 pt-3 sm:pt-4 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 bg-white flex-shrink-0">
             <a
               href="https://www.google.com/maps/dir/?api=1&destination=14.1810321,121.2827983&destination_place_id=ChIJG8rCRVdfvTMR0dcu9LTuvu4T"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-2.5 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
+              className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 text-center text-sm sm:text-base"
             >
               Get Directions
             </a>
             <button
               onClick={() => setIsMapOpen(false)}
-              className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-300"
+              className="px-4 sm:px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-300 text-sm sm:text-base"
             >
               Close
             </button>

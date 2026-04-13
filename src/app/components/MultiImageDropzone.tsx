@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { isBase64Url } from '@/utils/storageUpload';
 import { getImageUrl } from '@/utils/r2Upload';
+import heic2any from 'heic2any';
 
 interface MultiImageDropzoneProps {
   images: (string | File)[];
@@ -16,6 +17,7 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
   label = 'Gallery Images'
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const getImageHash = useCallback((imageData: string | File): string => {
     if (imageData instanceof File) {
@@ -59,24 +61,64 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
     }
   }, [images, uniqueImages, onChange]);
 
+  const convertHeicToJpeg = async (file: File): Promise<File> => {
+    if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
+      try {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.8
+        });
+        
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        return new File([blob], file.name.replace(/\.heic$/i, '.jpg'), {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+      } catch (err) {
+        console.error('[MultiImageDropzone] HEIC conversion failed:', err);
+        throw new Error(`Failed to convert HEIC image: ${file.name}`);
+      }
+    }
+    return file;
+  };
+
   // Handle multiple file selection - NO AUTOMATIC UPLOAD
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
+    const validFiles = fileArray.filter(file => 
+      file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic')
+    );
     
-    if (imageFiles.length === 0) return;
+    if (validFiles.length === 0) return;
 
-    // Check for duplicates
-    const existingHashes = new Set(uniqueImages.map(img => getImageHash(img)));
-    const uniqueNewFiles = imageFiles.filter(file => !existingHashes.has(getImageHash(file)));
-    
-    if (uniqueNewFiles.length > 0 && onChange && typeof onChange === 'function') {
-      onChange([...images, ...uniqueNewFiles]);
-    }
-    
-    const duplicateCount = imageFiles.length - uniqueNewFiles.length;
-    if (duplicateCount > 0) {
-      toast.error(`${duplicateCount} duplicate image${duplicateCount > 1 ? 's' : ''} skipped`);
+    setIsProcessing(true);
+    try {
+      // Process all files (convert HEIC if needed)
+      const processedFiles = await Promise.all(validFiles.map(file => convertHeicToJpeg(file)));
+
+      // Check for duplicates
+      const existingHashes = new Set(uniqueImages.map(img => getImageHash(img)));
+      const uniqueNewFiles = processedFiles.filter(file => !existingHashes.has(getImageHash(file)));
+      
+      if (uniqueNewFiles.length > 0 && onChange && typeof onChange === 'function') {
+        onChange([...images, ...uniqueNewFiles]);
+      }
+      
+      const duplicateCount = processedFiles.length - uniqueNewFiles.length;
+      if (duplicateCount > 0) {
+        toast.error(`${duplicateCount} duplicate image${duplicateCount > 1 ? 's' : ''} skipped`);
+      }
+
+      const heicCount = validFiles.filter(f => f.name.toLowerCase().endsWith('.heic')).length;
+      if (heicCount > 0) {
+        toast.success(`${heicCount} HEIC image${heicCount > 1 ? 's' : ''} converted successfully`);
+      }
+    } catch (err: any) {
+      console.error('[MultiImageDropzone] Processing failed:', err);
+      toast.error(err.message || 'Failed to process images');
+    } finally {
+      setIsProcessing(false);
     }
   }, [images, onChange, uniqueImages, getImageHash]);
 
@@ -131,7 +173,9 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          isProcessing ? 'cursor-wait opacity-75' : 'cursor-pointer'
+        } ${
           isDragging 
             ? 'border-[#1887FC] bg-blue-50' 
             : 'border-gray-300 hover:border-gray-400'
@@ -139,17 +183,24 @@ export const MultiImageDropzone: React.FC<MultiImageDropzoneProps> = ({
       >
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,.heic"
           multiple
           onChange={handleFileSelect}
           className="hidden"
           id="multi-image-input"
+          disabled={isProcessing}
         />
         <label 
           htmlFor="multi-image-input"
-          className="cursor-pointer flex flex-col items-center"
+          className={`${isProcessing ? 'cursor-wait' : 'cursor-pointer'} flex flex-col items-center`}
         >
-          {(
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-10 h-10 text-[#1887FC] mb-2 animate-spin" />
+              <p className="text-sm font-medium text-gray-700 mb-1">Processing images...</p>
+              <p className="text-xs text-gray-500">Converting HEIC if needed</p>
+            </>
+          ) : (
             <>
               <Upload className="w-10 h-10 text-gray-400 mb-2" />
               <p className="text-sm font-medium text-gray-700 mb-1">

@@ -1,20 +1,8 @@
-import React, { useRef } from 'react';
-import { Button } from '@/app/components/ui/button';
+import React, { useRef, useState, useEffect } from 'react';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
+import { cn } from "@/app/components/ui/utils";
 import { Textarea } from '@/app/components/ui/textarea';
 import { Label } from '@/app/components/ui/label';
-import { 
-  List, 
-  ListOrdered, 
-  Highlighter,
-  Bold,
-  ChevronDown
-} from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/app/components/ui/dropdown-menu";
 
 interface InteractiveRichEditorProps {
   id: string;
@@ -24,6 +12,8 @@ interface InteractiveRichEditorProps {
   placeholder?: string;
   rows?: number;
   required?: boolean;
+  showToolbar?: boolean;
+  onCommand?: (command: string, value?: string) => void;
 }
 
 export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
@@ -33,9 +23,25 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
   onChange,
   placeholder,
   rows = 4,
-  required = false
+  required = false,
+  showToolbar = true,
+  onCommand
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Listen for commands from parent toolbar
+  useEffect(() => {
+    const handleToolbarCommand = (e: any) => {
+      const { command, value: cmdValue } = e.detail;
+      handleCommand(command, cmdValue);
+    };
+
+    window.addEventListener(`editor-command-${id}`, handleToolbarCommand);
+    return () => {
+      window.removeEventListener(`editor-command-${id}`, handleToolbarCommand);
+    };
+  }, [id]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
@@ -128,12 +134,32 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
     }, 0);
   };
 
-  const applyHighlight = () => {
-    insertText('[[', ']]');
-  };
+  const handleCommand = (command: string, _value?: string) => {
+    // If we're using a single shared toolbar, we need to handle the focus properly
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
 
-  const applyBold = () => {
-    insertText('**', '**');
+    if (onCommand) {
+       onCommand(command, _value);
+       // We don't return here because we still want to apply the command locally
+       // if it's meant for this editor.
+    }
+
+    switch(command) {
+      case 'bold':
+        insertText('**', '**');
+        break;
+      case 'highlight':
+        insertText('[[', ']]');
+        break;
+      case 'bullet':
+        applyBullet('bullet');
+        break;
+      case 'number':
+        applyBullet('number');
+        break;
+    }
   };
 
   return (
@@ -143,60 +169,9 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
           {label} {required && <span className="text-red-500">*</span>}
         </Label>
         
-        <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-md border border-gray-200">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-gray-600 hover:text-[#1887FC] font-bold"
-            onClick={applyBold}
-            title="Bold selection"
-          >
-            <Bold className="w-4 h-4 mr-1" />
-            <span className="text-xs">Bold</span>
-          </Button>
-
-          <div className="w-[1px] h-4 bg-gray-300 mx-1" />
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-gray-600 hover:text-[#1887FC]"
-            onClick={applyHighlight}
-            title="Highlight selection"
-          >
-            <Highlighter className="w-4 h-4 mr-1" />
-            <span className="text-xs">Highlight</span>
-          </Button>
-
-          <div className="w-[1px] h-4 bg-gray-300 mx-1" />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-gray-600 hover:text-[#1887FC]"
-              >
-                <List className="w-4 h-4 mr-1" />
-                <span className="text-xs">List</span>
-                <ChevronDown className="w-3 h-3 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => applyBullet('bullet')} className="flex items-center gap-2">
-                <List className="w-4 h-4" />
-                <span>Bullet List (- )</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => applyBullet('number')} className="flex items-center gap-2">
-                <ListOrdered className="w-4 h-4" />
-                <span>Numbered List (1. )</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {showToolbar && (
+          <SharedToolbar onCommand={handleCommand} />
+        )}
       </div>
 
       <Textarea
@@ -204,9 +179,17 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
         id={id}
         value={value}
         onChange={handleTextChange}
+        onFocus={() => {
+          setIsFocused(true);
+          if (onCommand) onCommand('focus'); // Notify parent that this field is active
+        }}
+        onBlur={() => setIsFocused(false)}
         rows={rows}
         placeholder={placeholder}
-        className="font-sans text-sm leading-relaxed resize-y focus-visible:ring-[#1887FC]"
+        className={cn(
+          "font-sans text-sm leading-relaxed resize-y transition-all duration-200",
+          isFocused ? "ring-2 ring-[#1887FC] border-[#1887FC]" : "border-gray-200"
+        )}
       />
       <p className="text-[10px] text-gray-400 italic">
         Tip: Select text and click "Bold" for **bold**, "Highlight" for blue, or "List" for bullets/numbers.
@@ -214,3 +197,4 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
     </div>
   );
 };
+

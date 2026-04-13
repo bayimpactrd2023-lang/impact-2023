@@ -131,8 +131,7 @@ export const NewsCarousel: React.FC = React.memo(() => {
             {/* Main Card Container */}
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100/50 mx-0 sm:mx-4">
               {/* Subtle gradient overlay on top edge */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa]" />
-              
+                
               <div className="p-0 sm:p-10">
                 {/* Carousel Container - Only for top content */}
                 <div className="overflow-hidden mb-0 sm:mb-8" ref={emblaRef}>

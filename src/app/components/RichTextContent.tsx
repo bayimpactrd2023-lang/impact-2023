@@ -5,6 +5,26 @@ const containsHTML = (text: string): boolean => {
   return /<\/?[a-z][\s\S]*>/i.test(text);
 };
 
+const decodeHTMLEntities = (text: string): string => {
+  if (!text) return text;
+
+  let decoded = text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return decoded;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = decoded;
+  return textarea.value;
+};
+
 // Sanitize and clean HTML from WYSIWYG editor
 const sanitizeHTML = (html: string): string => {
   // Remove extra ** that might be wrapped in <b> tags
@@ -205,9 +225,11 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
     return <>{text}</>;
   }
 
+  const decodedText = decodeHTMLEntities(text);
+
   // Check if content is HTML (from WYSIWYG editor)
-  if (containsHTML(text)) {
-    const cleanedHTML = sanitizeHTML(text);
+  if (containsHTML(decodedText)) {
+    const cleanedHTML = sanitizeHTML(decodedText);
     return (
       <div 
         className={`prose prose-sm max-w-none ${className}`}
@@ -221,7 +243,7 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
   }
 
   // Use legacy parser for old markdown-style format
-  return parseLegacyFormat(text, className);
+  return parseLegacyFormat(decodedText, className);
 };
 
 // Admin helper tip component - updated for new WYSIWYG editor

@@ -77,8 +77,6 @@ export const PublicationsSection: React.FC = React.memo(() => {
               className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100/50 mx-0 sm:mx-0 cursor-pointer"
               onClick={() => handleReadPublication(publication)}
             >
-              {/* Top gradient line */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] z-10" />
               
               {/* Publication Image/Book Cover */}
               <div className="relative h-64 sm:h-56 overflow-hidden">

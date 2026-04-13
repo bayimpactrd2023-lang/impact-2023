@@ -3,6 +3,7 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import { isBase64Url } from '@/utils/storageUpload';
 import { getImageUrl } from '@/utils/r2Upload';
 import { toast } from 'sonner';
+import heic2any from 'heic2any';
 
 interface ImageDropzoneProps {
   value?: string | File;
@@ -47,14 +48,37 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
     setIsDragging(false);
   }, []);
 
+  const convertHeicToJpeg = async (file: File): Promise<File> => {
+    if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
+      try {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.8
+        });
+        
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        return new File([blob], file.name.replace(/\.heic$/i, '.jpg'), {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+      } catch (err) {
+        console.error('[ImageDropzone] HEIC conversion failed:', err);
+        throw new Error('Failed to convert HEIC image');
+      }
+    }
+    return file;
+  };
+
   const processImageFile = useCallback(async (imageFile: File) => {
     setIsUploading(true);
     try {
-      onChange(imageFile);
-      toast.success('Image selected');
-    } catch (err) {
+      const fileToProcess = await convertHeicToJpeg(imageFile);
+      onChange(fileToProcess);
+      toast.success(imageFile !== fileToProcess ? 'HEIC converted and selected' : 'Image selected');
+    } catch (err: any) {
       console.error('[ImageDropzone] Selection failed:', err);
-      toast.error('Failed to select image');
+      toast.error(err.message || 'Failed to select image');
     } finally {
       setIsUploading(false);
     }
@@ -65,7 +89,9 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
-    const imageFile = files.find(file => file.type.startsWith('image/'));
+    const imageFile = files.find(file => 
+      file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic')
+    );
 
     if (imageFile) {
       processImageFile(imageFile);
@@ -74,7 +100,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic'))) {
       processImageFile(file);
     }
   }, [processImageFile]);
@@ -125,7 +151,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
         >
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,.heic"
             onChange={handleFileSelect}
             className="hidden"
             id={`file-input-${label}`}

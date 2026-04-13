@@ -11,6 +11,7 @@ import { EntityValidator } from '../utils/adminHelpers';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
+import { Image } from 'lucide-react';
 
 interface PartnerModalProps {
   isOpen: boolean;
@@ -40,27 +41,29 @@ export function PartnerModal({
       allItems={allItems}
       onSave={onSave}
       title="Edit Partner"
-      description="Update the details for this partner and click Save to persist changes."
+      description="Update the partner details and click Save to persist changes."
       successMessage="Partner saved!"
       validate={EntityValidator.validatePartner}
       onUpdateItem={onUpdateItem}
+      icon={<Image className="w-5 h-5" />}
     >
       {(item, updateField) => (
         <>
-          {/* Name Field */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Name</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              Partner Name <span className="text-red-500 ml-0.5">*</span>
+            </Label>
             <Input
               value={item.name}
               onChange={e => updateField('name', e.target.value)}
-              placeholder="Enter partner name"
-              className="mt-1.5"
+              placeholder="Partner name"
+              className="text-lg font-semibold"
             />
           </div>
 
-          {/* Partner Logo */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Partner Logo</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1">Logo (Drag & Drop)</Label>
+            <p className="text-xs text-gray-500 mb-3">Upload a high-quality logo for this partner</p>
             <ImageDropzone
               value={item.logoUrl}
               onChange={url => updateField('logoUrl', url)}

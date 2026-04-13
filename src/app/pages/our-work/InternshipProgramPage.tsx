@@ -11,6 +11,7 @@ import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { Pagination } from '@/app/components/Pagination';
 import { Users } from 'lucide-react';
 import { PageSkeletonLoader } from '@/app/components/PageSkeletonLoader';
+import { RichTextContent } from '@/app/components/RichTextContent';
 
 const ITEMS_PER_PAGE = 3;
 
@@ -346,9 +347,9 @@ export const InternshipProgramPage: React.FC = () => {
 
                             {/* Full Story */}
                             <div className="ml-10 border-l-4 border-[#1887FC] pl-6">
-                              <p className="text-gray-700 leading-relaxed mb-4">
-                                {testimonial.fullText}
-                              </p>
+                              <div className="text-gray-700 leading-relaxed mb-4">
+                                <RichTextContent text={testimonial.fullText} />
+                              </div>
                               
                               <div className="flex items-center gap-2 text-gray-500 text-sm">
                                 <Calendar className="w-4 h-4" />

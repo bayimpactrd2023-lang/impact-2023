@@ -66,7 +66,7 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
     if (!confirmed) return;
 
     try {
-      if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+      if (!id.startsWith('temp-') && !id.match(/^\d{13}$/)) {
         // Find the partner to get its logo URL for storage cleanup
         const partnerToDelete = pagination.data.find(p => p.id === id);
         if (partnerToDelete?.logoUrl) {
@@ -108,7 +108,7 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
         logo_url: (finalLogoUrl as string) || '',
       };
 
-      if (editingPartner.id && !editingPartner.id.startsWith('temp-') && !editingPartner.id.match(/^\\d{13}$/)) {
+      if (editingPartner.id && !editingPartner.id.startsWith('temp-') && !editingPartner.id.match(/^\d{13}$/)) {
         await updatePartnerInDb(editingPartner.id, partnerData);
         toast.success('Partner updated!');
       } else {
@@ -164,14 +164,14 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
             {pagination.data.map((partner) => (
               <Card
                 key={partner.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow relative group"
+                className="cursor-pointer relative group"
                 onClick={() => handleEdit(partner)}
               >
-                <div className="absolute top-2 left-2 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 left-2 z-10">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm"
+                    className="h-8 w-8 p-0 bg-white/90 shadow-sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(partner.id);
@@ -190,13 +190,13 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-lg flex items-center justify-center">
-                    <Building2 className="w-16 h-16 text-gray-400" />
+                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 rounded-t-lg flex items-center justify-center">
+                    <Building2 className="w-16 h-16 text-[#1887FC]" />
                   </div>
                 )}
 
                 <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm text-center">
+                  <h4 className="font-semibold text-sm text-center line-clamp-1">
                     {partner.name || 'Unnamed Partner'}
                   </h4>
                   <div className="mt-3 flex items-center justify-center gap-2">
@@ -225,64 +225,79 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
 
       {/* Partner Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {editingPartner?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Partner
-            </DialogTitle>
-            <DialogDescription>
-              {editingPartner?.id?.startsWith('temp-')
-                ? 'Create a new partner entry'
-                : 'Update the details for this partner'}
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <Handshake className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                  {editingPartner?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Partner
+                </DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  {editingPartner?.id?.startsWith('temp-')
+                    ? 'Create a new partner entry'
+                    : 'Update the details for this partner'}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
           {editingPartner && (
-            <div className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="partner-name">Partner Name *</Label>
-                <Input
-                  id="partner-name"
-                  value={editingPartner.name}
-                  onChange={(e) =>
-                    setEditingPartner({ ...editingPartner, name: e.target.value })
-                  }
-                  placeholder="Enter partner name"
-                />
-              </div>
+            <div
+              className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+            >
+              <div className="space-y-8 py-6">
+                <div>
+                  <Label htmlFor="partner-name" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Partner Name <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
+                  <Input
+                    id="partner-name"
+                    value={editingPartner.name}
+                    onChange={(e) =>
+                      setEditingPartner({ ...editingPartner, name: e.target.value })
+                    }
+                    placeholder="Enter partner name"
+                    className="text-lg font-semibold"
+                  />
+                </div>
 
-              <div>
-                <Label>Logo</Label>
-                <ImageDropzone
-                  value={editingPartner.logoUrl || ''}
-                  onChange={(url) =>
-                    setEditingPartner({ ...editingPartner, logoUrl: url })
-                  }
-                  label="Partner Logo"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setEditingPartner(null);
-                  }}
-                >
-                  <X className="w-4 h-4 mr-2" /> Cancel
-                </Button>
-                <Button
-                  className="flex-1 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb]"
-                  disabled={isSaving}
-                  onClick={handleSave}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Partner'}
-                </Button>
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700 mb-1">Logo (Drag & Drop)</Label>
+                  <p className="text-xs text-gray-500 mb-3">Upload a high-quality logo for this partner</p>
+                  <ImageDropzone
+                    value={editingPartner.logoUrl || ''}
+                    onChange={(url) =>
+                      setEditingPartner({ ...editingPartner, logoUrl: url })
+                    }
+                    label="Partner Logo"
+                  />
+                </div>
               </div>
             </div>
           )}
+
+          <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingPartner(null);
+              }}
+            >
+              <X className="w-5 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
+              disabled={isSaving}
+              onClick={handleSave}
+            >
+              <CheckCircle className="w-5 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Partner'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -3,6 +3,7 @@ import { InternshipTestimonial, InternshipTestimonialForm } from '@/app/context/
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -42,6 +43,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<InternshipTestimonialForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeField, setActiveField] = useState<string | null>(null);
 
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
 
@@ -82,7 +84,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
     if (!confirmed) return;
 
     try {
-      if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+      if (!id.startsWith('temp-') && !id.match(/^\d{13}$/)) {
         // Find the testimonial to get its image URLs for storage cleanup
         const testimonialToDelete = pagination.data.find(t => t.id === id);
         if (testimonialToDelete && testimonialToDelete.images && testimonialToDelete.images.length > 0) {
@@ -193,7 +195,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
         images: (finalImages as string[]) || null,
       };
 
-      if (editingTestimonial.id && !editingTestimonial.id.startsWith('temp-') && !editingTestimonial.id.match(/^\\d{13}$/)) {
+      if (editingTestimonial.id && !editingTestimonial.id.startsWith('temp-') && !editingTestimonial.id.match(/^\d{13}$/)) {
         await updateTestimonialInDb(editingTestimonial.id, testimonialData);
         toast.success('Testimonial updated!');
       } else {
@@ -316,23 +318,46 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
 
       {/* Testimonial Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>
-              {editingTestimonial?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Testimonial
-            </DialogTitle>
-            <DialogDescription>
-              {editingTestimonial?.id?.startsWith('temp-')
-                ? 'Create a new internship testimonial'
-                : 'Update the details for this testimonial'}
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                  {editingTestimonial?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Testimonial
+                </DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  {editingTestimonial?.id?.startsWith('temp-')
+                    ? 'Create a new internship testimonial'
+                    : 'Update the details for this testimonial'}
+                </DialogDescription>
+              </div>
+            </div>
+            <div className="pt-2">
+              <SharedToolbar 
+                onCommand={(cmd, val) => {
+                  if (activeField) {
+                    const event = new CustomEvent(`editor-command-${activeField}`, { 
+                      detail: { command: cmd, value: val } 
+                    });
+                    window.dispatchEvent(event);
+                  }
+                }} 
+              />
+            </div>
           </DialogHeader>
           
           {editingTestimonial && (
-            <div className="overflow-y-auto max-h-[calc(90vh-140px)] px-1">
-              <div className="space-y-4 py-4">
+            <div
+              className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+            >
+              <div className="space-y-8 py-6">
                 <div>
-                  <Label htmlFor="testimonial-name">Name *</Label>
+                  <Label htmlFor="testimonial-name" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Name <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
                   <Input
                     id="testimonial-name"
                     value={editingTestimonial.name}
@@ -343,33 +368,39 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="testimonial-degree">Degree *</Label>
-                  <Input
-                    id="testimonial-degree"
-                    value={editingTestimonial.degree}
-                    onChange={(e) =>
-                      setEditingTestimonial({ ...editingTestimonial, degree: e.target.value })
-                    }
-                    placeholder="e.g., Bachelor of Science in Agriculture"
-                  />
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="testimonial-degree" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      Degree <span className="text-red-500 ml-0.5">*</span>
+                    </Label>
+                    <Input
+                      id="testimonial-degree"
+                      value={editingTestimonial.degree}
+                      onChange={(e) =>
+                        setEditingTestimonial({ ...editingTestimonial, degree: e.target.value })
+                      }
+                      placeholder="e.g., Bachelor of Science in Agriculture"
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="testimonial-institution">Institution *</Label>
-                  <Input
-                    id="testimonial-institution"
-                    value={editingTestimonial.institution}
-                    onChange={(e) =>
-                      setEditingTestimonial({ ...editingTestimonial, institution: e.target.value })
-                    }
-                    placeholder="e.g., University of the Philippines"
-                  />
+                  <div>
+                    <Label htmlFor="testimonial-institution" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      Institution <span className="text-red-500 ml-0.5">*</span>
+                    </Label>
+                    <Input
+                      id="testimonial-institution"
+                      value={editingTestimonial.institution}
+                      onChange={(e) =>
+                        setEditingTestimonial({ ...editingTestimonial, institution: e.target.value })
+                      }
+                      placeholder="e.g., University of the Philippines"
+                    />
+                  </div>
                 </div>
 
                 <VisualRichEditor
                   id="testimonial-quote"
-                  label="Quote/Short Testimonial *"
+                  label="Quote/Short Testimonial"
                   value={editingTestimonial.quote}
                   onChange={(value: string) =>
                     setEditingTestimonial({ ...editingTestimonial, quote: value })
@@ -377,6 +408,12 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   rows={3}
                   placeholder="Enter a short quote or testimonial..."
                   required
+                  showToolbar={false}
+                  onCommand={(cmd) => {
+                    if (cmd === 'focus') {
+                      setActiveField('testimonial-quote');
+                    }
+                  }}
                 />
 
                 <VisualRichEditor
@@ -388,35 +425,45 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   }
                   rows={6}
                   placeholder="Enter the full testimonial text..."
+                  showToolbar={false}
+                  onCommand={(cmd) => {
+                    if (cmd === 'focus') {
+                      setActiveField('testimonial-fulltext');
+                    }
+                  }}
                 />
 
-                <div>
-                  <Label htmlFor="testimonial-year">Year *</Label>
-                  <Input
-                    id="testimonial-year"
-                    value={editingTestimonial.year}
-                    onChange={(e) =>
-                      setEditingTestimonial({ ...editingTestimonial, year: e.target.value })
-                    }
-                    placeholder="e.g., 2024"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="testimonial-year" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      Year <span className="text-red-500 ml-0.5">*</span>
+                    </Label>
+                    <Input
+                      id="testimonial-year"
+                      value={editingTestimonial.year}
+                      onChange={(e) =>
+                        setEditingTestimonial({ ...editingTestimonial, year: e.target.value })
+                      }
+                      placeholder="e.g., 2024"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="testimonial-date" className="text-sm font-semibold text-gray-700 mb-1">Published Date</Label>
+                    <Input
+                      id="testimonial-date"
+                      type="date"
+                      value={editingTestimonial.publishedDate}
+                      onChange={(e) =>
+                        setEditingTestimonial({ ...editingTestimonial, publishedDate: e.target.value })
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="testimonial-date">Published Date</Label>
-                  <Input
-                    id="testimonial-date"
-                    type="date"
-                    value={editingTestimonial.publishedDate}
-                    onChange={(e) =>
-                      setEditingTestimonial({ ...editingTestimonial, publishedDate: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label>Gallery Images (Drag & Drop)</Label>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <Label className="text-sm font-semibold text-gray-700 mb-1">Gallery Images (Drag & Drop)</Label>
+                  <p className="text-xs text-gray-500 mb-3">
                     Upload images for the gallery
                   </p>
                   <MultiImageDropzone
@@ -430,29 +477,29 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                     label="Testimonial Images"
                   />
                 </div>
-
-                <div className="flex gap-3 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setEditingTestimonial(null);
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" /> Cancel
-                  </Button>
-                  <Button
-                    className="flex-1 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb]"
-                    disabled={isSaving}
-                    onClick={handleSave}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Testimonial'}
-                  </Button>
-                </div>
               </div>
             </div>
           )}
+
+          <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingTestimonial(null);
+              }}
+            >
+              <X className="w-5 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
+              disabled={isSaving}
+              onClick={handleSave}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Testimonial'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

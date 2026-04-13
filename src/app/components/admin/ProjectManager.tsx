@@ -5,7 +5,7 @@ import { Input } from '@/app/components/ui/input';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Plus, Trash2, Edit, X, CheckCircle, FolderOpen } from 'lucide-react';
+import { Plus, Trash2, Edit, X, CheckCircle, FolderOpen, Calendar } from 'lucide-react';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
@@ -24,8 +24,8 @@ import { invalidateProjectsCache } from '@/utils/cacheInvalidation';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { getImageUrl } from '@/utils/r2Upload';
 
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
-
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { 
   AdminValidationRules,
   mergeValidationResults,
@@ -46,6 +46,16 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeField, setActiveField] = useState<string | null>(null);
+
+  const handleCommand = (cmd: string, val?: string) => {
+    if (activeField) {
+      const event = new CustomEvent(`editor-command-${activeField}`, { 
+        detail: { command: cmd, value: val } 
+      });
+      window.dispatchEvent(event);
+    }
+  };
   
   // Initialize delete confirmation hook
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
@@ -92,7 +102,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
     if (!confirmed) return;
 
     try {
-      if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+      if (!id.startsWith('temp-') && !id.match(/^\d{13}$/)) {
         // Find the project to get its image URLs for storage cleanup
         const projectToDelete = pagination.data.find(p => p.id === id);
         if (projectToDelete) {
@@ -273,8 +283,8 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-lg flex items-center justify-center">
-                    <FolderOpen className="w-16 h-16 text-gray-400" />
+                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 rounded-t-lg flex items-center justify-center">
+                    <FolderOpen className="w-16 h-16 text-[#1887FC]" />
                   </div>
                 )}
 
@@ -282,13 +292,20 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                   <h4 className="font-semibold text-sm line-clamp-2 mb-2">
                     {project.title || 'Untitled Project'}
                   </h4>
-                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                    {project.description}
+                  <p className="text-xs text-gray-600 line-clamp-2">
+                    {project.description.replace(/<[^>]*>?/gm, '')}
                   </p>
                   {project.date && (
-                    <p className="text-xs text-gray-500">
-                      {new Date(project.date).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-1 mt-2">
+                      <Calendar className="w-3 h-3 text-blue-500" />
+                      <span className="text-xs text-blue-600">
+                        {new Date(project.date).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    </div>
                   )}
                   <div className="mt-3 flex items-center gap-2">
                     <Edit className="w-3 h-3 text-gray-400" />
@@ -316,23 +333,39 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
 
       {/* Project Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>
-              {editingProject?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Project
-            </DialogTitle>
-            <DialogDescription>
-              {editingProject?.id?.startsWith('temp-')
-                ? 'Create a new project entry'
-                : 'Update the details for this project'}
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <FolderOpen className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                  {editingProject?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Project
+                </DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  {editingProject?.id?.startsWith('temp-')
+                    ? 'Create a new project entry'
+                    : 'Update the details for this project'}
+                </DialogDescription>
+              </div>
+            </div>
+            <div className="pt-2">
+              <SharedToolbar 
+                onCommand={handleCommand} 
+              />
+            </div>
           </DialogHeader>
           
           {editingProject && (
-            <div className="overflow-y-auto max-h-[calc(90vh-140px)] px-1">
-              <div className="space-y-4 py-4">
+            <div
+              className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+            >
+              <div className="space-y-8 py-6">
                 <div>
-                  <Label htmlFor="project-title">Project Title *</Label>
+                  <Label htmlFor="project-title" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Project Title <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
                   <Input
                     id="project-title"
                     value={editingProject.title}
@@ -340,12 +373,13 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                       setEditingProject({ ...editingProject, title: e.target.value })
                     }
                     placeholder="Enter project title"
+                    className="text-lg font-semibold"
                   />
                 </div>
 
-                <InteractiveRichEditor
+                <VisualRichEditor
                   id="project-description"
-                  label="Project overview (Required)"
+                  label="Project overview"
                   value={editingProject.description}
                   onChange={(val) =>
                     setEditingProject({ ...editingProject, description: val })
@@ -353,11 +387,17 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                   rows={6}
                   placeholder="Enter project description"
                   required
+                  showToolbar={false}
+                  onCommand={(cmd) => {
+                    if (cmd === 'focus') {
+                      setActiveField('project-description');
+                    }
+                  }}
                 />
 
                 {/* Project Context - Only show for categories other than international and local */}
                 {category !== 'internationally_funded' && category !== 'locally_funded' && (
-                  <InteractiveRichEditor
+                  <VisualRichEditor
                     id="project-context"
                     label="Project Context"
                     value={editingProject.context || ''}
@@ -366,11 +406,17 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                     }
                     rows={4}
                     placeholder="Enter project context"
+                    showToolbar={false}
+                    onCommand={(cmd) => {
+                      if (cmd === 'focus') {
+                        setActiveField('project-context');
+                      }
+                    }}
                   />
                 )}
 
                 <div>
-                  <InteractiveRichEditor
+                  <VisualRichEditor
                     id="project-objectives"
                     label="Objectives"
                     value={editingProject.objectives || ''}
@@ -379,11 +425,17 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                     }
                     rows={4}
                     placeholder="Enter project objectives"
+                    showToolbar={false}
+                    onCommand={(cmd) => {
+                      if (cmd === 'focus') {
+                        setActiveField('project-objectives');
+                      }
+                    }}
                   />
                 </div>
 
                 <div>
-                  <InteractiveRichEditor
+                  <VisualRichEditor
                     id="project-methodology"
                     label="Methodology and Activities"
                     value={editingProject.methodology || ''}
@@ -392,11 +444,17 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                     }
                     rows={4}
                     placeholder="Enter methodology and activities"
+                    showToolbar={false}
+                    onCommand={(cmd) => {
+                      if (cmd === 'focus') {
+                        setActiveField('project-methodology');
+                      }
+                    }}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="project-date">Project Date</Label>
+                  <Label htmlFor="project-date" className="text-sm font-semibold text-gray-700 mb-1">Project Date</Label>
                   <Input
                     id="project-date"
                     type="date"
@@ -411,12 +469,12 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                 {category !== 'study_findings' && (
                   <>
                     <div>
-                      <Label>Cover Image (Drag & Drop)</Label>
-                      <p className="text-xs text-gray-500 mb-2">
+                      <Label className="text-sm font-semibold text-gray-700 mb-1">Cover Image (Drag & Drop)</Label>
+                      <p className="text-xs text-gray-500 mb-3">
                         Upload a cover image for this project
                       </p>
                       <ImageDropzone
-                        value={editingProject.imageUrl || ''}
+                        value={editingProject.imageUrl}
                         onChange={(url) =>
                           setEditingProject({ ...editingProject, imageUrl: url })
                         }
@@ -425,8 +483,11 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                     </div>
 
                     <div>
-                      <Label>Gallery Images (Drag & Drop)</Label>
-                      <p className="text-xs text-gray-500 mb-2">
+                      <Label className="text-sm font-semibold text-gray-700 mb-1 flex justify-between">
+                        <span>Gallery Images (Drag & Drop)</span>
+                        <span className="text-xs text-gray-400 font-normal">{editingProject.images?.length || 0} images</span>
+                      </Label>
+                      <p className="text-xs text-gray-500 mb-3">
                         Upload additional images for the gallery
                       </p>
                       <MultiImageDropzone
@@ -442,29 +503,29 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                     </div>
                   </>
                 )}
-
-                <div className="flex gap-3 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setEditingProject(null);
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" /> Cancel
-                  </Button>
-                  <Button
-                    className="flex-1 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb]"
-                    disabled={isSaving}
-                    onClick={handleSave}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Project'}
-                  </Button>
-                </div>
               </div>
             </div>
           )}
+
+          <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingProject(null);
+              }}
+            >
+              <X className="w-5 h-4 mr-2" /> Cancel
+            </Button>
+            <Button
+              className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
+              disabled={isSaving}
+              onClick={handleSave}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Project'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

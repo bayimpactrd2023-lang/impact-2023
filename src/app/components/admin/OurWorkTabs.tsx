@@ -1,8 +1,8 @@
 import { useEffect, useState, FC } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { ProjectManager } from '@/app/components/admin/ProjectManager';
-import { FinancialStatementManager } from '@/app/components/admin/FinancialStatementManager';
-import { InternshipTestimonialManager } from '@/app/components/admin/InternshipTestimonialManager';
+import { ProjectManager } from './ProjectManager';
+import { FinancialStatementManager } from './FinancialStatementManager';
+import { InternshipTestimonialManager } from './InternshipTestimonialManager';
 import { useContent } from '@/app/context/ContentContext';
 import { AdminSkeletonLoader } from '@/app/components/AdminSkeletonLoader';
 import { toast } from 'sonner';
@@ -16,12 +16,10 @@ export const OurWorkTabs: FC<OurWorkTabsProps> = ({ refreshContent }) => {
     content,
     updateInternationallyFundedProjects,
     updateLocallyFundedProjects,
-    updateCommunityTransformationProjects,
     updateFinancialStatements,
     updateInternshipTestimonials,
     fetchInternationallyFundedProjects,
     fetchLocallyFundedProjects,
-    fetchCommunityTransformationProjects,
     fetchFinancialStatements,
     fetchInternshipTestimonials,
   } = useContent();
@@ -71,16 +69,11 @@ export const OurWorkTabs: FC<OurWorkTabsProps> = ({ refreshContent }) => {
         case 'locally-funded':
           await fetchLocallyFundedProjects();
           break;
-        case 'community':
-          await fetchCommunityTransformationProjects();
-          break;
         case 'internship':
           await fetchInternshipTestimonials();
           break;
         case 'financial':
           await fetchFinancialStatements();
-          break;
-        case 'findings':
           break;
       }
       
@@ -96,21 +89,39 @@ export const OurWorkTabs: FC<OurWorkTabsProps> = ({ refreshContent }) => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold mb-4">Manage "Our Work" Sections</h3>
+      <h3 className="text-xl font-black text-gray-900 mb-6 tracking-tight">Manage "Our Work" Sections</h3>
       <Tabs value={activeSubTab} onValueChange={handleSubTabChange}>
-        <TabsList className="w-full flex-wrap h-auto mb-4">
-          <TabsTrigger value="internationally-funded">Int. Funded</TabsTrigger>
-          <TabsTrigger value="locally-funded">Loc. Funded</TabsTrigger>
-          <TabsTrigger value="community">Community</TabsTrigger>
-          <TabsTrigger value="internship">Internship</TabsTrigger>
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="findings">Findings</TabsTrigger>
+        <TabsList className="w-full flex-wrap h-auto mb-8 bg-[#EBF4FF]/60 p-1.5 rounded-2xl border border-[#D1E7FF] shadow-sm backdrop-blur-sm">
+          <TabsTrigger 
+            value="internationally-funded" 
+            className="rounded-xl px-6 py-3 transition-all data-[state=active]:bg-white data-[state=active]:text-[#1887FC] data-[state=active]:shadow-lg font-bold text-gray-600 hover:text-[#1887FC]/80 text-sm"
+          >
+            Int. Funded
+          </TabsTrigger>
+          <TabsTrigger 
+            value="locally-funded"
+            className="rounded-xl px-6 py-3 transition-all data-[state=active]:bg-white data-[state=active]:text-[#1887FC] data-[state=active]:shadow-lg font-bold text-gray-600 hover:text-[#1887FC]/80 text-sm"
+          >
+            Loc. Funded
+          </TabsTrigger>
+          <TabsTrigger 
+            value="internship"
+            className="rounded-xl px-6 py-3 transition-all data-[state=active]:bg-white data-[state=active]:text-[#1887FC] data-[state=active]:shadow-lg font-bold text-gray-600 hover:text-[#1887FC]/80 text-sm"
+          >
+            Community
+          </TabsTrigger>
+          <TabsTrigger 
+            value="financial"
+            className="rounded-xl px-6 py-3 transition-all data-[state=active]:bg-white data-[state=active]:text-[#1887FC] data-[state=active]:shadow-lg font-bold text-gray-600 hover:text-[#1887FC]/80 text-sm"
+          >
+            Financial
+          </TabsTrigger>
         </TabsList>
 
         {isSubTabLoading && <AdminSkeletonLoader />}
 
         {!isSubTabLoading && (
-          <>
+          <div className="mt-6">
             <TabsContent value="internationally-funded">
               <ProjectManager 
                 projects={content.internationallyFundedProjects} 
@@ -129,15 +140,6 @@ export const OurWorkTabs: FC<OurWorkTabsProps> = ({ refreshContent }) => {
                 refreshContent={refreshContent} 
               />
             </TabsContent>
-            <TabsContent value="community">
-              <ProjectManager 
-                projects={content.communityTransformationProjects} 
-                onUpdate={updateCommunityTransformationProjects}
-                title="Community Transformation" 
-                category="community_transformation" 
-                refreshContent={refreshContent} 
-              />
-            </TabsContent>
             <TabsContent value="internship">
               <InternshipTestimonialManager 
                 testimonials={content.internshipTestimonials} 
@@ -152,24 +154,7 @@ export const OurWorkTabs: FC<OurWorkTabsProps> = ({ refreshContent }) => {
                 refreshContent={refreshContent} 
               />
             </TabsContent>
-            <TabsContent value="findings">
-              {/* Under Development Placeholder */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200 p-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#1887FC] to-[#0b5ab8] mb-4">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Under Development</h3>
-                <p className="text-gray-700 mb-4 max-w-md mx-auto">
-                  The Findings from Our Latest Studies section is currently being developed and will be available soon.
-                </p>
-                <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-full font-semibold text-sm">
-                  🚧 Development in Progress
-                </div>
-              </div>
-            </TabsContent>
-          </>
+          </div>
         )}
       </Tabs>
     </div>

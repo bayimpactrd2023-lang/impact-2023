@@ -66,8 +66,6 @@ export function PartnersSection() {
               }}
               className="group relative flex flex-col items-center justify-center p-4 sm:p-6 bg-white rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100/50 cursor-pointer overflow-hidden"
             >
-              {/* Top gradient line */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] z-10" />
               
               {/* Subtle background pattern/glow on hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 to-blue-50/0 group-hover:from-blue-50/40 group-hover:to-transparent transition-all duration-500 opacity-0 group-hover:opacity-100" />

@@ -3,8 +3,9 @@ import { Card, CardContent } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
-import { Plus, Trash2, FileText, Edit, CheckCircle, X } from 'lucide-react';
+import { VisualRichEditor } from './VisualRichEditor';
+import { SharedToolbar } from './SharedToolbar';
+import { Plus, Trash2, FileText, Edit, CheckCircle, X, Calendar } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ import { toast } from 'sonner';
 import { invalidateBlogCache } from '@/utils/cacheInvalidation';
 import { AdminValidationRules, mergeValidationResults, validateMaxChars, validateMaxWords, validateNoDigits, validateRequiredTrimmed } from '@/app/components/admin/utils/adminHelpers';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
+import { RichTextContent } from '@/app/components/RichTextContent';
 
 interface BlogManagerProps {
   refreshContent?: () => Promise<void>;
@@ -40,6 +42,16 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
   const [editingPost, setEditingPost] = useState<BlogPostForm | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeField, setActiveField] = useState<string | null>(null);
+
+  const handleCommand = (cmd: string, val?: string) => {
+    if (activeField) {
+      const event = new CustomEvent(`editor-command-${activeField}`, { 
+        detail: { command: cmd, value: val } 
+      });
+      window.dispatchEvent(event);
+    }
+  };
   
   // Initialize delete confirmation hook
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
@@ -270,8 +282,8 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-48 bg-gray-100 rounded-t-lg flex items-center justify-center">
-                    <FileText className="w-12 h-12 text-gray-400" />
+                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 rounded-t-lg flex items-center justify-center">
+                    <FileText className="w-16 h-16 text-[#1887FC]" />
                   </div>
                 )}
 
@@ -279,13 +291,20 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                   <h4 className="font-semibold text-sm line-clamp-2 mb-2">
                     {post.title || "Untitled Post"}
                   </h4>
-                  <p className="text-xs text-gray-600 mb-2 line-clamp-2 whitespace-pre-wrap">
-                    {post.content}
-                  </p>
+                  <div className="text-xs text-gray-600 line-clamp-2">
+                    <RichTextContent text={post.content} className="text-xs text-gray-600" />
+                  </div>
                   {post.date && (
-                    <p className="text-xs text-gray-500">
-                      {new Date(post.date).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-1 mt-2">
+                      <Calendar className="w-3 h-3 text-blue-500" />
+                      <span className="text-xs text-blue-600">
+                        {new Date(post.date).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    </div>
                   )}
                   <div className="mt-3 flex items-center gap-2">
                     <Edit className="w-3 h-3 text-gray-400" />
@@ -315,30 +334,38 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
 
       {/* Blog Post Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl">
-          <DialogHeader className="p-5 pb-0">
-            <DialogTitle className="text-xl sm:text-2xl font-bold">
-              {editingPost?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Blog Post
-            </DialogTitle>
-            <DialogDescription className="text-sm text-gray-600">
-              {editingPost?.id?.startsWith('temp-') 
-                ? 'Create a new blog post' 
-                : 'Update the details for this blog post'}
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                  {editingPost?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Blog Post
+                </DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  {editingPost?.id?.startsWith('temp-') 
+                    ? 'Create a new blog post' 
+                    : 'Update the details for this blog post'}
+                </DialogDescription>
+              </div>
+            </div>
+            <div className="pt-2">
+              <SharedToolbar 
+                onCommand={handleCommand} 
+              />
+            </div>
           </DialogHeader>
 
           {editingPost && (
             <div
-              className="overflow-y-auto max-h-[calc(90vh-140px)] px-5 pb-5"
-              style={{
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-              }}
+              className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
             >
-              <div className="space-y-4 py-4">
+              <div className="space-y-8 py-6">
                 <div>
-                  <Label htmlFor="modal-blog-title" className="text-sm font-semibold">
-                    Title
+                  <Label htmlFor="modal-blog-title" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Title <span className="text-red-500 ml-0.5">*</span>
                   </Label>
                   <Input
                     id="modal-blog-title"
@@ -359,34 +386,45 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     setEditingPost({ ...editingPost, content: value })
                   }
                   rows={12}
+                  required
                   placeholder="Write your blog post content here..."
+                  showToolbar={false}
+                  onCommand={(cmd) => {
+                    if (cmd === 'focus') {
+                      setActiveField('modal-blog-content');
+                    }
+                  }}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="modal-blog-author">Author</Label>
+                    <Label htmlFor="modal-blog-author" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      Author <span className="text-red-500 ml-0.5">*</span>
+                    </Label>
                     <Input
                       id="modal-blog-author"
                       value={editingPost.author}
                       onChange={(e) =>
                         setEditingPost({ ...editingPost, author: e.target.value })
                       }
+                      placeholder="Author name"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="modal-blog-role">Author Role</Label>
+                    <Label htmlFor="modal-blog-role" className="text-sm font-semibold text-gray-700 mb-1">Author Role</Label>
                     <Input
                       id="modal-blog-role"
                       value={editingPost.authorRole}
                       onChange={(e) =>
                         setEditingPost({ ...editingPost, authorRole: e.target.value })
                       }
+                      placeholder="Author position"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="modal-blog-date">Date</Label>
+                  <Label htmlFor="modal-blog-date" className="text-sm font-semibold text-gray-700 mb-1">Date</Label>
                   <Input
                     id="modal-blog-date"
                     type="date"
@@ -400,9 +438,9 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                 </div>
 
                 <div>
-                  <Label>Cover Image (Drag & Drop)</Label>
-                  <p className="text-xs text-gray-500 mb-2">
-                    Upload a cover image for this blog post
+                  <Label className="text-sm font-semibold text-gray-700 mb-1">Cover Image (Drag & Drop)</Label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Upload a high-quality cover image for this blog post
                   </p>
                   <ImageDropzone
                     value={editingPost.imageUrl || ''}
@@ -414,8 +452,8 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                 </div>
 
                 <div>
-                  <Label>Gallery Images (Drag & Drop)</Label>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <Label className="text-sm font-semibold text-gray-700 mb-1">Gallery Images (Drag & Drop)</Label>
+                  <p className="text-xs text-gray-500 mb-3">
                     Upload additional images for the gallery
                   </p>
                   <MultiImageDropzone
@@ -429,30 +467,29 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     label="Blog Post Images"
                   />
                 </div>
-
-                {/* Save Button */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 w-full" 
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setEditingPost(null);
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" /> Cancel
-                  </Button>
-                  <Button 
-                    className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
-                    disabled={isSaving}
-                    onClick={handleSavePost}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Blog Post'}
-                  </Button>
-                </div>
               </div>
             </div>
           )}
+
+          <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+            <Button 
+              variant="outline" 
+              className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all" 
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingPost(null);
+              }}
+            >
+              <X className="w-5 h-4 mr-2" /> Cancel
+            </Button>
+            <Button 
+              className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
+              disabled={isSaving}
+              onClick={handleSavePost}
+            >
+              <CheckCircle className="w-5 h-5 mr-2" /> {isSaving ? 'Saving...' : 'Save Blog Post'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
       

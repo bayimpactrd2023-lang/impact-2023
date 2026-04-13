@@ -17,7 +17,8 @@ import {
   deleteFinancialStatement as deleteStatementFromDb,
   getFinancialStatementsPaginated,
 } from '@/services/supabaseService';
-import { InteractiveRichEditor } from '@/app/components/admin/InteractiveRichEditor';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateFinancialCache } from '@/utils/cacheInvalidation';
@@ -40,6 +41,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStatement, setEditingStatement] = useState<FinancialStatementForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeField, setActiveField] = useState<string | null>(null);
 
   const { confirmDelete, DeleteConfirmDialog } = useDeleteConfirmation();
 
@@ -81,7 +83,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
     if (!confirmed) return;
 
     try {
-      if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
+      if (!id.startsWith('temp-') && !id.match(/^\d{13}$/)) {
         // Find the statement to get its PDF URL for storage cleanup
         const statementToDelete = pagination.data.find(s => s.id === id);
         if (statementToDelete?.pdfUrl) {
@@ -146,7 +148,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
         pdf_access_type: editingStatement.pdfAccessType || 'download',
       };
 
-      if (editingStatement.id && !editingStatement.id.startsWith('temp-') && !editingStatement.id.match(/^\\d{13}$/)) {
+      if (editingStatement.id && !editingStatement.id.startsWith('temp-') && !editingStatement.id.match(/^\d{13}$/)) {
         await updateStatementInDb(editingStatement.id, statementData);
         toast.success('Financial statement updated!');
       } else {
@@ -259,118 +261,152 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
 
       {/* Statement Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {editingStatement?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Financial Statement
-            </DialogTitle>
-            <DialogDescription>
-              {editingStatement?.id?.startsWith('temp-')
-                ? 'Create a new financial statement entry'
-                : 'Update the details for this financial statement'}
-            </DialogDescription>
+        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                  {editingStatement?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Financial Statement
+                </DialogTitle>
+                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                  {editingStatement?.id?.startsWith('temp-')
+                    ? 'Create a new financial statement entry'
+                    : 'Update the details for this financial statement'}
+                </DialogDescription>
+              </div>
+            </div>
+            <div className="pt-2">
+              <SharedToolbar 
+                onCommand={(cmd, val) => {
+                  if (activeField) {
+                    const event = new CustomEvent(`editor-command-${activeField}`, { 
+                      detail: { command: cmd, value: val } 
+                    });
+                    window.dispatchEvent(event);
+                  }
+                }} 
+              />
+            </div>
           </DialogHeader>
 
           {editingStatement && (
-            <div className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="statement-title">Title *</Label>
-                <Input
-                  id="statement-title"
-                  value={editingStatement.title}
-                  onChange={(e) =>
-                    setEditingStatement({ ...editingStatement, title: e.target.value })
+            <div
+              className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+            >
+              <div className="space-y-8 py-6">
+                <div>
+                  <Label htmlFor="statement-title" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Title <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
+                  <Input
+                    id="statement-title"
+                    value={editingStatement.title}
+                    onChange={(e) =>
+                      setEditingStatement({ ...editingStatement, title: e.target.value })
+                    }
+                    placeholder="e.g., Annual Report 2023"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="statement-year" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Year <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
+                  <Select
+                    value={editingStatement.year}
+                    onValueChange={(value) => setEditingStatement({ ...editingStatement, year: value })}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a year">{editingStatement.year}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map(year => (
+                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <VisualRichEditor
+                  id="statement-description"
+                  label="Description (Optional)"
+                  value={editingStatement.description || ''}
+                  onChange={(val) =>
+                    setEditingStatement({ ...editingStatement, description: val })
                   }
-                  placeholder="e.g., Annual Financial Report"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="statement-year">Year *</Label>
-                <Select
-                  value={editingStatement.year.toString()}
-                  onValueChange={(value) =>
-                    setEditingStatement({ ...editingStatement, year: value })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a year">{editingStatement.year}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions.map(year => (
-                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <InteractiveRichEditor
-                id="statement-description"
-                label="Description (Optional)"
-                value={editingStatement.description || ''}
-                onChange={(val) =>
-                  setEditingStatement({ ...editingStatement, description: val })
-                }
-                placeholder="Enter a brief description of this financial statement"
-                rows={3}
-              />
-
-              <div>
-                <Label>PDF File (Drag & Drop) *</Label>
-                <p className="text-xs text-gray-500 mb-2">
-                  Upload the PDF file for this financial statement (PDF only)
-                </p>
-                <PDFDropzone
-                  value={editingStatement.pdfUrl}
-                  onChange={(value) =>
-                    setEditingStatement({ ...editingStatement, pdfUrl: value })
-                  }
-                  label="Financial Statement PDF"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pdf-access-type">PDF Access Type *</Label>
-                <Select
-                  value={editingStatement.pdfAccessType || 'download'}
-                  onValueChange={(value: 'view' | 'download') =>
-                    setEditingStatement({ ...editingStatement, pdfAccessType: value })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select access type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="download">Downloadable - Users can view and download</SelectItem>
-                    <SelectItem value="view">View Only - Users can only view</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Choose whether users can download the PDF or only view it
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setEditingStatement(null);
+                  placeholder="Enter a brief description of this financial statement"
+                  rows={3}
+                  showToolbar={false}
+                  onCommand={(cmd) => {
+                    if (cmd === 'focus') {
+                      setActiveField('statement-description');
+                    }
                   }}
-                >
-                  <X className="w-4 h-4 mr-2" /> Cancel
-                </Button>
-                <Button
-                  className="flex-1 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb]"
-                  disabled={isSaving}
-                  onClick={handleSave}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Statement'}
-                </Button>
+                />
+
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    PDF File (Drag & Drop) <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Upload the PDF file for this financial statement (PDF only)
+                  </p>
+                  <PDFDropzone
+                    value={editingStatement.pdfUrl}
+                    onChange={(value) =>
+                      setEditingStatement({ ...editingStatement, pdfUrl: value })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="pdf-access-type" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    PDF Access Type <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
+                  <Select
+                    value={editingStatement.pdfAccessType || 'download'}
+                    onValueChange={(value: 'view' | 'download') =>
+                      setEditingStatement({ ...editingStatement, pdfAccessType: value })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select access type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="download">Downloadable - Users can view and download</SelectItem>
+                      <SelectItem value="view">View Only - Users can only view</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-2 font-medium">
+                    Choose whether users can download the PDF or only view it
+                  </p>
+                </div>
               </div>
             </div>
           )}
+
+          <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+            <Button 
+              variant="outline" 
+              className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all" 
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingStatement(null);
+              }}
+            >
+              <X className="w-5 h-4 mr-2" /> Cancel
+            </Button>
+            <Button 
+              className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
+              disabled={isSaving}
+              onClick={handleSave}
+            >
+              <CheckCircle className="w-5 h-5 mr-2" /> {isSaving ? 'Saving...' : 'Save Statement'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

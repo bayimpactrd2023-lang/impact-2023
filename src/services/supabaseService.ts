@@ -252,6 +252,7 @@ export const getAllHighlights = async () => {
     const { data, error } = await supabase
       .from('highlights')
       .select('*')
+      .order('featured', { ascending: false })
       .order('published_date', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false });
     
@@ -1216,6 +1217,7 @@ export const getHighlightsPaginated = async (page: number = 1, itemsPerPage: num
     const { data, error } = await supabase
       .from('highlights')
       .select('*')
+      .order('featured', { ascending: false })
       .order('created_at', { ascending: false })
       .range(from, to);
 

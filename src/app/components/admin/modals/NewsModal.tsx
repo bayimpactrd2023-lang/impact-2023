@@ -13,6 +13,7 @@ import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
 import { Label } from '@/app/components/ui/label';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
+import { Newspaper } from 'lucide-react';
 
 interface NewsModalProps {
   isOpen: boolean;
@@ -48,30 +49,33 @@ export function NewsModal({
       successMessage="News item saved!"
       validate={EntityValidator.validateNewsItem}
       onUpdateItem={onUpdateItem}
+      icon={<Newspaper className="w-5 h-5" />}
     >
       {(item, updateField) => (
         <>
           {/* Title Field */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Title</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              Title <span className="text-red-500 ml-0.5">*</span>
+            </Label>
             <Input
               value={item.title}
               onChange={e => updateField('title', e.target.value)}
               placeholder="Enter news title"
-              className="mt-1.5"
             />
           </div>
 
           {/* Date Field */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Date</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              Date <span className="text-red-500 ml-0.5">*</span>
+            </Label>
             <Input
               type="date"
               value={item.date}
               onChange={e => updateField('date', e.target.value)}
               min="2000-01-01"
               max={new Date().toISOString().split('T')[0]}
-              className="mt-1.5"
             />
           </div>
 
@@ -83,11 +87,15 @@ export function NewsModal({
             onChange={(value: string) => updateField('content', value)}
             rows={8}
             placeholder="Enter news content"
+            required
           />
 
           {/* Main Image */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Main Image</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1">Main Image</Label>
+            <p className="text-xs text-gray-500 mb-3">
+              Upload a high-quality main image for this news article
+            </p>
             <ImageDropzone
               value={item.imageUrl || ''}
               onChange={url => updateField('imageUrl', url)}
@@ -97,7 +105,13 @@ export function NewsModal({
 
           {/* Gallery Images */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Gallery Images</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1 flex justify-between">
+              <span>Gallery Images (Drag & Drop)</span>
+              <span className="text-xs text-gray-400 font-normal">{item.images?.length || 0} images</span>
+            </Label>
+            <p className="text-xs text-gray-500 mb-3">
+              Upload additional images for the gallery
+            </p>
             <MultiImageDropzone
               images={item.images || []}
               onChange={images => {

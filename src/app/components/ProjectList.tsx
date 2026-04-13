@@ -313,8 +313,6 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                     viewport={{ once: true }}
                     className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100/50"
                   >
-                    {/* Top gradient line */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] z-10" />
                     
                     {/* Collapsed View - Title with Image */}
                     <div className="flex flex-col md:flex-row gap-4 p-6">
