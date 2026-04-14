@@ -3,7 +3,7 @@
  * Manages user authentication with Supabase Auth (production) and basic auth (fallback)
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Legacy basic auth logout
-  const logout = () => {
+  const logout = useCallback(() => {
     if (usingSupabaseAuth) {
       signOut();
     } else {
@@ -138,7 +138,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBasicAuthAuthenticated(false);
       setIsAdmin(false);
     }
-  };
+    // Clear any potential sensitive data from localStorage/sessionStorage
+    sessionStorage.clear();
+  }, [usingSupabaseAuth, signOut]);
 
   const isAuthenticated = usingSupabaseAuth ? !!user && isAdmin : basicAuthAuthenticated;
 

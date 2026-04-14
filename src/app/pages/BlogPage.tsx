@@ -89,7 +89,7 @@ export const BlogPage: React.FC = () => {
                   <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1887FC] text-sm font-bold mb-6 uppercase tracking-wider">
                     {targetPostId ? 'Reading Article' : 'Latest Insight'}
                   </span>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-8 leading-tight tracking-tight max-w-7xl mx-auto px-4">
+                  <h1 className="text-2xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-8 leading-[1.2] sm:leading-[1.1] tracking-tight w-full max-w-4xl mx-auto">
                     {selectedPost.title}
                   </h1>
                   <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-gray-500 text-base sm:text-lg border-y border-gray-100 py-6 mb-12">
@@ -115,20 +115,46 @@ export const BlogPage: React.FC = () => {
                 </div>
 
                 <div 
-                  className="relative flex items-center justify-center bg-[#fcfcfc] rounded-[2.5rem] p-4 sm:p-8 border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] mb-16 group transition-all duration-500 hover:shadow-[0_48px_80px_-20px_rgba(0,0,0,0.16)]"
+                  className="relative flex items-center justify-center mb-16 group transition-all duration-500 overflow-hidden cursor-pointer"
+                  onClick={() => selectedPost.imageUrl && openGallery(selectedPost.imageUrl)}
                 >
                   {selectedPost.imageUrl ? (
-                    <div className="relative w-full rounded-2xl overflow-hidden shadow-sm">
+                    <div className="relative w-full overflow-hidden shadow-sm">
                       <ImageWithFallback
                         src={selectedPost.imageUrl}
                         alt={selectedPost.title}
-                        className="w-full h-auto max-h-[700px] object-contain transition-transform duration-1000 group-hover:scale-[1.02]"
+                        className="w-full h-auto max-h-[750px] object-contain transition-transform duration-1000 group-hover:scale-[1.01]"
                       />
-                      <div className="absolute inset-0 ring-1 ring-black/5 rounded-2xl pointer-events-none" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
+                      <div className="absolute inset-0 ring-1 ring-black/5 pointer-events-none" />
                     </div>
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#1887FC] to-[#3b82f6] flex items-center justify-center">
-                      <BookOpen size={100} className="text-white/20" />
+                    <div className="w-full aspect-[16/9] sm:aspect-[21/9] bg-[#f8fafc] flex items-center justify-center rounded-[1.5rem] border border-blue-100/30 overflow-hidden relative min-h-[220px] sm:min-h-[280px] max-w-2xl mx-auto">
+                      {/* Subtle Pattern Background */}
+                      <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
+                        style={{ 
+                          backgroundImage: `radial-gradient(#1887FC 1.5px, transparent 1.5px)`, 
+                          backgroundSize: '24px 24px' 
+                        }} 
+                      />
+                      
+                      {/* Large Animated Gradient Glow */}
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-blue-100/30 blur-[80px] rounded-full" />
+                      
+                      <div className="relative flex flex-col items-center">
+                        <motion.div 
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.7, ease: "easeOut" }}
+                          className="w-32 h-32 sm:w-44 sm:h-44 rounded-[2.5rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.1)] flex items-center justify-center overflow-hidden border border-white/50 p-6 sm:p-10"
+                        >
+                          <img 
+                            src="/images/logos/placeholder.png" 
+                            alt="Placeholder" 
+                            className="w-full h-full object-contain opacity-90"
+                          />
+                        </motion.div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -149,80 +175,93 @@ export const BlogPage: React.FC = () => {
           )}
 
           {/* Separation Line */}
-          <div className="h-px bg-gray-100 w-full mb-20" />
+          {pagination.data.length > 1 && (
+            <div className="h-px bg-gray-100 w-full mb-20" />
+          )}
 
           {/* More Stories Grid */}
-          <div className="mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-12">More Stories</h2>
-            
-            {pagination.loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="aspect-[16/10] bg-gray-100 rounded-2xl mb-6" />
-                    <div className="h-8 bg-gray-100 rounded w-3/4 mb-4" />
-                    <div className="h-5 bg-gray-100 rounded w-full mb-3" />
-                    <div className="h-5 bg-gray-100 rounded w-2/3" />
-                  </div>
-                ))}
-              </div>
-            ) : regularPosts.length === 0 && !selectedPost ? (
-              <div className="text-center py-24 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-                <BookOpen size={64} className="mx-auto text-gray-300 mb-6" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">No stories yet</h3>
-                <p className="text-gray-500 text-lg">Check back later for new insights.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-                {regularPosts.map((post, index) => (
-                  <motion.div
-                    key={post.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    className="group cursor-pointer"
-                    onClick={() => {
-                      // Navigate to the post directly instead of opening a modal
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                      setTargetPostId(post.id);
-                      // Update URL without full page reload if possible, or just use the state
-                      const newUrl = `${window.location.pathname}?post=${post.id}`;
-                      window.history.pushState({}, '', newUrl);
-                    }}
-                  >
-                    <div className="flex items-center justify-center bg-[#f8fafc] rounded-2xl overflow-hidden mb-6 shadow-lg relative cursor-pointer">
-                      {post.imageUrl ? (
-                        <ImageWithFallback
-                          src={post.imageUrl}
-                          alt={post.title}
-                          className="w-full h-auto max-h-[400px] object-contain transition-transform duration-500 group-hover:scale-105"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openGallery(post.imageUrl!);
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-blue-50 flex items-center justify-center text-[#1887FC]">
-                          <BookOpen size={48} />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+          {pagination.data.length > 1 && (
+            <div className="mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-12">More Stories</h2>
+              
+              {pagination.loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="aspect-[16/10] bg-gray-100 rounded-2xl mb-6" />
+                      <div className="h-8 bg-gray-100 rounded w-3/4 mb-4" />
+                      <div className="h-5 bg-gray-100 rounded w-full mb-3" />
+                      <div className="h-5 bg-gray-100 rounded w-2/3" />
                     </div>
-                    <div className="flex items-center gap-3 text-sm font-bold text-[#1887FC] uppercase tracking-wider mb-4">
-                      <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 group-hover:text-[#1887FC] transition-colors line-clamp-2 leading-tight mb-4">
-                      {post.title}
-                    </h3>
-                    <div className="text-gray-600 text-lg line-clamp-2 leading-relaxed">
-                      <RichTextContent text={post.content} className="text-lg line-clamp-2" />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              ) : regularPosts.length === 0 && !selectedPost ? (
+                <div className="text-center py-24 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                  <BookOpen size={64} className="mx-auto text-gray-300 mb-6" />
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">No stories yet</h3>
+                  <p className="text-gray-500 text-lg">Check back later for new insights.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+                  {regularPosts.map((post, index) => (
+                    <motion.div
+                      key={post.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="group cursor-pointer"
+                      onClick={() => {
+                        // Navigate to the post directly instead of opening a modal
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        setTargetPostId(post.id);
+                        // Update URL without full page reload if possible, or just use the state
+                        const newUrl = `${window.location.pathname}?post=${post.id}`;
+                        window.history.pushState({}, '', newUrl);
+                      }}
+                    >
+                      <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full bg-[#f8fafc] rounded-2xl overflow-hidden mb-6 shadow-md group-hover:shadow-xl transition-all duration-500">
+                        {post.imageUrl ? (
+                          <>
+                            <ImageWithFallback
+                              src={post.imageUrl}
+                              alt={post.title}
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openGallery(post.imageUrl!);
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                          </>
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center">
+                            <div className="w-40 h-40 rounded-[2rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.12)] flex items-center justify-center overflow-hidden border border-white/80 p-8">
+                              <img 
+                                src="/images/logos/placeholder.png" 
+                                alt="Placeholder" 
+                                className="w-full h-full object-contain opacity-95"
+                              />
+                            </div>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 ring-1 ring-black/5 rounded-2xl pointer-events-none" />
+                      </div>
+                      <div className="flex items-center gap-3 text-sm font-bold text-[#1887FC] uppercase tracking-wider mb-4">
+                        <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900 group-hover:text-[#1887FC] transition-colors line-clamp-2 leading-tight mb-4">
+                        {post.title}
+                      </h3>
+                      <div className="text-gray-600 text-lg line-clamp-2 leading-relaxed">
+                        <RichTextContent text={post.content} className="text-lg line-clamp-2" />
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (regularPosts.length > 0 || selectedPost) && (

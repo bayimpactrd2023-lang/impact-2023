@@ -436,9 +436,7 @@ export const AdminPanel: React.FC = () => {
         await refreshContent();
         setIsQuickBlogOpen(false);
         setActiveTab('blog');
-        toast.success('Blog post saved to database!', {
-          description: `"${draft.title}" was successfully created.`,
-        });
+        toast.success('Blog post saved successfully!', );
       } else {
         toast.error('Failed to save blog post to database.');
       }
@@ -523,9 +521,7 @@ export const AdminPanel: React.FC = () => {
         await refreshContent();
         setIsQuickPublicationOpen(false);
         setActiveTab('publications');
-        toast.success('Publication saved to database!', {
-          description: `"${publicationDraft.title}" was successfully created.`,
-        });
+        toast.success('Publication saved successfully!');
       } else {
         toast.error('Failed to save publication to database.');
       }
@@ -587,7 +583,7 @@ export const AdminPanel: React.FC = () => {
       
       // Refresh from database
       await refreshContent();
-      toast.success('News saved to database successfully!');
+      toast.success('News saved successfully!');
     } catch (error) {
       console.error('Error saving news:', error);
       toast.error('Failed to save news.');
@@ -674,7 +670,7 @@ export const AdminPanel: React.FC = () => {
       }
       
       await refreshContent();
-      toast.success('Partners saved to database successfully!');
+      toast.success('Partners saved successfully!');
     } catch (error) {
       console.error('Error saving partners:', error);
       toast.error('Failed to save partners.');
@@ -774,7 +770,7 @@ export const AdminPanel: React.FC = () => {
       }
       
       await refreshContent();
-      toast.success('Highlights saved to database successfully!');
+      toast.success('Highlights saved successfully!');
       setShowMigrationWarning(false);
     } catch (error: any) {
       console.error('Error saving highlights:', error);
@@ -873,7 +869,7 @@ export const AdminPanel: React.FC = () => {
       }
       
       await refreshContent();
-      toast.success('Team members saved to database successfully!');
+      toast.success('Team members saved successfully!');
     } catch (error) {
       console.error('Error saving team members:', error);
       toast.error('Failed to save team members.');
@@ -951,7 +947,7 @@ export const AdminPanel: React.FC = () => {
       });
       
       await refreshContent();
-      toast.success('Hero section saved to database successfully!');
+      toast.success('Hero section saved successfully!');
     } catch (error) {
       console.error('Error saving hero section:', error);
       toast.error('Failed to save hero section.');
@@ -984,7 +980,7 @@ export const AdminPanel: React.FC = () => {
       // We also need to update vision/mission in context if possible, 
       // but refreshContent will handle it.
       await refreshContent();
-      toast.success('About section saved to database successfully!');
+      toast.success('About section saved successfully!');
     } catch (error) {
       console.error('Error saving about section:', error);
       toast.error('Failed to save about section.');

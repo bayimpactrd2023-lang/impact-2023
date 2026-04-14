@@ -59,17 +59,18 @@ export const AdminDashboardPage: React.FC = () => {
     toast.warning('You were logged out due to inactivity');
   }, [handleLogout]);
 
-  const handleStayLoggedIn = useCallback(() => {
-    setShowInactivityWarning(false);
-    toast.success('Session extended');
-  }, []);
-
   // Initialize inactivity logout
-  useInactivityLogout({
+  const { resetTimer } = useInactivityLogout({
     onLogout: handleInactivityLogout,
     onWarning: handleInactivityWarning,
     enabled: true,
   });
+
+  const handleStayLoggedIn = useCallback(() => {
+    setShowInactivityWarning(false);
+    resetTimer();
+    toast.success('Session extended');
+  }, [resetTimer]);
 
   return (
     <div className="min-h-screen"

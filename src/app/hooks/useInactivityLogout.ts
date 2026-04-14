@@ -26,6 +26,7 @@ export const useInactivityLogout = ({
 }: UseInactivityLogoutOptions) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
 
   /**
    * Clear all timers
@@ -48,6 +49,7 @@ export const useInactivityLogout = ({
     if (!enabled) return;
 
     clearTimers();
+    lastActivityRef.current = Date.now();
 
     // Set warning timeout
     warningTimeoutRef.current = setTimeout(() => {
@@ -103,6 +105,25 @@ export const useInactivityLogout = ({
       document.addEventListener(event, throttledHandleActivity);
     });
 
+    // Handle tab visibility changes (security: logout or lock if user leaves)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // User left the tab - we can either logout immediately or check time on return
+        // For high security, we'll record the time they left
+        lastActivityRef.current = Date.now();
+      } else {
+        // User returned to tab - check if they've been gone too long
+        const timeAway = Date.now() - lastActivityRef.current;
+        if (timeAway >= INACTIVITY_TIMEOUT) {
+          onLogout();
+        } else {
+          resetTimer();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     // Cleanup
     return () => {
       clearTimers();
@@ -112,8 +133,9 @@ export const useInactivityLogout = ({
       events.forEach(event => {
         document.removeEventListener(event, throttledHandleActivity);
       });
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [enabled, resetTimer, handleActivity, clearTimers]);
+  }, [enabled, resetTimer, handleActivity, clearTimers, onLogout]);
 
   return {
     resetTimer,

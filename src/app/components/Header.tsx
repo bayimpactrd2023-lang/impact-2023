@@ -10,6 +10,7 @@ export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
   const [blogDropdownOpen, setBlogDropdownOpen] = React.useState(false);
+  const [mobileBlogDropdownOpen, setMobileBlogDropdownOpen] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, scrollThreshold } = useHeaderTheme();
@@ -278,6 +279,75 @@ export const Header: React.FC = () => {
               const isActive = item.path === '/'
                 ? location.pathname === item.path
                 : location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+              
+              if (item.key === 'blog') {
+                return (
+                  <div key={item.key} className="space-y-1">
+                    <motion.button
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => setMobileBlogDropdownOpen(!mobileBlogDropdownOpen)}
+                      className={`flex w-full items-center justify-between px-4 py-3 text-base font-semibold rounded-xl transition-all duration-300 ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white shadow-lg' 
+                          : 'text-gray-700 hover:bg-blue-50/80 hover:text-[#1887FC]'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <ChevronDown size={18} className={`transition-transform duration-300 ${mobileBlogDropdownOpen ? 'rotate-180' : ''}`} />
+                    </motion.button>
+                    
+                    {mobileBlogDropdownOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="pl-4 space-y-1 overflow-hidden"
+                      >
+                        {content.blogPosts.length > 0 ? (
+                          content.blogPosts.slice(0, 4).map((post) => (
+                            <button
+                              key={post.id}
+                              onClick={() => {
+                                handleNavigation(`/blog?post=${post.id}`);
+                                setMobileMenuOpen(false);
+                                setMobileBlogDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-blue-50 group transition-all rounded-xl border-l-2 border-transparent hover:border-[#1887FC]"
+                            >
+                              <p className="text-sm font-bold text-gray-800 group-hover:text-[#1887FC] transition-colors line-clamp-1">
+                                {post.title}
+                              </p>
+                              {post.date && (
+                                <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                  {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </p>
+                              )}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3">
+                            <p className="text-xs text-gray-400 italic">No blog posts found</p>
+                          </div>
+                        )}
+                        {content.blogPosts.length > 3 && (
+                          <button
+                            onClick={() => {
+                              handleNavigation('/blog');
+                              setMobileMenuOpen(false);
+                              setMobileBlogDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-[#1887FC] font-bold text-xs uppercase tracking-wider hover:bg-blue-50 rounded-xl mt-1 border-t border-gray-50"
+                          >
+                            View All {content.blogPosts.length} Articles
+                          </button>
+                        )}
+                      </motion.div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <motion.button
                   key={item.key}
