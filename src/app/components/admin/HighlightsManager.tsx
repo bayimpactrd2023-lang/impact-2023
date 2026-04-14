@@ -15,7 +15,7 @@ import { useConfirm } from '@/shared/hooks';
 import { invalidateHighlightsCache } from '@/utils/cacheInvalidation';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { getImageUrl } from '@/utils/r2Upload';
-import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
+import { EntityValidator, hasChanges } from '@/app/components/admin/utils/adminHelpers';
 import { RichTextContent } from '@/app/components/RichTextContent';
 import {
   createHighlight,
@@ -216,6 +216,13 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
 
       let result;
       if (editingHighlight.id && !editingHighlight.id.startsWith('temp-') && !editingHighlight.id.match(/^\d{13}$/)) {
+        const originalHighlight = pagination.data.find(h => h.id === editingHighlight.id);
+        if (originalHighlight && !hasChanges(originalHighlight, editingHighlight)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingHighlight(null);
+          return;
+        }
         result = await updateHighlightInDb(editingHighlight.id, highlightData);
       } else {
         result = await createHighlight(highlightData);

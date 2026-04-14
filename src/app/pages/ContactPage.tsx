@@ -17,7 +17,7 @@ export const ContactPage: React.FC = () => {
       icon: Mail,
       label: 'Email',
       value: 'main@impactrd.org',
-      link: 'mailto:main@impactrd.org',
+      link: 'https://mail.google.com/mail/?view=cm&fs=1&to=main@impactrd.org',
       clickable: true
     },
     {
@@ -166,6 +166,8 @@ export const ContactPage: React.FC = () => {
                         {info.clickable ? (
                           <a 
                             href={info.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-sm sm:text-base text-gray-600 hover:text-[#1887FC] transition-colors font-medium break-words"
                           >
                             {info.value}

@@ -812,6 +812,39 @@ export const getInternshipTestimonialsPaginated = async (page: number, limit: nu
 };
 
 // ============================================
+// CURSOR PAGINATION (Optimized)
+// ============================================
+
+export const getNewsCursor = async (cursor: string | null = null, limit: number = 6) => {
+  const cacheKey = generateCacheKey('news', 'cursor', cursor || 'start', limit);
+
+  return cachedFetch(
+    cacheKey,
+    async () => {
+      const { data, hasMore, nextCursor, prevCursor } = await originalService.getNewsCursor(cursor, limit);
+
+      // Optimize images
+      const mappedData: NewsItem[] = (data || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        date: item.date,
+        imageUrl: optimizeImageUrl(item.imageUrl, { width: 800, quality: 75 }),
+        images: optimizeImageArray(item.images, { width: 1200, quality: 80 }),
+      }));
+
+      return {
+        data: mappedData,
+        hasMore,
+        nextCursor,
+        prevCursor
+      };
+    },
+    { ...defaultCacheConfig, ttl: CACHE_TTL.content }
+  );
+};
+
+// ============================================
 // CACHE MANAGEMENT
 // ============================================
 

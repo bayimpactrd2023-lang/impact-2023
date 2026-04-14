@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 // Check if text contains HTML tags
 const containsHTML = (text: string): boolean => {
@@ -25,6 +25,9 @@ const decodeHTMLEntities = (text: string): string => {
   return textarea.value;
 };
 
+// URL regex pattern - matches http, https, and www URLs
+const URL_REGEX = /(https?:\/\/[^\s<>"{}|\^`\[\]]+|www\.[^\s<>"{}|\^`\[\]]+\.[a-zA-Z]{2,}[^\s<>"{}|\^`\[\]]*)/g;
+
 // Sanitize and clean HTML from WYSIWYG editor
 const sanitizeHTML = (html: string): string => {
   // Remove extra ** that might be wrapped in <b> tags
@@ -41,11 +44,11 @@ const sanitizeHTML = (html: string): string => {
   );
   cleaned = cleaned.replace(/<\/font>/gi, '</span>');
   
+  // Note: We don't automatically convert URLs to <a> tags here because 
+  // dangerouslySetInnerHTML is static. We'll handle it in useEffect for HTML content.
+  
   return cleaned;
 };
-
-// URL regex pattern - matches http, https, and www URLs
-const URL_REGEX = /(https?:\/\/[^\s<>"{}|\^`\[\]]+|www\.[^\s<>"{}|\^`\[\]]+\.[a-zA-Z]{2,}[^\s<>"{}|\^`\[\]]*)/g;
 
 // Parse URLs and convert to clickable links
 const parseUrls = (text: string): React.ReactNode[] => {
@@ -53,6 +56,7 @@ const parseUrls = (text: string): React.ReactNode[] => {
   let lastIndex = 0;
   let match;
 
+  URL_REGEX.lastIndex = 0; // Reset regex state
   while ((match = URL_REGEX.exec(text)) !== null) {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
@@ -70,6 +74,7 @@ const parseUrls = (text: string): React.ReactNode[] => {
         rel="noopener noreferrer"
         className="text-[#1887FC] hover:text-[#0d6fd8] underline underline-offset-2 font-medium break-all"
         title={href}
+        onClick={(e) => e.stopPropagation()}
       >
         {displayUrl.length > 50 ? displayUrl.slice(0, 47) + '...' : displayUrl}
       </a>
@@ -209,13 +214,82 @@ interface RichTextContentProps {
   text: string | undefined | null;
   enabled?: boolean;
   className?: string;
+  onImageClick?: (url: string) => void;
 }
 
 export const RichTextContent: React.FC<RichTextContentProps> = ({ 
   text, 
   enabled = true,
-  className = ''
+  className = '',
+  onImageClick
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-link URLs in HTML content after mount
+  useEffect(() => {
+    if (!containerRef.current || !text || !containsHTML(text)) return;
+
+    const walkAndReplace = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const content = node.textContent || '';
+        // Use a new regex instance for each check
+        const urlRegex = new RegExp(URL_REGEX.source, 'g');
+        if (urlRegex.test(content)) {
+          const span = document.createElement('span');
+          const parts = [];
+          let lastIndex = 0;
+          let match;
+          
+          urlRegex.lastIndex = 0;
+          while ((match = urlRegex.exec(content)) !== null) {
+            if (match.index > lastIndex) {
+              parts.push(document.createTextNode(content.slice(lastIndex, match.index)));
+            }
+            
+            const url = match[0];
+            const href = url.startsWith('http') ? url : `https://${url}`;
+            const link = document.createElement('a');
+            link.href = href;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'text-[#1887FC] hover:text-[#0d6fd8] underline underline-offset-2 font-medium break-all';
+            link.textContent = url.length > 50 ? url.slice(0, 47) + '...' : url;
+            link.onclick = (e) => e.stopPropagation();
+            parts.push(link);
+            
+            lastIndex = match.index + match[0].length;
+          }
+          
+          if (lastIndex < content.length) {
+            parts.push(document.createTextNode(content.slice(lastIndex)));
+          }
+          
+          parts.forEach(p => span.appendChild(p));
+          node.parentNode?.replaceChild(span, node);
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement;
+        
+        // Handle images for full-screen modal
+        if (el.tagName === 'IMG' && onImageClick) {
+          const img = el as HTMLImageElement;
+          img.style.cursor = 'pointer';
+          img.onclick = (e) => {
+            e.stopPropagation();
+            onImageClick(img.src);
+          };
+        }
+
+        // Don't process content inside existing links or buttons
+        if (el.tagName !== 'A' && el.tagName !== 'BUTTON') {
+          Array.from(el.childNodes).forEach(walkAndReplace);
+        }
+      }
+    };
+
+    walkAndReplace(containerRef.current);
+  }, [text]);
+
   // Handle null/undefined/empty text gracefully
   if (!text) {
     return null;
@@ -232,7 +306,11 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
     const cleanedHTML = sanitizeHTML(decodedText);
     return (
       <div 
-        className={`prose prose-sm max-w-none ${className}`}
+        ref={containerRef}
+        className={`prose prose-lg max-w-none ${className} [&_a]:text-[#1887FC] [&_a]:underline [&_a:hover]:text-[#0d6fd8]
+          [&_img]:max-w-[50%] [&_img]:rounded-lg [&_img]:shadow-md [&_img.float-left]:float-left [&_img.float-left]:mr-4 [&_img.float-left]:mb-4
+          [&_img.float-right]:float-right [&_img.float-right]:ml-4 [&_img.float-right]:mb-4
+        `}
         dangerouslySetInnerHTML={{ __html: cleanedHTML }}
         style={{ 
           whiteSpace: 'pre-wrap',

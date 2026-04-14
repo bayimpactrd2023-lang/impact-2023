@@ -6,7 +6,10 @@ import {
   Highlighter,
   Bold,
   ChevronDown,
-  Type
+  Type,
+  Image as ImageIcon,
+  AlignLeft,
+  AlignRight
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -19,11 +22,13 @@ import { cn } from "@/app/components/ui/utils";
 interface SharedToolbarProps {
   onCommand: (command: string, value?: string) => void;
   className?: string;
+  onImageUpload?: (file: File) => void;
 }
 
 export const SharedToolbar: React.FC<SharedToolbarProps> = ({ 
   onCommand, 
-  className
+  className,
+  onImageUpload
 }) => {
   const [isSticky, setIsSticky] = useState(false);
   const [activeFormats, setActiveFormats] = useState<{
@@ -38,6 +43,20 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
     number: false
   });
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onImageUpload) {
+      onImageUpload(file);
+    }
+    // Reset input so the same file can be selected again
+    e.target.value = '';
+  };
 
   useEffect(() => {
     const checkFormats = () => {
@@ -188,6 +207,56 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {onImageUpload && (
+          <>
+            <div className="w-[1px] h-4 bg-gray-300 mx-1" />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200"
+              onClick={handleImageClick}
+              title="Insert Image"
+            >
+              <ImageIcon className="w-4 h-4 mr-1.5" />
+              <span className="text-xs">Image</span>
+            </Button>
+
+            <div className="w-[1px] h-4 bg-gray-300 mx-1" />
+            
+            {/* Image Alignment */}
+            <div className="flex items-center gap-0.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
+                onClick={() => onCommand('alignImage', 'left')}
+                title="Align Image Left"
+              >
+                <AlignLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
+                onClick={() => onCommand('alignImage', 'right')}
+                title="Align Image Right"
+              >
+                <AlignRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

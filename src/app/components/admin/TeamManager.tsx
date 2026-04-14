@@ -12,7 +12,7 @@ import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { useServerPagination } from '@/hooks/useServerPagination';
-import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
+import { EntityValidator, hasChanges } from '@/app/components/admin/utils/adminHelpers';
 import {
   createTeamMember,
   updateTeamMember as updateTeamInDb,
@@ -126,6 +126,13 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
       };
 
       if (editingMember.id && !editingMember.id.startsWith('temp-') && !editingMember.id.match(/^\d{13}$/)) {
+        const originalMember = pagination.data.find(m => m.id === editingMember.id);
+        if (originalMember && !hasChanges(originalMember, editingMember)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingMember(null);
+          return;
+        }
         await updateTeamInDb(editingMember.id, memberData);
         toast.success('Team member updated!');
       } else {

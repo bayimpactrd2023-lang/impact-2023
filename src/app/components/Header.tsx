@@ -1,16 +1,31 @@
 import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { motion } from 'motion/react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { useHeaderTheme } from '@/app/context/HeaderThemeContext';
+import { useContent } from '@/app/context/ContentContext';
 
 
 export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
+  const [blogDropdownOpen, setBlogDropdownOpen] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, scrollThreshold } = useHeaderTheme();
+  const { content, fetchBlogPosts } = useContent();
+
+  // Fetch blogs in the background after mount
+  React.useEffect(() => {
+    // Check if blogs are already fetching or loaded
+    if (!content.blogPosts.length) {
+      // Use setImmediate or setTimeout to ensure it doesn't block the main thread
+      const timer = setTimeout(() => {
+        fetchBlogPosts().catch(err => console.error('[Header] Error fetching blog posts:', err));
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Listen to scroll events
   React.useEffect(() => {
@@ -129,15 +144,100 @@ export const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => (
-              <button
-                key={item.key}
-                onClick={() => handleNavigation(item.path)}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${getNavButtonClass(item.path)}`}
-              >
-                {item.label}
-              </button>
-            ))}
+            {navItems.map((item) => {
+              if (item.key === 'blog') {
+                return (
+                  <div 
+                    key={item.key} 
+                    className="relative"
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setBlogDropdownOpen(!blogDropdownOpen);
+                      }}
+                      className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 flex items-center gap-1 ${getNavButtonClass(item.path)}`}
+                    >
+                      {item.label}
+                      <ChevronDown size={14} className={`transition-transform duration-300 ${blogDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Blog Dropdown */}
+                    {blogDropdownOpen && (
+                      <>
+                        {/* Overlay to close when clicking outside */}
+                        <div 
+                          className="fixed inset-0 z-[90]" 
+                          onClick={() => setBlogDropdownOpen(false)}
+                        />
+                        
+                        <div className="absolute top-[calc(100%+12px)] right-0 w-80 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div className="relative bg-white/95 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-2xl border border-blue-50/50 py-2 overflow-hidden">
+                            <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recent Posts</span>
+                            </div>
+                            
+                            {content.blogPosts.length > 0 ? (
+                              content.blogPosts.slice(0, 4).map((post) => (
+                                <button
+                                  key={post.id}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleNavigation(`/blog?post=${post.id}`);
+                                    setBlogDropdownOpen(false);
+                                  }}
+                                  className="w-full text-left px-5 py-3 hover:bg-blue-50 group transition-all border-b border-gray-50/50 last:border-0"
+                                >
+                                  <p className="text-xs font-bold text-gray-800 group-hover:text-[#1887FC] transition-colors line-clamp-2 leading-relaxed mb-1">
+                                    {post.title}
+                                  </p>
+                                  {post.date && (
+                                    <p className="text-[10px] text-gray-400 font-medium">
+                                      {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </p>
+                                  )}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-5 py-6 text-center">
+                                <p className="text-xs text-gray-400 italic">No blog posts found</p>
+                              </div>
+                            )}
+                            
+                            {content.blogPosts.length > 3 && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleNavigation('/blog');
+                                  setBlogDropdownOpen(false);
+                                }}
+                                className="w-full text-center py-3 bg-gray-50/50 hover:bg-blue-50 transition-colors mt-auto border-t border-gray-50/50"
+                              >
+                                <span className="text-[11px] font-black text-[#1887FC] uppercase tracking-wider">
+                                  View All {content.blogPosts.length} Articles
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => handleNavigation(item.path)}
+                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${getNavButtonClass(item.path)}`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
             {/* Contact Us Button */}
             <button
               onClick={() => handleNavigation('/contact')}

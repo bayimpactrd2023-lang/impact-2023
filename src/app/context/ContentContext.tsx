@@ -16,6 +16,7 @@ import {
   getAllFinancialStatements,
   getAllInternshipTestimonials,
   getAboutSection,
+  getNewsCursor,
 } from "@/services/optimizedSupabaseService";
 import { getImageUrl } from "@/utils/r2Upload";
 
@@ -189,6 +190,8 @@ interface ContentData {
   studyFindings: Project[];
   internshipTestimonials: InternshipTestimonial[];
   blogPosts: BlogPost[];
+  newsHasMore: boolean;
+  newsNextCursor: string | null;
 }
 
 interface ContentContextType {
@@ -213,7 +216,7 @@ interface ContentContextType {
   updateInternshipTestimonials: (testimonials: InternshipTestimonial[]) => void;
   updateBlogPosts: (posts: BlogPost[]) => void;
   // New lazy fetch functions
-  fetchNews: () => Promise<void>;
+  fetchNews: (cursor?: string | null, limit?: number) => Promise<void>;
   fetchHighlights: () => Promise<void>;
   fetchPartners: () => Promise<void>;
   fetchPublications: () => Promise<void>;
@@ -270,6 +273,8 @@ const initialContent: ContentData = {
   studyFindings: [],
   internshipTestimonials: [],
   blogPosts: [],
+  newsHasMore: false,
+  newsNextCursor: null,
 };
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -414,7 +419,7 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
       const mappedFinancialStatements = (financialStatementsData || []).map((item: any) => mapDbToApp(item));
       const mappedInternshipTestimonials = (internshipTestimonialsData || []).map((item: any) => mapDbToApp(item));
 
-      const newContent = {
+      const newContent: ContentData = {
         newsItems: mappedNews,
         highlights: mappedHighlights,
         partners: mappedPartners,
@@ -436,6 +441,8 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         researchBayanihanImage: researchBayanihanImg,
         financialStatements: mappedFinancialStatements,
         internshipTestimonials: mappedInternshipTestimonials,
+        newsHasMore: false,
+        newsNextCursor: null,
       };
       
       setContent(newContent);
@@ -547,12 +554,18 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // Lazy fetch functions
-  const fetchNews = async () => {
+  const fetchNews = async (cursor: string | null = null, limit: number = 10) => {
     setLoadingStates(prev => ({ ...prev, news: true }));
     try {
-      const newsData = await getAllNews();
-      const mappedNews = (newsData || []).map((item: any) => mapDbToApp(item));
-      setContent(prev => ({ ...prev, newsItems: mappedNews }));
+      const response = await getNewsCursor(cursor, limit);
+      const mappedNews = response.data.map((item: any) => mapDbToApp(item));
+      
+      setContent(prev => ({ 
+        ...prev, 
+        newsItems: cursor ? [...prev.newsItems, ...mappedNews] : mappedNews,
+        newsHasMore: response.hasMore,
+        newsNextCursor: response.nextCursor
+      }));
     } catch (err) {
       console.error("Error fetching news:", err);
       setError("Failed to load news. Please check your Supabase configuration.");

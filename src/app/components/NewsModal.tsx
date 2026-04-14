@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/app/components/ui/dialog';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NewsItem } from '@/app/context/ContentContext';
 import useEmblaCarousel from 'embla-carousel-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 import { motion } from 'motion/react';
 import { GalleryModal } from './GalleryModal';
 import { RichTextContent } from './RichTextContent';
@@ -54,108 +53,113 @@ export const NewsModal: React.FC<NewsModalProps> = ({ isOpen, onClose, newsItem 
 
   // Only use gallery images, not the cover image
   const galleryImages = newsItem.images && newsItem.images.length > 0 ? newsItem.images : [];
-  const hasGallery = galleryImages.length > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-full sm:max-w-5xl lg:max-w-6xl max-h-[95vh] overflow-y-auto scrollbar-hide bg-white border-none shadow-2xl p-0">
+      <DialogContent className="w-[95%] sm:w-[90%] md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl p-0 flex flex-col">
+        {/* DialogTitle and DialogDescription must be direct children of DialogContent for Radix accessibility */}
+        <DialogTitle className="sr-only">{newsItem.title}</DialogTitle>
+        <DialogDescription className="sr-only">News article published on {formatDate(newsItem.date)}</DialogDescription>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="p-4 sm:p-6 md:p-8"
+          transition={{ duration: 0.3 }}
+          className="flex-1 overflow-y-auto scrollbar-hide"
         >
-          <div className="mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-2">
-              {newsItem.title}
-            </h2>
-            <DialogTitle className="sr-only">{newsItem.title}</DialogTitle>
-            <DialogDescription className="sr-only">News article published on {formatDate(newsItem.date)}</DialogDescription>
-          </div>
-
-          {/* Image Gallery */}
-          {hasGallery && (
-            <div className="relative mb-4 mt-6">
-              <div className="overflow-hidden rounded-2xl bg-gray-100" ref={emblaRef}>
-                <div className="flex">
-                  {galleryImages.map((image, index) => (
-                    <div key={index} className="flex-[0_0_100%] min-w-0">
-                      <ImageWithFallback
+          {/* Image Gallery Section */}
+          <div className="relative group">
+            <div className="overflow-hidden bg-gray-50" ref={emblaRef}>
+              <div className="flex">
+                {galleryImages.length > 0 ? (
+                  galleryImages.map((image, index) => (
+                    <div key={index} className="flex-[0_0_100%] min-w-0 flex items-center justify-center bg-gray-900/10">
+                      <img
                         src={image}
                         alt={`${newsItem.title} - Image ${index + 1}`}
-                        className="w-full h-64 sm:h-80 md:h-96 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                        className="max-w-full max-h-[40vh] sm:max-h-[50vh] md:max-h-[60vh] object-contain shadow-sm cursor-pointer"
                         onClick={() => {
                           setGalleryIndex(index);
                           setIsGalleryOpen(true);
                         }}
                       />
                     </div>
+                  ))
+                ) : newsItem.imageUrl ? (
+                  <div className="flex-[0_0_100%] min-w-0 flex items-center justify-center bg-gray-900/10">
+                    <img
+                      src={newsItem.imageUrl}
+                      alt={newsItem.title}
+                      className="max-w-full max-h-[40vh] sm:max-h-[50vh] md:max-h-[60vh] object-contain shadow-sm cursor-pointer"
+                      onClick={() => {
+                        setGalleryIndex(0);
+                        setIsGalleryOpen(true);
+                      }}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Navigation Arrows */}
+            {galleryImages.length > 1 && (
+              <>
+                <button
+                  onClick={scrollPrev}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white hover:scale-105 transition-all z-10"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-800" />
+                </button>
+                <button
+                  onClick={scrollNext}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white hover:scale-105 transition-all z-10"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-800" />
+                </button>
+
+                {/* Progress Indicator - Pill Style */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-[#1887FC]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                  {galleryImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => emblaApi && emblaApi.scrollTo(index)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        index === currentIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/60 hover:bg-white/80'
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
                   ))}
                 </div>
-              </div>
-
-              {/* Navigation Arrows */}
-              <button
-                onClick={scrollPrev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white rounded-full shadow-lg hover:bg-gray-50 hover:scale-110 transition-all duration-300 z-10"
-              >
-                <ChevronLeft className="w-6 h-6 text-gray-800" />
-              </button>
-              <button
-                onClick={scrollNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white rounded-full shadow-lg hover:bg-gray-50 hover:scale-110 transition-all duration-300 z-10"
-              >
-                <ChevronRight className="w-6 h-6 text-gray-800" />
-              </button>
-
-              {/* Dots Indicator - Instagram Style */}
-              <div className="flex justify-center gap-2 mt-4">
-                {galleryImages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => emblaApi?.scrollTo(index)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      index === currentIndex
-                        ? 'w-8 bg-[#1887FC]'
-                        : 'w-2 bg-gray-300 hover:bg-gray-400'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Single Image (fallback if no gallery) */}
-          {!hasGallery && newsItem.imageUrl && (
-            <div className="mb-4 mt-6 rounded-2xl overflow-hidden bg-gray-100">
-              <ImageWithFallback
-                src={newsItem.imageUrl}
-                alt={newsItem.title}
-                className="w-full h-[500px] object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                onClick={() => {
-                  setGalleryIndex(0);
-                  setIsGalleryOpen(true);
-                }}
-              />
-            </div>
-          )}
-
-          {/* Published Date - Now below gallery/image */}
-          <div className="flex items-center gap-3 text-sm text-gray-600 mb-6">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Calendar className="w-4 h-4 text-[#1887FC]" />
-            </div>
-            <span className="font-semibold tracking-wide">Published on {formatDate(newsItem.date)}</span>
+              </>
+            )}
           </div>
 
-          <div className="text-base md:text-lg text-gray-700 leading-relaxed text-justify">
-            <RichTextContent 
-              text={newsItem.content}
-              className="text-base md:text-lg text-gray-700 leading-relaxed"
-            />
+          <div className="p-6 sm:p-10">
+            <div className="mb-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                {newsItem.title}
+              </h2>
+              
+              <div className="flex items-center gap-2 text-blue-600">
+                <Calendar className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {formatDate(newsItem.date)}
+                </span>
+              </div>
+            </div>
+
+            <div className="prose prose-sm sm:prose lg:prose-lg max-w-none text-justify">
+              <RichTextContent 
+                text={newsItem.content}
+                className="text-base sm:text-lg text-gray-700 leading-relaxed"
+              />
+            </div>
           </div>
         </motion.div>
       </DialogContent>
+
       <GalleryModal
         images={galleryImages.length > 0 ? galleryImages : newsItem.imageUrl ? [newsItem.imageUrl] : []}
         isOpen={isGalleryOpen}

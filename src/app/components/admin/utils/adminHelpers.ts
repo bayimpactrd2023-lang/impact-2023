@@ -260,6 +260,46 @@ export class EntityValidator {
 }
 
 /**
+ * Deep equality check for form objects to prevent redundant updates.
+ * Only compares values that are part of the form state.
+ */
+export function hasChanges(original: any, current: any): boolean {
+  if (!original || !current) return true;
+  
+  const keys = Object.keys(current);
+  for (const key of keys) {
+    const origVal = original[key];
+    const currVal = current[key];
+    
+    // Handle null/undefined comparison
+    if (origVal === currVal) continue;
+    
+    // Handle arrays (e.g., images)
+    if (Array.isArray(origVal) && Array.isArray(currVal)) {
+      if (origVal.length !== currVal.length) return true;
+      for (let i = 0; i < origVal.length; i++) {
+        if (origVal[i] !== currVal[i]) return true;
+      }
+      continue;
+    }
+    
+    // Handle files (always consider changed if new file is selected)
+    if (currVal instanceof File) return true;
+    
+    // Handle objects (recursive check if needed, but form data is usually flat)
+    if (typeof currVal === 'object' && currVal !== null && origVal !== null) {
+      if (hasChanges(origVal, currVal)) return true;
+      continue;
+    }
+
+    // Default primitive comparison
+    if (origVal !== currVal) return true;
+  }
+  
+  return false;
+}
+
+/**
  * Check if an item exists in an array by ID
  */
 export function itemExists<T extends { id: string }>(

@@ -29,6 +29,7 @@ import {
   validateMaxChars,
   validateMaxWords,
   validateRequiredTrimmed,
+  hasChanges
 } from '@/app/components/admin/utils/adminHelpers';
 
 interface FinancialStatementManagerProps {
@@ -149,6 +150,13 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
       };
 
       if (editingStatement.id && !editingStatement.id.startsWith('temp-') && !editingStatement.id.match(/^\d{13}$/)) {
+        const originalStatement = pagination.data.find(s => s.id === editingStatement.id);
+        if (originalStatement && !hasChanges(originalStatement, editingStatement)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingStatement(null);
+          return;
+        }
         await updateStatementInDb(editingStatement.id, statementData);
         toast.success('Financial statement updated!');
       } else {

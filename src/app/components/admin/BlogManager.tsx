@@ -25,10 +25,17 @@ import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
-import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
 import { invalidateBlogCache } from '@/utils/cacheInvalidation';
-import { AdminValidationRules, mergeValidationResults, validateMaxChars, validateMaxWords, validateNoDigits, validateRequiredTrimmed } from '@/app/components/admin/utils/adminHelpers';
+import { 
+  AdminValidationRules, 
+  mergeValidationResults, 
+  validateMaxChars, 
+  validateMaxWords, 
+  validateNoDigits, 
+  validateRequiredTrimmed,
+  hasChanges
+} from '@/app/components/admin/utils/adminHelpers';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { RichTextContent } from '@/app/components/RichTextContent';
 
@@ -50,6 +57,22 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
         detail: { command: cmd, value: val } 
       });
       window.dispatchEvent(event);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!activeField) {
+      toast.error('Please click on the content area first to insert an image');
+      return;
+    }
+    
+    try {
+      const url = await uploadImage(file, 'blog');
+      handleCommand('insertImage', url);
+      toast.success('Image uploaded and inserted!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
     }
   };
   
@@ -185,7 +208,16 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
       };
       
       // Check if updating existing or creating new
-      if (editingPost.id && !editingPost.id.startsWith('temp-') && !editingPost.id.match(/^\\d{13}$/)) {
+      if (editingPost.id && !editingPost.id.startsWith('temp-') && !editingPost.id.match(/^\d{13}$/)) {
+        // Find original post to check for changes
+        const originalPost = pagination.data.find(p => p.id === editingPost.id);
+        if (originalPost && !hasChanges(originalPost, editingPost)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingPost(null);
+          return;
+        }
+
         // Update existing
         await updateBlogPost(editingPost.id, postData);
         toast.success('Blog post updated!');
@@ -354,6 +386,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
             <div className="pt-2">
               <SharedToolbar 
                 onCommand={handleCommand} 
+                onImageUpload={handleImageUpload}
               />
             </div>
           </DialogHeader>
@@ -394,6 +427,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                       setActiveField('modal-blog-content');
                     }
                   }}
+                  onImageUpload={handleImageUpload}
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -448,23 +482,6 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                       setEditingPost({ ...editingPost, imageUrl: url })
                     }
                     label="Cover Image"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-sm font-semibold text-gray-700 mb-1">Gallery Images (Drag & Drop)</Label>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Upload additional images for the gallery
-                  </p>
-                  <MultiImageDropzone
-                    images={editingPost.images || []}
-                    onChange={(images) => {
-                      setEditingPost({
-                        ...editingPost,
-                        images
-                      });
-                    }}
-                    label="Blog Post Images"
                   />
                 </div>
               </div>

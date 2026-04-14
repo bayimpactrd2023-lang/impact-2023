@@ -10,7 +10,6 @@ import { PageSkeletonLoader } from "@/app/components/PageSkeletonLoader";
 // Lazy load sections for better performance
 const NewsCarousel = React.lazy(() => import("@/app/components/NewsCarousel").then(m => ({ default: m.NewsCarousel })));
 const FeaturedHighlightsSection = React.lazy(() => import("@/app/components/FeaturedHighlightsSection").then(m => ({ default: m.FeaturedHighlightsSection })));
-const PublicationsSection = React.lazy(() => import("@/app/components/PublicationsSection").then(m => ({ default: m.PublicationsSection })));
 const PartnersCarousel = React.lazy(() => import("@/app/components/PartnersCarousel").then(m => ({ default: m.PartnersCarousel })));
 const ResearchBayanihanSection = React.lazy(() => import("@/app/components/ResearchBayanihanSection").then(m => ({ default: m.ResearchBayanihanSection })));
 
@@ -29,18 +28,23 @@ export const HomePage: React.FC = () => {
   // Fetch data when component mounts
   React.useEffect(() => {
     const loadPageData = async () => {
-      setPageLoading(true);
+      // Don't block the initial render with a full page loading state if possible
+      // Let lazy components handle their own loading via Suspense
       try {
-        await Promise.all([
-          fetchHeroSection(),
+        // Fetch hero section first as it's the primary visual element
+        await fetchHeroSection();
+        setPageLoading(false);
+
+        // Fetch remaining data in the background
+        Promise.all([
           fetchNews(),
           fetchHighlights(),
           fetchPublications(),
           fetchPartners(),
-        ]);
+        ]).catch(err => console.error('[HomePage] Background fetch error:', err));
+        
       } catch (error) {
-        console.error('[HomePage] Error fetching page data:', error);
-      } finally {
+        console.error('[HomePage] Error fetching critical page data:', error);
         setPageLoading(false);
       }
     };
@@ -54,8 +58,8 @@ export const HomePage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Show loading state on the page itself
-  const isLoading = pageLoading || loadingStates.hero || loadingStates.news || loadingStates.highlights || loadingStates.publications || loadingStates.partners;
+  // Only show full page loader if hero isn't loaded yet
+  const isLoading = pageLoading && loadingStates.hero;
   
   if (isLoading) {
     return <PageSkeletonLoader message="Loading Home..." />;
@@ -174,7 +178,7 @@ export const HomePage: React.FC = () => {
                   zIndex: 2,
                 }}
               >
-                A DOST-certified Science Foundation
+                A DOST-certified Science & Technology Foundation
               </motion.p>
             </div>
 
@@ -283,13 +287,7 @@ export const HomePage: React.FC = () => {
         </Suspense>
       </SectionTheme>
 
-      <SectionTheme theme="dark" className="py-6 sm:py-8 md:py-10 bg-[#333333]">
-        <Suspense fallback={<SectionSkeleton />}>
-          <PublicationsSection />
-        </Suspense>
-      </SectionTheme>
-
-      <SectionTheme theme="light" className="py-6 sm:py-8 md:py-10 bg-white" id="highlights">
+      <SectionTheme theme="light" className="py-6 sm:py-8 md:py-10 bg-[#f8fbff]" id="highlights">
         <Suspense fallback={<SectionSkeleton />}>
           <FeaturedHighlightsSection />
         </Suspense>

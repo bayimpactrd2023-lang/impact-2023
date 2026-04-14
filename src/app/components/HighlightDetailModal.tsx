@@ -75,14 +75,14 @@ export const HighlightDetailModal: React.FC<HighlightDetailModalProps> = ({
           {/* Image Gallery */}
           {galleryImages.length > 0 && (
             <div className="relative">
-              <div className="overflow-hidden bg-gray-50" ref={emblaRef}>
-                <div className="flex">
+              <div className="overflow-hidden bg-gray-50/50 flex items-center justify-center min-h-[300px] py-6" ref={emblaRef}>
+                <div className="flex w-full items-center">
                   {galleryImages.map((image, index) => (
-                    <div key={index} className="flex-[0_0_100%] min-w-0 flex items-center justify-center bg-gray-900/10">
+                    <div key={index} className="flex-[0_0_100%] min-w-0 flex items-center justify-center p-4">
                       <ImageWithFallback
                         src={image}
                         alt={`${highlight.title} - Image ${index + 1}`}
-                        className="max-w-full max-h-[40vh] sm:max-h-[50vh] md:max-h-[60vh] object-contain shadow-sm cursor-pointer"
+                        className="max-w-[85%] sm:max-w-[70%] h-auto max-h-[450px] object-contain cursor-pointer shadow-xl rounded-sm"
                         onClick={() => {
                           setGalleryIndex(index);
                           setIsGalleryOpen(true);

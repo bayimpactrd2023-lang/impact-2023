@@ -31,6 +31,7 @@ import {
   validateMaxWords,
   validateNoDigits,
   validateRequiredTrimmed,
+  hasChanges
 } from '@/app/components/admin/utils/adminHelpers';
 
 interface InternshipTestimonialManagerProps {
@@ -196,6 +197,13 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
       };
 
       if (editingTestimonial.id && !editingTestimonial.id.startsWith('temp-') && !editingTestimonial.id.match(/^\d{13}$/)) {
+        const originalTestimonial = pagination.data.find(t => t.id === editingTestimonial.id);
+        if (originalTestimonial && !hasChanges(originalTestimonial, editingTestimonial)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingTestimonial(null);
+          return;
+        }
         await updateTestimonialInDb(editingTestimonial.id, testimonialData);
         toast.success('Testimonial updated!');
       } else {

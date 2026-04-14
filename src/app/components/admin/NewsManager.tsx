@@ -15,7 +15,7 @@ import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmat
 import { invalidateNewsCache } from '@/utils/cacheInvalidation';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { getImageUrl } from '@/utils/r2Upload';
-import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
+import { EntityValidator, hasChanges } from '@/app/components/admin/utils/adminHelpers';
 import { RichTextContent } from '@/app/components/RichTextContent';
 import { 
   createNews, 
@@ -160,6 +160,13 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
       };
 
       if (editingNews.id && !editingNews.id.startsWith('temp-') && !editingNews.id.match(/^\d{13}$/)) {
+        const originalNews = pagination.data.find(n => n.id === editingNews.id);
+        if (originalNews && !hasChanges(originalNews, editingNews)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingNews(null);
+          return;
+        }
         await updateNewsInDb(editingNews.id, newsData);
         toast.success('News updated!');
       } else {

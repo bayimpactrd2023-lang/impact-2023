@@ -164,9 +164,15 @@ app.put("/server/r2/*", async (c: any) => {
   });
 
   const body = await resp.arrayBuffer();
+  const headers = new Headers(resp.headers);
+  // Remove upstream CORS headers to prevent browser conflicts with Hono's CORS middleware
+  headers.delete("access-control-allow-origin");
+  headers.delete("access-control-allow-methods");
+  headers.delete("access-control-allow-headers");
+  
   return new Response(body, {
     status: resp.status,
-    headers: resp.headers,
+    headers: headers,
   });
 });
 
@@ -204,9 +210,15 @@ app.delete("/server/r2/*", async (c: any) => {
   });
 
   const body = await resp.arrayBuffer();
+  const headers = new Headers(resp.headers);
+  // Remove upstream CORS headers to prevent browser conflicts with Hono's CORS middleware
+  headers.delete("access-control-allow-origin");
+  headers.delete("access-control-allow-methods");
+  headers.delete("access-control-allow-headers");
+  
   return new Response(body, {
     status: resp.status,
-    headers: resp.headers,
+    headers: headers,
   });
 });
 

@@ -1,44 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { BlogPost } from '@/app/types/content';
-import { BookOpen, ExternalLink } from 'lucide-react';
+import { BookOpen, Calendar, User } from 'lucide-react';
 import { RichTextContent } from '@/app/components/RichTextContent';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from '@/app/components/ui/dialog';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
-import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
-import { BlogDetailModal } from '@/app/components/BlogDetailModal';
+import { GalleryModal } from '@/app/components/GalleryModal';
 import { PageSkeletonLoader } from '@/app/components/PageSkeletonLoader';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { getBlogPostsPaginated } from '@/services/optimizedSupabaseService';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
+import { useLocation } from 'react-router';
 
 export const BlogPage: React.FC = () => {
-  const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [targetPostId, setTargetPostId] = useState<string | null>(null);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const location = useLocation();
   
-  // Cover image modal state
-  const [coverImageModalOpen, setCoverImageModalOpen] = useState(false);
-  const [selectedCoverImage, setSelectedCoverImage] = useState<string | null>(null);
-  const [selectedCoverTitle, setSelectedCoverTitle] = useState<string>('');
-
-  // Use server-side pagination with 6 items per page
+  // Use server-side pagination with 4 items per page (1 featured + 3 stories)
   const pagination = useServerPagination<BlogPost>({
     fetchFunction: getBlogPostsPaginated,
-    itemsPerPage: 6,
+    itemsPerPage: 4,
   });
 
-  // Production-ready scroll-to-top using native browser API
-  const scrollRef = useScrollToTop([pagination.currentPage]);
+  // Production-ready scroll-to-top
+  const scrollRef = useScrollToTop([pagination.currentPage, targetPostId]);
 
-  // Show full-page skeleton during any loading
-  if (pagination.loading) {
+  // Handle deep-linking from header dropdown
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const postId = params.get('post');
+    if (postId) {
+      setTargetPostId(postId);
+    } else {
+      setTargetPostId(null);
+    }
+  }, [location.search]);
+
+  // Show full-page skeleton during initial loading
+  if (pagination.loading && pagination.currentPage === 1 && pagination.data.length === 0) {
     return <PageSkeletonLoader message="Loading Blog..." />;
   }
 
@@ -46,266 +48,206 @@ export const BlogPage: React.FC = () => {
     pagination.goToPage(page);
   };
 
+  const openGallery = (imageUrl: string) => {
+    setGalleryImages([imageUrl]);
+    setIsGalleryOpen(true);
+  };
+
+  // Logic to determine which post to show as "featured" (the main article at the top)
+  // 1. If targetPostId is set, find that post
+  // 2. Otherwise use the first post on the current page
+  const selectedPost = targetPostId 
+    ? pagination.data.find(p => p.id === targetPostId) 
+    : (pagination.currentPage === 1 ? pagination.data[0] : null);
+
+  // Remaining posts for the grid
+  const regularPosts = selectedPost 
+    ? pagination.data.filter(p => p.id !== selectedPost.id)
+    : pagination.data;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-blue-50/50">
+    <div className="min-h-screen bg-white">
       {/* Scroll anchor point */}
       <div ref={scrollRef} className="absolute top-0 left-0" />
       
-      <PageHeaderTheme theme="transparent" scrollThreshold={700} />
+      {/* Light header since we're going straight to content */}
+      <PageHeaderTheme theme="light" scrollThreshold={50} />
       
-      {/* Hero Section - Match Home Page Style */}
-      <SectionTheme theme="transparent">
-        <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
-          {/* High-Quality Background Image with Overlay */}
-          <div className="absolute inset-0">
-            {/* Agricultural Research Image */}
-            <ImageWithFallback
-              src="https://images.unsplash.com/photo-1656488497988-ca149c86dade?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=2000"
-              alt="Agricultural Research"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            
-            {/* Modern Gradient Overlay - Instagram-style */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
-            
-            {/* Animated Gradient Accent */}
-            <div 
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(circle at 30% 50%, rgba(24,135,252,0.3) 0%, transparent 50%),
-                  radial-gradient(circle at 70% 50%, rgba(59,130,246,0.2) 0%, transparent 50%)
-                `,
-                animation: 'gradientShift 10s ease-in-out infinite alternate'
-              }}
-            />
-            
-            {/* Floating Particles */}
-            {[...Array(10)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 bg-white/20 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  bottom: 0,
-                }}
-                animate={{
-                  y: [0, -500],
-                  x: [0, (Math.random() - 0.5) * 150],
-                  opacity: [0, 1, 1, 0],
-                }}
-                transition={{
-                  duration: 12 + Math.random() * 8,
-                  repeat: Infinity,
-                  delay: Math.random() * 5,
-                  ease: "linear"
-                }}
-              />
-            ))}
-            
-            {/* Futuristic Grid Overlay */}
-            <div 
-              className="absolute inset-0 opacity-5"
-              style={{
-                backgroundImage: `
-                  linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-                `,
-                backgroundSize: '50px 50px'
-              }}
-            />
-          </div>
-
-          {/* Content */}
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
+      <main className="pt-24 sm:pt-32 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Main Article Display - No Modal */}
+          {selectedPost ? (
+            <motion.article 
+              key={selectedPost.id}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="mb-20"
             >
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-                className="text-3xl sm:text-5xl font-bold text-white mb-2"
-                style={{
-                  textShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)',
-                }}
-              >
-                Blog
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.8 }}
-                className="text-base sm:text-xl text-white/90"
-                style={{
-                  textShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                }}
-              >
-                Insights, stories, and updates from our team on agricultural research and community development
-              </motion.p>
-            </motion.div>
-          </div>
-        </section>
-      </SectionTheme>
-
-      {/* Blog Posts Grid */}
-      <SectionTheme theme="light">
-        <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Keyed container for React re-mounting */}
-          <div key={pagination.currentPage}>
-            {pagination.loading ? (
-              // Show loading skeleton when changing pages
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-full flex flex-col overflow-hidden bg-white rounded-3xl shadow-lg animate-pulse">
-                    <div className="h-56 bg-gray-200" />
-                    <div className="p-6 flex-grow flex flex-col">
-                      <div className="h-6 bg-gray-200 rounded mb-3" />
-                      <div className="h-4 bg-gray-200 rounded mb-2" />
-                      <div className="h-4 bg-gray-200 rounded mb-2" />
-                      <div className="h-4 bg-gray-200 rounded mb-6 w-2/3" />
-                      <div className="h-12 bg-gray-200 rounded-2xl" />
+              <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-10">
+                  <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1887FC] text-sm font-bold mb-6 uppercase tracking-wider">
+                    {targetPostId ? 'Reading Article' : 'Latest Insight'}
+                  </span>
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-8 leading-tight tracking-tight max-w-7xl mx-auto px-4">
+                    {selectedPost.title}
+                  </h1>
+                  <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-gray-500 text-base sm:text-lg border-y border-gray-100 py-6 mb-12">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC]">
+                        <User size={20} />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs uppercase tracking-widest text-gray-400 font-bold">Author</p>
+                        <p className="font-bold text-gray-900 leading-none">{selectedPost.author}</p>
+                      </div>
                     </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC]">
+                        <Calendar size={20} />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs uppercase tracking-widest text-gray-400 font-bold">Published</p>
+                        <p className="font-bold text-gray-900 leading-none">{new Date(selectedPost.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className="relative flex items-center justify-center bg-[#fcfcfc] rounded-[2.5rem] p-4 sm:p-8 border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] mb-16 group transition-all duration-500 hover:shadow-[0_48px_80px_-20px_rgba(0,0,0,0.16)]"
+                >
+                  {selectedPost.imageUrl ? (
+                    <div className="relative w-full rounded-2xl overflow-hidden shadow-sm">
+                      <ImageWithFallback
+                        src={selectedPost.imageUrl}
+                        alt={selectedPost.title}
+                        className="w-full h-auto max-h-[700px] object-contain transition-transform duration-1000 group-hover:scale-[1.02]"
+                      />
+                      <div className="absolute inset-0 ring-1 ring-black/5 rounded-2xl pointer-events-none" />
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#1887FC] to-[#3b82f6] flex items-center justify-center">
+                      <BookOpen size={100} className="text-white/20" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="prose prose-lg sm:prose-xl max-w-none">
+                  <RichTextContent 
+                    text={selectedPost.content} 
+                    className="text-gray-800 leading-relaxed space-y-8 text-lg sm:text-xl"
+                    onImageClick={openGallery}
+                  />
+                </div>
+              </div>
+            </motion.article>
+          ) : targetPostId && (
+            <div className="text-center py-20">
+              <p className="text-gray-500">Post not found or loading...</p>
+            </div>
+          )}
+
+          {/* Separation Line */}
+          <div className="h-px bg-gray-100 w-full mb-20" />
+
+          {/* More Stories Grid */}
+          <div className="mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-12">More Stories</h2>
+            
+            {pagination.loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-[16/10] bg-gray-100 rounded-2xl mb-6" />
+                    <div className="h-8 bg-gray-100 rounded w-3/4 mb-4" />
+                    <div className="h-5 bg-gray-100 rounded w-full mb-3" />
+                    <div className="h-5 bg-gray-100 rounded w-2/3" />
                   </div>
                 ))}
               </div>
-            ) : pagination.data.length === 0 ? (
-              <div className="text-center py-24">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#1887FC]/10 to-blue-100 mb-6">
-                  <BookOpen className="w-10 h-10 text-[#1887FC]" strokeWidth={2} />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Blog Posts Yet</h3>
-                <p className="text-gray-600 text-base max-w-md mx-auto">
-                  Check back soon for insights, stories, and updates from our team on agricultural research and community development.
-                </p>
+            ) : regularPosts.length === 0 && !selectedPost ? (
+              <div className="text-center py-24 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                <BookOpen size={64} className="mx-auto text-gray-300 mb-6" />
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">No stories yet</h3>
+                <p className="text-gray-500 text-lg">Check back later for new insights.</p>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12">
-                  {pagination.data.map((post, index) => (
-                    <motion.div
-                      key={post.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      viewport={{ once: true }}
-                    >
-                      <div className="h-full flex flex-col overflow-hidden cursor-pointer group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300">
-                        {/* Cover Image or Fallback */}
-                        <div 
-                          className="relative h-56 overflow-hidden bg-gradient-to-br from-[#1887FC] via-[#3b82f6] to-[#60a5fa] cursor-pointer"
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+                {regularPosts.map((post, index) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="group cursor-pointer"
+                    onClick={() => {
+                      // Navigate to the post directly instead of opening a modal
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setTargetPostId(post.id);
+                      // Update URL without full page reload if possible, or just use the state
+                      const newUrl = `${window.location.pathname}?post=${post.id}`;
+                      window.history.pushState({}, '', newUrl);
+                    }}
+                  >
+                    <div className="flex items-center justify-center bg-[#f8fafc] rounded-2xl overflow-hidden mb-6 shadow-lg relative cursor-pointer">
+                      {post.imageUrl ? (
+                        <ImageWithFallback
+                          src={post.imageUrl}
+                          alt={post.title}
+                          className="w-full h-auto max-h-[400px] object-contain transition-transform duration-500 group-hover:scale-105"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (post.imageUrl) {
-                              setSelectedCoverImage(post.imageUrl);
-                              setSelectedCoverTitle(post.title || 'Blog Image');
-                              setCoverImageModalOpen(true);
-                            }
+                            openGallery(post.imageUrl!);
                           }}
-                        >
-                          {post.imageUrl ? (
-                            <>
-                              <ImageWithFallback
-                                src={post.imageUrl}
-                                alt={post.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                              {/* Click hint overlay */}
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                <span className="text-white opacity-0 group-hover:opacity-100 font-semibold px-4 py-2 bg-black/50 rounded">
-                                  View Full Size
-                                </span>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <BookOpen className="w-24 h-24 text-white/90" strokeWidth={1.5} />
-                            </div>
-                          )}
-                          {/* Gradient Overlay on Hover */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-blue-50 flex items-center justify-center text-[#1887FC]">
+                          <BookOpen size={48} />
                         </div>
-
-                        {/* White Bottom Section with Content */}
-                        <div className="p-6 flex-grow flex flex-col bg-white">
-                          {/* Title */}
-                          <h3 className="text-xl font-bold text-[#1887FC] mb-3 line-clamp-2 leading-tight">
-                            {post.title || "Untitled Story"}
-                          </h3>
-
-                          {/* Content Preview */}
-                          <div className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-6 flex-grow">
-                            <RichTextContent text={post.content} className="text-sm leading-relaxed line-clamp-3" />
-                          </div>
-
-                          {/* Read More Button */}
-                          <button
-                            onClick={() => {
-                              setSelectedBlogPost(post);
-                              setIsModalOpen(true);
-                            }}
-                            className="w-full bg-[#1887FC] hover:bg-[#0b5ab8] text-white font-semibold py-3.5 px-6 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 group/btn"
-                          >
-                            <span>Read More</span>
-                            <ExternalLink className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" strokeWidth={2} />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Pagination Controls */}
-                {pagination.totalPages > 1 && (
-                  <PaginationControls
-                    currentPage={pagination.currentPage}
-                    totalPages={pagination.totalPages}
-                    loading={pagination.loading}
-                    onPageChange={handlePageChange}
-                    onPrevious={pagination.prevPage}
-                    onNext={pagination.nextPage}
-                    itemCount={pagination.data.length}
-                    totalItems={pagination.totalItems}
-                  />
-                )}
-              </>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    </div>
+                    <div className="flex items-center gap-3 text-sm font-bold text-[#1887FC] uppercase tracking-wider mb-4">
+                      <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 group-hover:text-[#1887FC] transition-colors line-clamp-2 leading-tight mb-4">
+                      {post.title}
+                    </h3>
+                    <div className="text-gray-600 text-lg line-clamp-2 leading-relaxed">
+                      <RichTextContent text={post.content} className="text-lg line-clamp-2" />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             )}
           </div>
-        </section>
-      </SectionTheme>
 
-      {/* Blog Detail Modal */}
-      <BlogDetailModal
-        blogPost={selectedBlogPost}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedBlogPost(null);
-        }}
-      />
-
-      {/* Cover Image Modal */}
-      <Dialog open={coverImageModalOpen} onOpenChange={setCoverImageModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-black/95 border-none overflow-hidden">
-          <DialogTitle className="sr-only">{selectedCoverTitle}</DialogTitle>
-          <DialogDescription className="sr-only">Cover image for {selectedCoverTitle}</DialogDescription>
-          
-  
-
-          {/* Image Container */}
-          <div className="flex items-center justify-center min-h-[50vh] max-h-[85vh] p-4">
-            {selectedCoverImage && (
-              <img
-                src={selectedCoverImage}
-                alt={selectedCoverTitle}
-                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (regularPosts.length > 0 || selectedPost) && (
+            <div className="mt-16">
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                loading={pagination.loading}
+                onPageChange={handlePageChange}
+                onPrevious={pagination.prevPage}
+                onNext={pagination.nextPage}
+                itemCount={pagination.data.length}
+                totalItems={pagination.totalItems}
               />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </div>
+          )}
+        </div>
+      </main>
+
+      <GalleryModal
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        images={galleryImages}
+        title="Blog Image"
+      />
     </div>
   );
 };

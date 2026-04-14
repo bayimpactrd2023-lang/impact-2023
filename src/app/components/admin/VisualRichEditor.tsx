@@ -13,6 +13,7 @@ interface VisualRichEditorProps {
   required?: boolean;
   showToolbar?: boolean;
   onCommand?: (command: string, value?: string) => void;
+  onImageUpload?: (file: File) => void;
 }
 
 export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
@@ -24,7 +25,8 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
   rows = 4,
   required = false,
   showToolbar = true,
-  onCommand
+  onCommand,
+  onImageUpload
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -69,6 +71,58 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     handleInput();
   };
 
+  const alignImage = (side: 'left' | 'right') => {
+    if (!editorRef.current) return;
+    
+    // Find the image in the current selection
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    let container = selection.getRangeAt(0).commonAncestorContainer;
+    if (container.nodeType === 3) {
+      container = container.parentNode!;
+    }
+    
+    // Check if the container is an image or contains an image
+    const images = (container as HTMLElement).querySelectorAll?.('img');
+    let targetImg = (container.nodeName === 'IMG' ? container : (images?.length === 1 ? images[0] : null)) as HTMLImageElement;
+    
+    // Proactive search for any image in the editor if nothing is directly selected
+    if (!targetImg && editorRef.current) {
+      const allImgs = editorRef.current.querySelectorAll('img');
+      if (allImgs.length > 0) {
+        // Find the image closest to the selection or just the first one if only one exists
+        targetImg = allImgs.length === 1 ? allImgs[0] : (selection.anchorNode?.parentElement?.querySelector('img') || allImgs[0]);
+      }
+    }
+    
+    if (targetImg) {
+      if (side === 'left') {
+        targetImg.className = "float-left mr-4 mb-4 max-w-[50%] rounded-lg shadow-md";
+        targetImg.style.float = 'left';
+        targetImg.style.marginRight = '16px';
+        targetImg.style.marginLeft = '0';
+      } else {
+        targetImg.className = "float-right ml-4 mb-4 max-w-[50%] rounded-lg shadow-md";
+        targetImg.style.float = 'right';
+        targetImg.style.marginLeft = '16px';
+        targetImg.style.marginRight = '0';
+      }
+      handleInput();
+    }
+  };
+
+  const insertImage = (url: string) => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      
+      // Create an image element that floats left by default
+      const imgHtml = `<img src="${url}" class="float-left mr-4 mb-4 max-w-[50%] rounded-lg shadow-md" style="float: left; margin-right: 16px; margin-bottom: 16px; max-width: 50%; border-radius: 8px;" />`;
+      document.execCommand('insertHTML', false, imgHtml);
+      handleInput();
+    }
+  };
+
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
@@ -94,7 +148,13 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
   useEffect(() => {
     const handleToolbarCommand = (e: any) => {
       const { command, value: cmdValue } = e.detail;
-      execCommand(command, cmdValue);
+      if (command === 'insertImage') {
+        insertImage(cmdValue);
+      } else if (command === 'alignImage') {
+        alignImage(cmdValue);
+      } else {
+        execCommand(command, cmdValue);
+      }
     };
 
     window.addEventListener(`editor-command-${id}`, handleToolbarCommand);
@@ -111,7 +171,10 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
         </Label>
         
         {showToolbar && (
-          <SharedToolbar onCommand={execCommand} />
+          <SharedToolbar 
+            onCommand={execCommand} 
+            onImageUpload={onImageUpload}
+          />
         )}
       </div>
 
@@ -138,6 +201,16 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
           }}
           onBlur={handleBlur}
           onPaste={handlePaste}
+          onMouseDown={(e) => {
+            // If we click an image, explicitly select it
+            if ((e.target as HTMLElement).tagName === 'IMG') {
+              const range = document.createRange();
+              range.selectNode(e.target as Node);
+              const sel = window.getSelection();
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+            }
+          }}
           className="w-full h-full min-h-[inherit] p-3 outline-none empty:before:content-[attr(data-placeholder)] prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4"
           style={{ minHeight: `${rows * 24}px` }}
           suppressContentEditableWarning

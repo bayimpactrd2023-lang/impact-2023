@@ -221,16 +221,16 @@ export const HighlightsPage: React.FC = () => {
                             >
                               {/* Image Section - Alternating Position */}
                               <div
-                                className={`relative h-64 md:h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden group/img ${isImageOnRight ? "md:col-start-2" : ""}`}
+                                className={`relative flex items-center justify-center bg-[#f8fafc] rounded-2xl overflow-hidden group/img ${isImageOnRight ? "md:col-start-2" : ""}`}
                               >
                                 {highlight.imageUrl ? (
                                   <>
                                     <ImageWithFallback
                                       src={highlight.imageUrl}
                                       alt={highlight.title}
-                                      className="w-full h-full object-cover transition-all duration-700 group-hover/img:scale-110"
+                                      className="w-full h-auto max-h-[500px] object-contain transition-all duration-700 group-hover/img:scale-105"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover/img:opacity-100 transition-all duration-500" />
+                                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-all duration-500" />
                                   </>
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1887FC] to-[#0b5ab8]">

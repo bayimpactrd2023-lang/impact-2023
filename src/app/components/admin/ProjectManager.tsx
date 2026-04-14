@@ -32,6 +32,7 @@ import {
   validateMaxChars,
   validateMaxWords,
   validateRequiredTrimmed,
+  hasChanges
 } from '@/app/components/admin/utils/adminHelpers';
 
 interface ProjectManagerProps {
@@ -202,6 +203,13 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
       };
 
       if (editingProject.id && !editingProject.id.startsWith('temp-') && !editingProject.id.match(/^\d{13}$/)) {
+        const originalProject = pagination.data.find(p => p.id === editingProject.id);
+        if (originalProject && !hasChanges(originalProject, editingProject)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingProject(null);
+          return;
+        }
         await updateProjectInDb(editingProject.id, projectData);
         toast.success('Project updated!');
       } else {

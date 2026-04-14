@@ -115,6 +115,8 @@ export const AdminPanel: React.FC = () => {
   const [heroTitle, setHeroTitle] = useState(content.heroTitle);
   const [heroSubtitle, setHeroSubtitle] = useState(content.heroSubtitle);
   const [aboutText, setAboutText] = useState(content.aboutText);
+  const [aboutVision, setAboutVision] = useState(content.aboutVision);
+  const [aboutMission, setAboutMission] = useState(content.aboutMission);
   const [heroBackgroundUrl, setHeroBackgroundUrl] = useState(content.heroBackgroundUrl);
 
   // ── Quick Create Blog modal ───────────────────────────────────────────────
@@ -138,6 +140,21 @@ export const AdminPanel: React.FC = () => {
         detail: { command: cmd, value: val }
       });
       window.dispatchEvent(event);
+    }
+  };
+
+  const handleQuickBlogImageUpload = async (file: File) => {
+    if (!quickBlogActiveField) {
+      toast.error('Please click on the content area first to insert an image');
+      return;
+    }
+    try {
+      const url = await uploadImage(file, 'blog');
+      handleQuickBlogCommand('insertImage', url);
+      toast.success('Image uploaded and inserted!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
     }
   };
 
@@ -281,6 +298,8 @@ export const AdminPanel: React.FC = () => {
     setHeroTitle(content.heroTitle);
     setHeroSubtitle(content.heroSubtitle);
     setAboutText(content.aboutText);
+    setAboutVision(content.aboutVision);
+    setAboutMission(content.aboutMission);
     setHeroBackgroundUrl(content.heroBackgroundUrl);
   }, [
     content.newsItems,
@@ -944,7 +963,11 @@ export const AdminPanel: React.FC = () => {
   const handleSaveAbout = async () => {
     const validation = mergeValidationResults(
       validateRequiredTrimmed(aboutText, 'About text'),
-      validateMaxChars(aboutText.trim(), AdminValidationRules.contentMaxChars, 'About text')
+      validateMaxChars(aboutText.trim(), AdminValidationRules.contentMaxChars, 'About text'),
+      validateRequiredTrimmed(aboutVision, 'Vision'),
+      validateMaxChars(aboutVision.trim(), AdminValidationRules.contentMaxChars, 'Vision'),
+      validateRequiredTrimmed(aboutMission, 'Mission'),
+      validateMaxChars(aboutMission.trim(), AdminValidationRules.contentMaxChars, 'Mission')
     );
     if (!validation.isValid) {
       toast.error(validation.error || 'Validation failed');
@@ -953,11 +976,13 @@ export const AdminPanel: React.FC = () => {
 
     try {
       await updateAboutSection({
-        vision: '',  // You can expand the About section to include vision/mission fields
-        mission: '',
+        vision: aboutVision,
+        mission: aboutMission,
         description: aboutText
       });
       updateAbout(aboutText);
+      // We also need to update vision/mission in context if possible, 
+      // but refreshContent will handle it.
       await refreshContent();
       toast.success('About section saved to database successfully!');
     } catch (error) {
@@ -1188,21 +1213,43 @@ export const AdminPanel: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>About Section</CardTitle>
-                <CardDescription>Edit the about section content</CardDescription>
+                <CardDescription>Edit the about section content including Mission and Vision</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
-                  <Label htmlFor="about-text" className="text-sm font-semibold text-gray-700">About Text</Label>
-                  <Textarea id="about-text" value={aboutText} onChange={(e) => setAboutText(e.target.value)} rows={6} className="mt-1.5" />
+                  <Label htmlFor="about-mission" className="text-sm font-semibold text-gray-700">Mission</Label>
+                  <Textarea 
+                    id="about-mission" 
+                    value={aboutMission} 
+                    onChange={(e) => setAboutMission(e.target.value)} 
+                    rows={4} 
+                    placeholder="Enter the organization's mission..."
+                    className="mt-1.5 focus:ring-2 focus:ring-[#1887FC]" 
+                  />
+                  <p className="text-xs text-gray-500 italic">Tip: Use &lt;span class='text-[#1887FC] font-bold'&gt;keywords&lt;/span&gt; to highlight text.</p>
                 </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="about-vision" className="text-sm font-semibold text-gray-700">Vision</Label>
+                  <Textarea 
+                    id="about-vision" 
+                    value={aboutVision} 
+                    onChange={(e) => setAboutVision(e.target.value)} 
+                    rows={4} 
+                    placeholder="Enter the organization's vision..."
+                    className="mt-1.5 focus:ring-2 focus:ring-[#1887FC]" 
+                  />
+                  <p className="text-xs text-gray-500 italic">Tip: Use &lt;span class='text-[#1887FC] font-bold'&gt;keywords&lt;/span&gt; to highlight text.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="about-text" className="text-sm font-semibold text-gray-700">About Text / Story</Label>
+                  <Textarea id="about-text" value={aboutText} onChange={(e) => setAboutText(e.target.value)} rows={6} className="mt-1.5 focus:ring-2 focus:ring-[#1887FC]" />
+                </div>
+                
                 <Button 
                   className="w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
-                  onClick={() => {
-                    handleSaveAbout();
-                    toast.success('About section saved!', {
-                      description: 'Your changes have been saved successfully.',
-                    });
-                  }}
+                  onClick={handleSaveAbout}
                 >
                   <Save className="w-4 h-4 mr-2" /> Save About Section
                 </Button>
@@ -1695,8 +1742,11 @@ export const AdminPanel: React.FC = () => {
               </div>
             </div>
             {/* Shared Toolbar */}
-            <div className="pt-3">
-              <SharedToolbar onCommand={handleQuickBlogCommand} />
+            <div className="pt-2">
+              <SharedToolbar 
+                onCommand={handleQuickBlogCommand} 
+                onImageUpload={handleQuickBlogImageUpload}
+              />
             </div>
           </DialogHeader>
 
@@ -1724,19 +1774,20 @@ export const AdminPanel: React.FC = () => {
 
               {/* Content */}
               <VisualRichEditor
-                id="qb-content"
+                id="quick-blog-content"
                 label="Content"
                 value={draft.content}
-                onChange={(value: string) => setDraft(p => ({ ...p, content: value }))}
-                rows={10}
-                placeholder="Write your blog post content here..."
+                onChange={(value: string) => setDraft({ ...draft, content: value })}
+                rows={12}
                 required
+                placeholder="What's on your mind? Start writing here..."
                 showToolbar={false}
                 onCommand={(cmd) => {
                   if (cmd === 'focus') {
-                    setQuickBlogActiveField('qb-content');
+                    setQuickBlogActiveField('quick-blog-content');
                   }
                 }}
+                onImageUpload={handleQuickBlogImageUpload}
               />
 
               {/* Author + Role */}
@@ -1765,17 +1816,6 @@ export const AdminPanel: React.FC = () => {
                   value={draft.imageUrl || ''}
                   onChange={(url) => setDraft(p => ({ ...p, imageUrl: url }))}
                   label="Cover Image"
-                />
-              </div>
-
-              {/* Gallery images */}
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Gallery Images (Drag & Drop)</Label>
-                <p className="text-xs text-gray-500 mb-2">Upload additional images for the gallery</p>
-                <MultiImageDropzone
-                  images={(draft as BlogPostForm).images || []}
-                  onChange={(images) => setDraft(p => ({ ...p, images }))}
-                  label="Blog Post Images"
                 />
               </div>
             </div>

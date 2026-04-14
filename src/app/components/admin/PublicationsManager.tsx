@@ -15,7 +15,10 @@ import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { useConfirm } from '@/shared/hooks';
 import { useServerPagination } from '@/hooks/useServerPagination';
-import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
+import { 
+  EntityValidator,
+  hasChanges
+} from '@/app/components/admin/utils/adminHelpers';
 import {
   createPublication,
   updatePublication as updatePublicationInDb,
@@ -157,6 +160,16 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
       };
       
       if (editingPublication.id && !editingPublication.id.startsWith('temp-') && !editingPublication.id.match(/^\d{13}$/)) {
+        // Find original to check for changes
+        const original = pagination.data.find(p => p.id === editingPublication.id);
+        if (original && !hasChanges(original, editingPublication)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingPublication(null);
+          return;
+        }
+
+        // Update existing
         await updatePublicationInDb(editingPublication.id, pubData);
         toast.success('Publication updated!');
       } else {

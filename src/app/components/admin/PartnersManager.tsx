@@ -10,7 +10,7 @@ import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { useServerPagination } from '@/hooks/useServerPagination';
-import { EntityValidator } from '@/app/components/admin/utils/adminHelpers';
+import { EntityValidator, hasChanges } from '@/app/components/admin/utils/adminHelpers';
 import {
   createPartner,
   updatePartner as updatePartnerInDb,
@@ -109,6 +109,13 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
       };
 
       if (editingPartner.id && !editingPartner.id.startsWith('temp-') && !editingPartner.id.match(/^\d{13}$/)) {
+        const originalPartner = pagination.data.find(p => p.id === editingPartner.id);
+        if (originalPartner && !hasChanges(originalPartner, editingPartner)) {
+          toast.info('No changes detected.');
+          setIsModalOpen(false);
+          setEditingPartner(null);
+          return;
+        }
         await updatePartnerInDb(editingPartner.id, partnerData);
         toast.success('Partner updated!');
       } else {
@@ -182,11 +189,11 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
                 </div>
 
                 {partner.logoUrl ? (
-                  <div className="w-full h-48 overflow-hidden rounded-t-lg bg-white p-4 flex items-center justify-center">
+                  <div className="w-full h-48 overflow-hidden rounded-t-lg bg-white p-6 flex items-center justify-center">
                     <img
                       src={partner.logoUrl}
                       alt={partner.name}
-                      className="max-w-full max-h-full object-contain"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 ) : (

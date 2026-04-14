@@ -157,7 +157,7 @@ export const NewsPage: React.FC = () => {
                   <Card className="h-full flex flex-col hover:shadow-2xl transition-all cursor-pointer group"
                     onClick={() => handleReadMore(item)}
                   >
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative aspect-video overflow-hidden">
                       <ImageWithFallback
                         src={item.imageUrl}
                         alt={item.title}

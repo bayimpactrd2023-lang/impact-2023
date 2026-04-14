@@ -47,13 +47,13 @@ export const Highlights: React.FC = () => {
                 viewport={{ once: true }}
                 className="group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl transition-shadow"
               >
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative flex items-center justify-center bg-[#f8fafc] overflow-hidden">
                   {highlight.imageUrl ? (
                     <>
                       <img
                         src={getImageUrl(highlight.imageUrl)}
                         alt={highlight.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-auto max-h-[400px] object-contain group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => {
                           // Fallback to placeholder if image fails to load
                           const target = e.target as HTMLImageElement;
@@ -61,7 +61,7 @@ export const Highlights: React.FC = () => {
                           target.parentElement!.classList.add('bg-gradient-to-br', 'from-[#1887FC]', 'to-[#0b5ab8]'); 
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                      <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all duration-500" />
                     </>
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[#1887FC] to-[#0b5ab8] flex items-center justify-center">

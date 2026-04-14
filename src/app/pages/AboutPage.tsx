@@ -10,7 +10,6 @@ import { SectionTheme } from "@/app/components/SectionTheme";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { PageSkeletonLoader } from "@/app/components/PageSkeletonLoader";
 import { TeamMemberDetailModal } from "@/app/components/TeamMemberDetailModal";
-import { getImageUrl } from '@/utils/r2Upload';
 
 export const AboutPage: React.FC = () => {
   const { content, loadingStates, fetchAboutSection, fetchTeamMembers } = useContent();
@@ -182,7 +181,7 @@ export const AboutPage: React.FC = () => {
                       </h2>
                     </div>
                     <div className="text-lg text-gray-700 leading-relaxed text-justify">
-                      <RichTextContent text={content.aboutMission || "To deliver innovative research-driven solutions that address agricultural challenges, environmental sustainability, and community development needs across the Philippines through science-based methodologies and collaborative partnerships."} />
+                      <RichTextContent text={content.aboutMission || "To conduct <span class='text-[#1887FC] font-bold'>innovative, research-driven work</span> that advances scientific knowledge and <span class='text-[#1887FC] font-bold'>amplifies societal impact</span> through evidence-based solutions, <span class='text-[#1887FC] font-bold'>collaborative partnerships</span>, and the strengths of a multidisciplinary team"} />
                     </div>
                   </CardContent>
                 </Card>
@@ -210,7 +209,7 @@ export const AboutPage: React.FC = () => {
                       </h2>
                     </div>
                     <div className="text-lg text-gray-700 leading-relaxed text-justify">
-                      <RichTextContent text={content.aboutVision || "To be a leading research organization in the Philippines, recognized for transforming scientific research into practical solutions that empower communities and promote sustainable development across the nation."} />
+                      <RichTextContent text={content.aboutVision || "To be one of the <span class='text-[#1887FC] font-bold'>research organizations in the Philippines</span> that strives to make science <span class='text-[#1887FC] font-bold'>more relevant, inclusive, and responsive</span> to community needs and <span class='text-[#1887FC] font-bold'>sustainable development</span>"} />
                     </div>
                   </CardContent>
                 </Card>
@@ -275,7 +274,7 @@ export const AboutPage: React.FC = () => {
                   <Users className="w-7 h-7 text-white" />
                 </motion.div>
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
-                  Our Team
+                  Board Members
                 </h2>
               </div>
               <div className="w-20 h-1 bg-gradient-to-r from-[#1887FC] to-[#4da3fd] mx-auto rounded-full" />
@@ -298,17 +297,15 @@ export const AboutPage: React.FC = () => {
                 >
                   <Card className="h-full hover:shadow-2xl transition-all duration-300 bg-white border-0 shadow-md">
                     <CardContent className="p-6">
-                      {member.imageUrl && (
-                        <div className="mb-6">
-                          <motion.img
-                            src={getImageUrl(member.imageUrl)}
-                            alt={member.name}
-                            className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-[#1887FC] shadow-lg"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.3 }}
-                          />
-                        </div>
-                      )}
+                  {member.imageUrl && (
+                    <div className="mb-6 relative w-40 h-40 mx-auto">
+                      <ImageWithFallback
+                        src={member.imageUrl}
+                        alt={member.name}
+                        className="w-full h-full rounded-full object-cover border-4 border-[#1887FC] shadow-lg"
+                      />
+                    </div>
+                  )}
                       <div className="text-center">
                         <h3 className="text-xl font-bold text-gray-900 mb-2">
                           {member.name}

@@ -9,11 +9,11 @@ export const PartnersCarousel: React.FC = React.memo(() => {
 
   const settings = useMemo(() => ({
     dots: false,
-    infinite: true,
+    infinite: content.partners.length > 4, // Only loop if we have enough items
     speed: 3000,
-    slidesToShow: 4,
+    slidesToShow: Math.min(content.partners.length, 4),
     slidesToScroll: 1,
-    autoplay: true,
+    autoplay: content.partners.length > 1,
     autoplaySpeed: 0,
     cssEase: 'linear',
     pauseOnHover: true,
@@ -25,37 +25,37 @@ export const PartnersCarousel: React.FC = React.memo(() => {
       {
         breakpoint: 1280,
         settings: {
-          slidesToShow: 4,
+          slidesToShow: Math.min(content.partners.length, 4),
           speed: 3500,
         }
       },
       {
         breakpoint: 1024,
         settings: {
-          slidesToShow: 3,
+          slidesToShow: Math.min(content.partners.length, 3),
           speed: 3000,
         }
       },
       {
         breakpoint: 768,
         settings: {
-          slidesToShow: 2,
+          slidesToShow: Math.min(content.partners.length, 2),
           speed: 2500,
           autoplaySpeed: 2000,
+          centerMode: false,
         }
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: Math.min(content.partners.length, 2),
           speed: 2000,
           autoplaySpeed: 2500,
-          centerMode: true,
-          centerPadding: '40px',
+          centerMode: false,
         }
       }
     ]
-  }), []);
+  }), [content.partners.length]);
 
   return (
     <section className="py-12 sm:py-16 md:pt-16 md:pb-20 relative overflow-hidden">
@@ -153,26 +153,31 @@ const PartnerCard: React.FC<PartnerCardProps> = React.memo(({ partner, index }) 
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
       viewport={{ once: true, margin: "-30px" }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center h-32 sm:h-36 md:h-44 lg:h-48 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer select-none"
+      whileHover={{ y: -4, scale: 1.01 }}
+      className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] h-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer select-none mx-auto w-full max-w-[280px]"
     >
       {/* Subtle top accent line */}
-      <div className="absolute top-0 left-4 right-4 sm:left-6 sm:right-6 h-0.5 bg-gradient-to-r from-transparent via-[#1887FC]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
+      <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-[#1887FC]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
 
-      <div className="h-12 sm:h-14 md:h-16 lg:h-20 w-full flex items-center justify-center mb-2 sm:mb-3 relative">
+      <div className="flex-1 w-full flex items-center justify-center mb-4 relative shrink-0">
         {/* Subtle glow on hover */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/5 to-[#3b82f6]/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/5 to-[#3b82f6]/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        <ImageWithFallback
-          src={partner.logoUrl}
-          alt={partner.name}
-          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
-          style={{ width: 'auto', height: 'auto', maxHeight: '100%' }}
-        />
+        <div className="w-full h-16 sm:h-20 md:h-24 p-2 flex items-center justify-center">
+          <ImageWithFallback
+            src={partner.logoUrl}
+            alt={partner.name}
+            className="max-w-full max-h-full object-contain transition-all duration-500 group-hover:scale-105 relative z-10"
+            title={partner.name}
+          />
+        </div>
       </div>
-      <p className="text-xs sm:text-sm text-gray-700 text-center font-medium group-hover:text-[#1887FC] transition-colors duration-200 line-clamp-2 px-1">
-        {partner.name}
-      </p>
+      
+      <div className="w-full pt-2 border-t border-gray-50 group-hover:border-blue-50 transition-colors duration-300">
+        <p className="text-[11px] sm:text-xs md:text-sm text-gray-600 text-center font-semibold group-hover:text-[#1887FC] transition-colors duration-200 line-clamp-2 leading-tight px-1">
+          {partner.name}
+        </p>
+      </div>
     </motion.div>
   );
 });

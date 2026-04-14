@@ -322,7 +322,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                           onClick={(e) =>
                             handleImageClick(project, e, coverImage, false)
                           }
-                          className="relative group overflow-hidden rounded-xl sm:rounded-2xl w-full h-56 md:h-40"
+                          className="relative group overflow-hidden rounded-xl sm:rounded-2xl w-full aspect-video md:aspect-square"
                         >
                           <ImageWithFallback
                             src={coverImage}

@@ -15,16 +15,43 @@ import { RichTextContent } from '@/app/components/RichTextContent';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Button } from '@/app/components/ui/button';
 import { getImageUrl } from '@/utils/r2Upload';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 
 export const NewsCarousel: React.FC = React.memo(() => {
-  const { content } = useContent();
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: false,
+    dragFree: false, // Set to false to prevent slides from stopping in-between
+    duration: 35,   // Faster transitions
+  });
+  const { content, fetchNews, loadingStates } = useContent();
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>('');
   const [selectedImageTitle, setSelectedImageTitle] = useState<string>('');
+
+  // Handle lazy loading when approaching the end of the carousel
+  useEffect(() => {
+    if (!emblaApi || !content.newsHasMore || loadingStates.news) return;
+
+    const onSelect = () => {
+      const index = emblaApi.selectedScrollSnap();
+      setCurrentIndex(index);
+      
+      // Much earlier prefetching: trigger when only 6 items left
+      if (index >= content.newsItems.length - 6) {
+        fetchNews(content.newsNextCursor);
+      }
+    };
+
+    emblaApi.on('select', onSelect);
+    onSelect();
+
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
+  }, [emblaApi, content.newsHasMore, content.newsNextCursor, content.newsItems.length, loadingStates.news, fetchNews]);
 
   const handleReadMore = useCallback((item: NewsItem) => {
     setSelectedNews(item);
@@ -64,6 +91,11 @@ export const NewsCarousel: React.FC = React.memo(() => {
       emblaApi.off('select', onSelect);
     };
   }, [emblaApi]);
+
+  // Handle re-initialization when items change
+  useEffect(() => {
+    if (emblaApi) emblaApi.reInit();
+  }, [emblaApi, content.newsItems]);
 
   // Memoize upcoming items calculation
   const upcomingItems = useMemo(() => {
@@ -136,60 +168,72 @@ export const NewsCarousel: React.FC = React.memo(() => {
                 {/* Carousel Container - Only for top content */}
                 <div className="overflow-hidden mb-0 sm:mb-8" ref={emblaRef}>
                   <div className="flex">
-                    {content.newsItems.map((item) => {
+                    {content.newsItems.map((item, index) => {
                       const imageUrl = item.imageUrl;
                       return (
                       <div
-                        key={item.id}
+                        key={`${item.id}-${index}`}
                         className="flex-[0_0_100%] min-w-0"
                       >
-                        <div className="flex flex-col md:grid md:grid-cols-2 gap-0 sm:gap-8">
+                        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 sm:gap-12 items-center lg:items-center">
                           {/* Main Image Section - Clickable when has image */}
-                          {imageUrl ? (
-                            <button
-                              onClick={() => {
-                                const fullUrl = getImageUrl(imageUrl);
-                                if (fullUrl) handleImageClick(fullUrl, item.title);
-                              }}
-                              className="relative h-56 sm:h-72 md:h-96 bg-gradient-to-br from-gray-100 to-gray-200 rounded-none sm:rounded-2xl overflow-hidden group w-full text-left cursor-pointer"
-                            >
-                              <img
-                                src={getImageUrl(imageUrl) || ''}
-                                alt={item.title}
-                                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
-                              {/* Click hint */}
-                              <div className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/50 text-white text-xs font-medium rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                Click to view
+                          <div className="w-full lg:w-full">
+                            {imageUrl ? (
+                              <button
+                                onClick={() => {
+                                  const fullUrl = getImageUrl(imageUrl);
+                                  if (fullUrl) handleImageClick(fullUrl, item.title);
+                                }}
+                                className="relative aspect-[4/3] w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl sm:rounded-3xl overflow-hidden group text-left cursor-pointer shadow-lg"
+                              >
+                                <ImageWithFallback
+                                  src={imageUrl}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                                {/* Click hint */}
+                                <div className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/50 text-white text-xs font-medium rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                  Click to view
+                                </div>
+                              </button>
+                            ) : (
+                              <div className="relative aspect-[4/3] w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg">
+                                <div className="w-full h-full flex items-center justify-center gradient-vibrant">
+                                  <span className="text-white text-4xl sm:text-6xl font-bold drop-shadow-2xl">IMPACT</span>
+                                </div>
                               </div>
-                            </button>
-                          ) : (
-                            <div className="relative h-56 sm:h-72 md:h-96 bg-gradient-to-br from-gray-100 to-gray-200 rounded-none sm:rounded-2xl overflow-hidden">
-                              <div className="w-full h-full flex items-center justify-center gradient-vibrant">
-                                <span className="text-white text-4xl sm:text-7xl font-bold drop-shadow-2xl">IMPACT</span>
-                              </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
 
                           {/* Text Section */}
-                          <div className="flex flex-col justify-center space-y-3 sm:space-y-4 p-6 sm:p-0">
-                            <h3 className="text-xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight line-clamp-2">
+                          <div className="flex flex-col justify-center space-y-4 sm:space-y-6 text-center lg:text-left w-full max-w-xl mx-auto lg:max-w-none px-4 sm:px-0">
+                            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight">
                               {item.title}
                             </h3>
-                            <div className="text-gray-600 text-sm sm:text-lg line-clamp-2 sm:line-clamp-5 leading-relaxed">
-                              <RichTextContent text={item.content} className="text-sm sm:text-lg line-clamp-2 sm:line-clamp-5" />
+                            <div className="text-gray-600 text-base sm:text-lg lg:text-xl line-clamp-3 sm:line-clamp-4 lg:line-clamp-6 leading-relaxed">
+                              <RichTextContent text={item.content} className="text-base sm:text-lg lg:text-xl" />
                             </div>
-                            <div className="mt-2 sm:mt-4">
+                            <div className="pt-2 flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center">
                               <motion.button
                                 onClick={() => handleReadMore(item)}
-                                className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold shadow-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105 group w-full sm:w-fit justify-center"
-                                whileHover={{ y: -2 }}
+                                className="inline-flex items-center gap-2 px-10 py-4 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 transform hover:scale-105 group w-full sm:w-fit justify-center"
+                                whileHover={{ y: -4 }}
                                 whileTap={{ scale: 0.98 }}
                               >
-                                <span className="text-base">Learn More</span>
+                                <span className="text-lg">Learn More</span>
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                               </motion.button>
+                              
+                              {loadingStates.news && (
+                                <div className="flex items-center gap-2 text-[#1887FC] animate-pulse">
+                                  <div className="w-2 h-2 bg-[#1887FC] rounded-full animate-bounce" />
+                                  <div className="w-2 h-2 bg-[#1887FC] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                  <div className="w-2 h-2 bg-[#1887FC] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                  <span className="text-sm font-semibold">Loading...</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -215,10 +259,11 @@ export const NewsCarousel: React.FC = React.memo(() => {
                         >
                           <div className="w-full h-16 sm:h-28 rounded-lg sm:rounded-xl overflow-hidden border border-gray-100 sm:border-2 sm:border-gray-200 hover:border-[#1887FC] transition-all duration-300 mb-1 sm:mb-2 shadow-sm sm:shadow-md hover:shadow-xl transform hover:scale-105 relative">
                             {upcomingItem.imageUrl ? (
-                              <img
-                                src={getImageUrl(upcomingItem.imageUrl)}
+                              <ImageWithFallback
+                                src={upcomingItem.imageUrl}
                                 alt={upcomingItem.title}
-                                className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                loading="lazy"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center gradient-vibrant">
