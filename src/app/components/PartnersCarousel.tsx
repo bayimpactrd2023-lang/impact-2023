@@ -39,7 +39,7 @@ export const PartnersCarousel: React.FC = React.memo(() => {
       {
         breakpoint: 768,
         settings: {
-          slidesToShow: Math.min(content.partners.length, 2),
+          slidesToShow: Math.min(content.partners.length, 3),
           speed: 2500,
           autoplaySpeed: 2000,
           centerMode: false,
@@ -48,10 +48,11 @@ export const PartnersCarousel: React.FC = React.memo(() => {
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: Math.min(content.partners.length, 2),
-          speed: 2000,
-          autoplaySpeed: 2500,
-          centerMode: false,
+          slidesToShow: 1,
+          speed: 1500,
+          autoplaySpeed: 3000,
+          centerMode: true,
+          centerPadding: '20px',
         }
       }
     ]
@@ -153,28 +154,24 @@ const PartnerCard: React.FC<PartnerCardProps> = React.memo(({ partner, index }) 
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
       viewport={{ once: true, margin: "-30px" }}
-      whileHover={{ y: -4, scale: 1.01 }}
-      className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] h-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer select-none mx-auto w-full max-w-[280px]"
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="bg-white rounded-2xl p-6 sm:p-5 md:p-6 flex flex-col items-center justify-between min-h-[180px] sm:min-h-[220px] md:min-h-[240px] h-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer select-none mx-auto w-full max-w-[280px] sm:max-w-[180px] md:max-w-[200px]"
     >
-      {/* Subtle top accent line */}
-      <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-[#1887FC]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
+      <div className="flex-1 w-full flex items-center justify-center relative shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/5 to-[#3b82f6]/5 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-      <div className="flex-1 w-full flex items-center justify-center mb-4 relative shrink-0">
-        {/* Subtle glow on hover */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/5 to-[#3b82f6]/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-        <div className="w-full h-16 sm:h-20 md:h-24 p-2 flex items-center justify-center">
+        <div className="w-full aspect-video sm:aspect-[3/4] flex items-center justify-center p-2">
           <ImageWithFallback
             src={partner.logoUrl}
             alt={partner.name}
-            className="max-w-full max-h-full object-contain transition-all duration-500 group-hover:scale-105 relative z-10"
+            className="max-w-full max-h-[100px] sm:max-h-[90px] md:max-h-[110px] object-contain transition-all duration-500 group-hover:scale-110 relative z-10"
             title={partner.name}
           />
         </div>
       </div>
       
-      <div className="w-full pt-2 border-t border-gray-50 group-hover:border-blue-50 transition-colors duration-300">
-        <p className="text-[11px] sm:text-xs md:text-sm text-gray-600 text-center font-semibold group-hover:text-[#1887FC] transition-colors duration-200 line-clamp-2 leading-tight px-1">
+      <div className="w-full pt-3 mt-auto border-t border-gray-50 group-hover:border-blue-50 transition-colors duration-300">
+        <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 text-center font-bold group-hover:text-[#1887FC] transition-colors duration-200 line-clamp-3 leading-tight px-0.5">
           {partner.name}
         </p>
       </div>
