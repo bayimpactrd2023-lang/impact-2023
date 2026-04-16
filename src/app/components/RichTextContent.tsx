@@ -333,6 +333,12 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
           [&_img.float-right]:float-right [&_img.float-right]:ml-4 [&_img.float-right]:mb-4
           [&_.image-wrapper_img]:max-w-full
           [&_.delete-image-btn]:hidden [&_.resize-handle]:hidden
+          [&_p[style*="text-align: center"]]:text-center [&_p[style*="text-align:center"]]:text-center
+          [&_p[style*="text-align: right"]]:text-right [&_p[style*="text-align:right"]]:text-right
+          [&_p[style*="text-align: justify"]]:text-justify [&_p[style*="text-align:justify"]]:text-justify
+          [&_div[style*="text-align: center"]]:text-center [&_div[style*="text-align:center"]]:text-center
+          [&_div[style*="text-align: right"]]:text-right [&_div[style*="text-align:right"]]:text-right
+          [&_div[style*="text-align: justify"]]:text-justify [&_div[style*="text-align:justify"]]:text-justify
           after:content-[''] after:table after:clear-both
         `}
         dangerouslySetInnerHTML={{ __html: cleanedHTML }}

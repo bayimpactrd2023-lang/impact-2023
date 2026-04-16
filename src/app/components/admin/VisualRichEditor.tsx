@@ -181,6 +181,14 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
       document.execCommand('insertUnorderedList', false);
     } else if (command === 'number') {
       document.execCommand('insertOrderedList', false);
+    } else if (command === 'justifyLeft') {
+      document.execCommand('justifyLeft', false);
+    } else if (command === 'justifyCenter') {
+      document.execCommand('justifyCenter', false);
+    } else if (command === 'justifyRight') {
+      document.execCommand('justifyRight', false);
+    } else if (command === 'justifyFull') {
+      document.execCommand('justifyFull', false);
     }
     
     handleInput();

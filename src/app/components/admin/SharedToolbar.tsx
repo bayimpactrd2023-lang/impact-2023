@@ -10,7 +10,8 @@ import {
   Image as ImageIcon,
   AlignLeft,
   AlignCenter,
-  AlignRight
+  AlignRight,
+  AlignJustify
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -37,11 +38,19 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
     blue: boolean;
     bullet: boolean;
     number: boolean;
+    alignLeft: boolean;
+    alignCenter: boolean;
+    alignRight: boolean;
+    alignJustify: boolean;
   }>({
     bold: false,
     blue: false,
     bullet: false,
-    number: false
+    number: false,
+    alignLeft: false,
+    alignCenter: false,
+    alignRight: false,
+    alignJustify: false
   });
   const toolbarRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,7 +74,11 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
         bold: document.queryCommandState('bold'),
         blue: document.queryCommandValue('foreColor') === 'rgb(24, 135, 252)' || document.queryCommandValue('foreColor') === '#1887fc',
         bullet: document.queryCommandState('insertUnorderedList'),
-        number: document.queryCommandState('insertOrderedList')
+        number: document.queryCommandState('insertOrderedList'),
+        alignLeft: document.queryCommandState('justifyLeft'),
+        alignCenter: document.queryCommandState('justifyCenter'),
+        alignRight: document.queryCommandState('justifyRight'),
+        alignJustify: document.queryCommandState('justifyFull')
       });
     };
 
@@ -169,6 +182,98 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
           </DropdownMenu>
 
           <div className="hidden sm:block w-[1px] h-4 bg-gray-300 mx-0.5" />
+          
+          {/* Combined Alignment Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0 overflow-hidden",
+                  (activeFormats.alignLeft || activeFormats.alignCenter || activeFormats.alignRight || activeFormats.alignJustify) ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
+                )}
+              >
+                <div className="flex items-center min-w-0 overflow-hidden">
+                  <AlignJustify className="w-4 h-4 mr-1 sm:mr-1.5 shrink-0" />
+                  <span className="text-[11px] sm:text-xs font-semibold truncate">Align</span>
+                  <ChevronDown className="w-3 h-3 ml-0.5 sm:ml-1.5 opacity-50 shrink-0" />
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="rounded-xl border-gray-200 shadow-lg min-w-[180px]">
+              <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Text Alignment</div>
+              <DropdownMenuItem 
+                onClick={() => onCommand('justifyLeft')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2",
+                  activeFormats.alignLeft ? "bg-blue-50 font-semibold text-[#1887FC]" : ""
+                )}
+              >
+                <AlignLeft className="w-4 h-4" />
+                <span>Align Left</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onCommand('justifyCenter')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2",
+                  activeFormats.alignCenter ? "bg-blue-50 font-semibold text-[#1887FC]" : ""
+                )}
+              >
+                <AlignCenter className="w-4 h-4" />
+                <span>Align Center</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onCommand('justifyRight')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2",
+                  activeFormats.alignRight ? "bg-blue-50 font-semibold text-[#1887FC]" : ""
+                )}
+              >
+                <AlignRight className="w-4 h-4" />
+                <span>Align Right</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onCommand('justifyFull')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2",
+                  activeFormats.alignJustify ? "bg-blue-50 font-semibold text-[#1887FC]" : ""
+                )}
+              >
+                <AlignJustify className="w-4 h-4" />
+                <span>Justify</span>
+              </DropdownMenuItem>
+
+              {onImageUpload && (
+                <>
+                  <div className="h-px bg-gray-100 my-1" />
+                  <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Image Layout</div>
+                  <DropdownMenuItem 
+                    onClick={() => onCommand('alignImage', 'left')} 
+                    className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
+                  >
+                    <AlignLeft className="w-4 h-4" />
+                    <span>Float Left</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onCommand('alignImage', 'center')} 
+                    className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
+                  >
+                    <AlignCenter className="w-4 h-4" />
+                    <span>Center Block</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onCommand('alignImage', 'right')} 
+                    className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
+                  >
+                    <AlignRight className="w-4 h-4" />
+                    <span>Float Right</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Separator for mobile between row 1 and 2 */}
@@ -238,42 +343,6 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
                 <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
                 <span className="text-[11px] sm:text-xs">Image</span>
               </Button>
-
-              <div className="w-[1px] h-4 bg-gray-300 mx-0.5" />
-              
-              {/* Image Alignment */}
-              <div className="flex items-center gap-0.5 shrink-0 px-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
-                  onClick={() => onCommand('alignImage', 'left')}
-                  title="Align Image Left"
-                >
-                  <AlignLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
-                  onClick={() => onCommand('alignImage', 'center')}
-                  title="Align Image Center"
-                >
-                  <AlignCenter className="w-4 h-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
-                  onClick={() => onCommand('alignImage', 'right')}
-                  title="Align Image Right"
-                >
-                  <AlignRight className="w-4 h-4" />
-                </Button>
-              </div>
             </>
           )}
         </div>
