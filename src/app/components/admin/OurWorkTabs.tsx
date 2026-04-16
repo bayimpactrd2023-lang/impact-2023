@@ -1,73 +1,70 @@
 import { useEffect, useState, FC } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
 import { ProjectManager } from './ProjectManager';
 import { FinancialStatementManager } from './FinancialStatementManager';
 import { InternshipTestimonialManager } from './InternshipTestimonialManager';
 import { useContent } from '@/app/context/ContentContext';
-import { AdminSkeletonLoader } from '@/app/components/AdminSkeletonLoader';
+import { AdminPageSkeleton } from './SkeletonLoaders';
 import { toast } from 'sonner';
+import { Globe, Users, Cpu, GraduationCap, Users2, Landmark } from 'lucide-react';
 
 interface OurWorkTabsProps {
   refreshContent: () => Promise<void>;
 }
 
+const SECTIONS = [
+  { value: 'rd-projects', label: 'R&D Projects', icon: Globe, category: 'rd_projects' },
+  { value: 'community', label: 'Community Transformation', icon: Users, category: 'community_transformation' },
+  { value: 'technology', label: 'Technology Spinoffs', icon: Cpu, category: 'technology_spinoffs' },
+  { value: 'thesis-support', label: 'Thesis Support', icon: GraduationCap, category: 'thesis_support' },
+  { value: 'internship', label: 'Internship Program', icon: Users2, category: 'internship_program' },
+  { value: 'financial', label: 'Financial Transparency', icon: Landmark, category: 'financial_statements' },
+];
+
 export const OurWorkTabs: FC<OurWorkTabsProps> = ({ refreshContent }) => {
   const {
     content,
-    updateInternationallyFundedProjects,
-    updateLocallyFundedProjects,
+    updateRDProjects,
+    updateCommunityTransformationProjects,
+    updateTechnologySpinoffsProjects,
+    updateStudentSupportProjects,
     updateFinancialStatements,
     updateInternshipTestimonials,
-    fetchInternationallyFundedProjects,
-    fetchLocallyFundedProjects,
+    fetchRDProjects,
+    fetchCommunityTransformationProjects,
+    fetchTechnologySpinoffsProjects,
+    fetchStudentSupportProjects,
     fetchFinancialStatements,
     fetchInternshipTestimonials,
   } = useContent();
 
-  const [activeSubTab, setActiveSubTab] = useState('internationally-funded');
-  const [isSubTabLoading, setIsSubTabLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState('rd-projects');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadedSections, setLoadedSections] = useState<Set<string>>(new Set());
 
-  // Track which tabs have been loaded
-  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set(['internationally-funded']));
+  const fetchDataForSection = async (section: string) => {
+    if (loadedSections.has(section)) return;
 
-  // Fetch initial data for the first tab on mount
-  useEffect(() => {
-    const loadInitialData = async () => {
-      setIsSubTabLoading(true);
-      try {
-        await fetchInternationallyFundedProjects();
-      } catch (error) {
-        console.error('[OurWorkTabs] Error loading initial data:', error);
-        toast.error('Failed to load project data');
-      } finally {
-        setIsSubTabLoading(false);
-      }
-    };
-
-    if (!loadedTabs.has('internationally-funded')) {
-      loadInitialData();
-    }
-  }, [fetchInternationallyFundedProjects, loadedTabs]);
-
-  const handleSubTabChange = async (value: string) => {
-    if (value === activeSubTab) return;
-
-    setActiveSubTab(value);
-
-    // Check if we've already loaded this tab's data
-    if (loadedTabs.has(value)) {
-      return;
-    }
-
-    setIsSubTabLoading(true);
-
+    setIsLoading(true);
     try {
-      switch (value) {
-        case 'internationally-funded':
-          await fetchInternationallyFundedProjects();
+      switch (section) {
+        case 'rd-projects':
+          await fetchRDProjects();
           break;
-        case 'locally-funded':
-          await fetchLocallyFundedProjects();
+        case 'community':
+          await fetchCommunityTransformationProjects();
+          break;
+        case 'technology':
+          await fetchTechnologySpinoffsProjects();
+          break;
+        case 'thesis-support':
+          await fetchStudentSupportProjects();
           break;
         case 'internship':
           await fetchInternshipTestimonials();
@@ -76,87 +73,110 @@ export const OurWorkTabs: FC<OurWorkTabsProps> = ({ refreshContent }) => {
           await fetchFinancialStatements();
           break;
       }
-      
-      // Mark this tab as loaded
-      setLoadedTabs(prev => new Set([...prev, value]));
+      setLoadedSections(prev => new Set([...prev, section]));
     } catch (error) {
-      console.error(`Error fetching data for sub-tab ${value}:`, error);
-      toast.error('Failed to load data');
+      console.error(`Error fetching data for ${section}:`, error);
+      toast.error('Failed to load section data');
     } finally {
-      setIsSubTabLoading(false);
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchDataForSection(activeSection);
+  }, [activeSection]);
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-xl font-black text-gray-900 mb-6 tracking-tight">Manage "Our Work" Sections</h3>
-      <Tabs value={activeSubTab} onValueChange={handleSubTabChange}>
-        <TabsList className="w-full flex-wrap h-auto mb-8 bg-[#EBF4FF]/60 p-1.5 rounded-2xl border border-[#D1E7FF] shadow-sm backdrop-blur-sm">
-          <TabsTrigger 
-            value="internationally-funded" 
-            className="rounded-xl px-6 py-3 transition-all data-[state=active]:bg-white data-[state=active]:text-[#1887FC] data-[state=active]:shadow-lg font-bold text-gray-600 hover:text-[#1887FC]/80 text-sm"
-          >
-            Int. Funded
-          </TabsTrigger>
-          <TabsTrigger 
-            value="locally-funded"
-            className="rounded-xl px-6 py-3 transition-all data-[state=active]:bg-white data-[state=active]:text-[#1887FC] data-[state=active]:shadow-lg font-bold text-gray-600 hover:text-[#1887FC]/80 text-sm"
-          >
-            Loc. Funded
-          </TabsTrigger>
-          <TabsTrigger 
-            value="internship"
-            className="rounded-xl px-6 py-3 transition-all data-[state=active]:bg-white data-[state=active]:text-[#1887FC] data-[state=active]:shadow-lg font-bold text-gray-600 hover:text-[#1887FC]/80 text-sm"
-          >
-            Community
-          </TabsTrigger>
-          <TabsTrigger 
-            value="financial"
-            className="rounded-xl px-6 py-3 transition-all data-[state=active]:bg-white data-[state=active]:text-[#1887FC] data-[state=active]:shadow-lg font-bold text-gray-600 hover:text-[#1887FC]/80 text-sm"
-          >
-            Financial
-          </TabsTrigger>
-        </TabsList>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div>
+          <h3 className="text-xl font-black text-gray-900 tracking-tight">Manage "Our Work"</h3>
+          <p className="text-sm text-gray-500 mt-1">Select a section to manage its content</p>
+        </div>
 
-        {isSubTabLoading && <AdminSkeletonLoader />}
+        <div className="w-full sm:w-72">
+          <Select value={activeSection} onValueChange={setActiveSection}>
+            <SelectTrigger className="w-full h-12 bg-gray-50 border-gray-100 rounded-xl focus:ring-[#1887FC] focus:border-[#1887FC] transition-all font-semibold text-gray-700">
+              <SelectValue placeholder="Select section" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-gray-100 shadow-xl p-1">
+              {SECTIONS.map((section) => (
+                <SelectItem 
+                  key={section.value} 
+                  value={section.value}
+                  className="rounded-lg py-3 focus:bg-blue-50 focus:text-[#1887FC] transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <section.icon className="w-4 h-4" />
+                    <span className="font-medium">{section.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-        {!isSubTabLoading && (
-          <div className="mt-6">
-            <TabsContent value="internationally-funded">
+      <div className="relative min-h-[400px]">
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-[2px] z-10 rounded-2xl">
+            <AdminPageSkeleton message="Loading section..." />
+          </div>
+        ) : (
+          <div className="transition-all duration-300">
+            {activeSection === 'rd-projects' && (
               <ProjectManager 
-                projects={content.internationallyFundedProjects} 
-                onUpdate={updateInternationallyFundedProjects}
-                title="Internationally Funded Projects" 
-                category="internationally_funded" 
+                projects={content.rdProjects} 
+                onUpdate={updateRDProjects}
+                title="R&D Projects" 
+                category="rd_projects" 
                 refreshContent={refreshContent} 
               />
-            </TabsContent>
-            <TabsContent value="locally-funded">
+            )}
+            {activeSection === 'community' && (
               <ProjectManager 
-                projects={content.locallyFundedProjects} 
-                onUpdate={updateLocallyFundedProjects}
-                title="Locally Funded Projects" 
-                category="locally_funded" 
+                projects={content.communityTransformationProjects} 
+                onUpdate={updateCommunityTransformationProjects}
+                title="Community Transformation" 
+                category="community_transformation" 
                 refreshContent={refreshContent} 
               />
-            </TabsContent>
-            <TabsContent value="internship">
+            )}
+            {activeSection === 'technology' && (
+              <ProjectManager 
+                projects={content.technologySpinoffsProjects} 
+                onUpdate={updateTechnologySpinoffsProjects}
+                title="Technology Spinoffs" 
+                category="technology_spinoffs" 
+                refreshContent={refreshContent} 
+              />
+            )}
+            {activeSection === 'thesis-support' && (
+              <ProjectManager
+                projects={content.studentSupportProjects}
+                onUpdate={updateStudentSupportProjects}
+                title="Thesis Support"
+                category="thesis_support"
+                refreshContent={refreshContent}
+              />
+            )}
+            {activeSection === 'internship' && (
               <InternshipTestimonialManager 
                 testimonials={content.internshipTestimonials} 
                 onUpdate={updateInternshipTestimonials}
                 refreshContent={refreshContent} 
               />
-            </TabsContent>
-            <TabsContent value="financial">
+            )}
+            {activeSection === 'financial' && (
               <FinancialStatementManager 
                 statements={content.financialStatements} 
                 onUpdate={updateFinancialStatements}
                 refreshContent={refreshContent} 
               />
-            </TabsContent>
+            )}
           </div>
         )}
-      </Tabs>
+      </div>
     </div>
   );
 };

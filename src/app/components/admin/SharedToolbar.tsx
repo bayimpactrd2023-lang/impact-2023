@@ -9,6 +9,7 @@ import {
   Type,
   Image as ImageIcon,
   AlignLeft,
+  AlignCenter,
   AlignRight
 } from 'lucide-react';
 import {
@@ -103,7 +104,7 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
   }, []);
 
   return (
-    <div 
+    <div
       ref={toolbarRef}
       className={cn(
         "z-50 transition-all duration-200 py-2",
@@ -111,152 +112,171 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
         className
       )}
     >
-      <div className="flex items-center gap-1 bg-gray-50/50 p-1 rounded-xl border border-gray-200 w-fit shadow-inner">
-        {/* Bold */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-8 px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 font-bold rounded-lg transition-all duration-200",
-            activeFormats.bold ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-0.5 bg-gray-50/50 p-0.5 rounded-xl border border-gray-200 w-full sm:w-fit shadow-inner overflow-hidden">
+        {/* Row 1: Bold & Highlight (Mobile) */}
+        <div className="flex items-center gap-0.5 w-full sm:w-auto">
+          {/* Bold */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 font-bold rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0",
+              activeFormats.bold ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
+            )}
+            onClick={() => onCommand('bold')}
+            title="Bold"
+          >
+            <Bold className="w-4 h-4 mr-1 sm:mr-1.5" />
+            <span className="text-[11px] sm:text-xs">Bold</span>
+          </Button>
+
+          <div className="w-[1px] h-4 bg-gray-300 mx-0.5" />
+
+          {/* Highlight/Color */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0",
+                  activeFormats.blue ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
+                )}
+              >
+                <Highlighter className="w-4 h-4 mr-1 sm:mr-1.5" style={{ color: '#1887FC' }} />
+                <span className="text-[11px] sm:text-xs text-[#1887FC]">Highlight</span>
+                <ChevronDown className="w-3 h-3 ml-1 sm:ml-1.5 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="rounded-xl border-gray-200 shadow-lg">
+              <DropdownMenuItem 
+                onClick={() => onCommand('foreColor', '#1887FC')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50",
+                  activeFormats.blue ? "bg-blue-50 font-semibold" : ""
+                )}
+              >
+                <span className="w-4 h-4 rounded-full bg-[#1887FC]" />
+                <span className="text-[#1887FC] font-medium">Blue Text</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onCommand('foreColor', 'black')} className="flex items-center gap-2 cursor-pointer focus:bg-gray-100">
+                <Type className="w-4 h-4" />
+                <span>Normal Text</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="hidden sm:block w-[1px] h-4 bg-gray-300 mx-0.5" />
+        </div>
+
+        {/* Separator for mobile between row 1 and 2 */}
+        <div className="sm:hidden w-full h-[1px] bg-gray-200 my-0.5" />
+
+        {/* Row 2: List, Image & Alignment (Mobile) */}
+        <div className="flex items-center gap-0.5 w-full sm:w-auto">
+          {/* List Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0",
+                  (activeFormats.bullet || activeFormats.number) ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
+                )}
+              >
+                <List className="w-4 h-4 mr-1 sm:mr-1.5" />
+                <span className="text-[11px] sm:text-xs">List</span>
+                <ChevronDown className="w-3 h-3 ml-1 sm:ml-1.5 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="rounded-xl border-gray-200 shadow-lg">
+              <DropdownMenuItem 
+                onClick={() => onCommand('bullet')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50",
+                  activeFormats.bullet ? "bg-blue-50 font-semibold" : ""
+                )}
+              >
+                <List className="w-4 h-4" />
+                <span>Bullet List</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onCommand('number')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50",
+                  activeFormats.number ? "bg-blue-50 font-semibold" : ""
+                )}
+              >
+                <ListOrdered className="w-4 h-4" />
+                <span>Numbered List</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {onImageUpload && (
+            <>
+              <div className="w-[1px] h-4 bg-gray-300 mx-0.5" />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0"
+                onClick={handleImageClick}
+                title="Insert Image"
+              >
+                <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
+                <span className="text-[11px] sm:text-xs">Image</span>
+              </Button>
+
+              <div className="w-[1px] h-4 bg-gray-300 mx-0.5" />
+              
+              {/* Image Alignment */}
+              <div className="flex items-center gap-0.5 shrink-0 px-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
+                  onClick={() => onCommand('alignImage', 'left')}
+                  title="Align Image Left"
+                >
+                  <AlignLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
+                  onClick={() => onCommand('alignImage', 'center')}
+                  title="Align Image Center"
+                >
+                  <AlignCenter className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
+                  onClick={() => onCommand('alignImage', 'right')}
+                  title="Align Image Right"
+                >
+                  <AlignRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </>
           )}
-          onClick={() => onCommand('bold')}
-          title="Bold"
-        >
-          <Bold className="w-4 h-4 mr-1.5" />
-          <span className="text-xs">Bold</span>
-        </Button>
-
-        <div className="w-[1px] h-4 bg-gray-300 mx-1" />
-
-        {/* Highlight/Color */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "h-8 px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200",
-                activeFormats.blue ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
-              )}
-            >
-              <Highlighter className="w-4 h-4 mr-1.5" style={{ color: '#1887FC' }} />
-              <span className="text-xs text-[#1887FC]">Highlight</span>
-              <ChevronDown className="w-3 h-3 ml-1.5 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="rounded-xl border-gray-200 shadow-lg">
-            <DropdownMenuItem 
-              onClick={() => onCommand('foreColor', '#1887FC')} 
-              className={cn(
-                "flex items-center gap-2 cursor-pointer focus:bg-blue-50",
-                activeFormats.blue ? "bg-blue-50 font-semibold" : ""
-              )}
-            >
-              <span className="w-4 h-4 rounded-full bg-[#1887FC]" />
-              <span className="text-[#1887FC] font-medium">Blue Text</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onCommand('foreColor', 'black')} className="flex items-center gap-2 cursor-pointer focus:bg-gray-100">
-              <Type className="w-4 h-4" />
-              <span>Normal Text</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <div className="w-[1px] h-4 bg-gray-300 mx-1" />
-
-        {/* List Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "h-8 px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200",
-                (activeFormats.bullet || activeFormats.number) ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
-              )}
-            >
-              <List className="w-4 h-4 mr-1.5" />
-              <span className="text-xs">List</span>
-              <ChevronDown className="w-3 h-3 ml-1.5 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="rounded-xl border-gray-200 shadow-lg">
-            <DropdownMenuItem 
-              onClick={() => onCommand('bullet')} 
-              className={cn(
-                "flex items-center gap-2 cursor-pointer focus:bg-blue-50",
-                activeFormats.bullet ? "bg-blue-50 font-semibold" : ""
-              )}
-            >
-              <List className="w-4 h-4" />
-              <span>Bullet List</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => onCommand('number')} 
-              className={cn(
-                "flex items-center gap-2 cursor-pointer focus:bg-blue-50",
-                activeFormats.number ? "bg-blue-50 font-semibold" : ""
-              )}
-            >
-              <ListOrdered className="w-4 h-4" />
-              <span>Numbered List</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {onImageUpload && (
-          <>
-            <div className="w-[1px] h-4 bg-gray-300 mx-1" />
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200"
-              onClick={handleImageClick}
-              title="Insert Image"
-            >
-              <ImageIcon className="w-4 h-4 mr-1.5" />
-              <span className="text-xs">Image</span>
-            </Button>
-
-            <div className="w-[1px] h-4 bg-gray-300 mx-1" />
-            
-            {/* Image Alignment */}
-            <div className="flex items-center gap-0.5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
-                onClick={() => onCommand('alignImage', 'left')}
-                title="Align Image Left"
-              >
-                <AlignLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg"
-                onClick={() => onCommand('alignImage', 'right')}
-                title="Align Image Right"
-              >
-                <AlignRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </>
-        )}
+        </div>
       </div>
     </div>
   );

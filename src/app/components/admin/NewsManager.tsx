@@ -5,9 +5,9 @@ import { Input } from '@/app/components/ui/input';
 import { VisualRichEditor } from './VisualRichEditor';
 import { SharedToolbar } from './SharedToolbar';
 import { Label } from '@/app/components/ui/label';
-import { Card, CardContent } from '@/app/components/ui/card';
+import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
-import { Plus, Trash2, Edit, X, CheckCircle, Newspaper, Calendar } from 'lucide-react';
+import { Plus, Trash2, Edit, X, CheckCircle, Newspaper, Calendar, Bell } from 'lucide-react';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
@@ -197,9 +197,21 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Manage News & Updates</h3>
-        <Button onClick={addNews} size="sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100/50">
+            <Bell className="w-5 h-5 stroke-[2.5px]" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">Manage News & Updates</h3>
+            <p className="text-xs text-gray-500 font-medium">Post announcements and updates</p>
+          </div>
+        </div>
+        <Button 
+          onClick={addNews} 
+          size="sm"
+          className="w-full sm:w-auto bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md h-10 sm:h-9 px-4 font-semibold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
           <Plus className="w-4 h-4 mr-2" /> Add News
         </Button>
       </div>
@@ -225,65 +237,78 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
           {pagination.loading ? (
             <AdminPageSkeleton message="Loading news items..." />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pagination.data.map((item) => (
               <Card
                 key={item.id}
-                className="cursor-pointer relative group"
+                className="cursor-pointer relative group overflow-hidden border-gray-100/50 hover:border-blue-200/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 rounded-3xl"
                 onClick={() => handleEdit(item)}
               >
-                <div className="absolute top-2 left-2 z-10">
+                {/* Delete Button */}
+                <div className="absolute top-4 right-4 z-20">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 bg-white/90 shadow-sm"
+                    className="h-9 w-9 p-0 bg-white/90 backdrop-blur-md shadow-md hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all border border-gray-100"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(item.id);
                     }}
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </div>
 
-                {item.imageUrl || (item.images && item.images.length > 0) ? (
-                  <div className="w-full h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={getImageUrl(item.imageUrl || item.images?.[0] || '')}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
+                <div className="p-0">
+                  {/* Image Container */}
+                  <div className="relative w-full h-48 mb-0 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
+                    {item.imageUrl || (item.images && item.images.length > 0) ? (
+                      <img
+                        src={getImageUrl(item.imageUrl || item.images?.[0] || '')}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+                        <Newspaper className="w-16 h-16 text-[#1887FC]" />
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 rounded-t-lg flex items-center justify-center">
-                    <Newspaper className="w-16 h-16 text-[#1887FC]" />
-                  </div>
-                )}
 
-                <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm line-clamp-2 mb-2">
-                    {item.title || 'Untitled'}
-                  </h4>
-                  <div className="text-xs text-gray-600 line-clamp-2">
-                    <RichTextContent text={item.content} className="text-xs text-gray-600" />
-                  </div>
-                  {item.date && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <Calendar className="w-3 h-3 text-blue-500" />
-                      <span className="text-xs text-blue-600">
-                        {new Date(item.date).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </span>
+                  <div className="p-6 space-y-3">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-gray-900 text-lg line-clamp-2 group-hover:text-[#1887FC] transition-colors leading-tight">
+                        {item.title || 'Untitled'}
+                      </h4>
+                      {item.date && (
+                        <div className="flex items-center gap-1.5 pt-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#1887FC]" />
+                          <span className="text-xs font-bold text-[#1887FC] uppercase tracking-wider">
+                            {new Date(item.date).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="mt-3 flex items-center gap-2">
-                    <Edit className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">Click to edit</span>
+                    
+                    <div className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                      <RichTextContent text={item.content} className="text-sm text-gray-500" />
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                          <Edit className="w-3 h-3 text-gray-400 group-hover:text-blue-500" />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-500 transition-colors">Click to edit</span>
+                      </div>
+                    </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))}
             </div>
@@ -351,7 +376,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
 
                 <div>
                   <Label htmlFor="news-date" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                    Date <span className="text-red-500 ml-0.5">*</span>
+                    Published Date <span className="text-red-500 ml-0.5">*</span>
                   </Label>
                   <Input
                     id="news-date"

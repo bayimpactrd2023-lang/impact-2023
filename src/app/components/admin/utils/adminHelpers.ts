@@ -35,16 +35,46 @@ export const AdminValidationRules = {
 const digitsRegex = /\d/;
 
 export function countWords(value: string): number {
-  const trimmed = value.trim();
+  const stripped = stripHtmlAndImages(value);
+  const trimmed = stripped.trim();
   if (!trimmed) return 0;
   return trimmed.split(/\s+/).filter(Boolean).length;
 }
 
+/**
+ * Strips HTML tags and large base64 image data from a string.
+ * This is used to calculate the real text character count without
+ * including formatting or embedded image data.
+ */
+export function stripHtmlAndImages(html: string): string {
+  if (!html) return '';
+  
+  // 1. Remove large base64 image data within src attributes
+  // Matches <img ... src="data:image/..." ... >
+  let cleanHtml = html.replace(/src="data:image\/[^"]+"/g, 'src="image-data"');
+  
+  // 2. Remove the image wrappers and buttons entirely from the count
+  cleanHtml = cleanHtml.replace(/<div class="image-wrapper[^>]*>[\s\S]*?<\/div>/g, '');
+  
+  // 3. Strip all other HTML tags
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = cleanHtml;
+  return tmp.textContent || tmp.innerText || '';
+}
+
 export function validateMaxChars(value: string, maxChars: number, fieldLabel: string) {
-  if (value.length > maxChars) {
+  // If it's content-like field, strip HTML and images for the count
+  const isContentField = fieldLabel.toLowerCase().includes('content') || 
+                        fieldLabel.toLowerCase().includes('description') ||
+                        fieldLabel.toLowerCase().includes('biography') ||
+                        fieldLabel.toLowerCase().includes('abstract');
+  
+  const textToCount = isContentField ? stripHtmlAndImages(value) : value;
+
+  if (textToCount.length > maxChars) {
     return {
       isValid: false,
-      error: `${fieldLabel} must be ${maxChars} characters or fewer`,
+      error: `${fieldLabel} must be ${maxChars} characters or fewer (currently ${textToCount.length})`,
     };
   }
   return { isValid: true };

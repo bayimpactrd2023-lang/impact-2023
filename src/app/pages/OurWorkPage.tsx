@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router';
-import { Globe, Briefcase, Users, DollarSign } from 'lucide-react';
+import { Globe, Briefcase, Users, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
@@ -10,42 +10,40 @@ import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 export const OurWorkPage: React.FC = () => {
   const navigate = useNavigate();
 
-  // No loading state or data fetching needed - this is a navigation page
-
   const workSections = [
     {
-      id: 'internationally-funded',
-      title: 'Internationally Funded Projects',
-      description: 'Project overview required i and add below it Objectives and Methodology and Activities',
-      icon: Globe,
-      path: '/our-work/internationally-funded',
+      id: 'rd-projects',
+      title: 'R&D Projects',
+      description: 'Discover our ongoing and past research initiatives driving innovation in agriculture and sustainable development.',
+      icon: Briefcase,
+      path: '/our-work/rd-projects',
       gradient: 'from-blue-600 via-blue-500 to-indigo-600',
       textColor: 'text-blue-600'
     },
     {
-      id: 'locally-funded',
-      title: 'Locally Funded Projects',
-      description: 'Project overview required i and add below it Objectives and Methodology and Activities',
-      icon: Briefcase,
-      path: '/our-work/locally-funded',
+      id: 'community-transformation',
+      title: 'Community Transformation',
+      description: 'Empowering communities through outreach activities, workshops, and sustainable development initiatives.',
+      icon: Users,
+      path: '/our-work/community-transformation',
       gradient: 'from-emerald-600 via-emerald-500 to-teal-600',
       textColor: 'text-emerald-600'
     },
     {
-      id: 'internship-program',
-      title: 'Community Transformation',
-      description: 'Real stories, real growth. Testimonials from our interns about their transformative experiences.',
-      icon: Users,
-      path: '/our-work/internship-program',
+      id: 'technology-spinoffs',
+      title: 'Technology Spinoffs',
+      description: 'Explore our innovative applications, dashboards, and systems developed from our research findings.',
+      icon: Globe,
+      path: '/our-work/technology-spinoffs',
       gradient: 'from-violet-600 via-purple-500 to-fuchsia-600',
       textColor: 'text-purple-600'
     },
     {
-      id: 'financial-statements',
-      title: 'Financial Statements',
-      description: 'Transparent financial reports demonstrating our commitment to accountability and governance.',
-      icon: DollarSign,
-      path: '/our-work/financial-statements',
+      id: 'thesis-support',
+      title: 'Research, Student, and Financial Support',
+      description: 'Supporting the next generation of researchers through thesis funding, internships, and financial support programs.',
+      icon: BookOpen,
+      path: '/our-work/thesis-support',
       gradient: 'from-amber-600 via-orange-500 to-yellow-600',
       textColor: 'text-orange-600'
     }
@@ -149,7 +147,7 @@ export const OurWorkPage: React.FC = () => {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
               {workSections.map((section, index) => {
                 const Icon = section.icon;
                 return (
@@ -158,49 +156,49 @@ export const OurWorkPage: React.FC = () => {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ 
-                      delay: index * 0.15, 
-                      duration: 0.8,
+                      delay: index * 0.1, 
+                      duration: 0.6,
                       ease: [0.21, 0.47, 0.32, 0.98] 
                     }}
                     viewport={{ once: true }}
                     onClick={() => navigate(section.path)}
                     className="group cursor-pointer"
                   >
-                    <Card className="h-full border-none shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] transition-all duration-500 overflow-hidden bg-white/80 backdrop-blur-sm rounded-[2rem] relative">
+                    <Card className="h-full border-none shadow-[0_8px_30px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_15px_45px_-15px_rgba(0,0,0,0.15)] transition-all duration-500 overflow-hidden bg-white/80 backdrop-blur-sm rounded-[1.5rem] relative">
                       {/* Decorative Gradient Border on Hover */}
                       <div className={`absolute inset-0 bg-gradient-to-br ${section.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`} />
                       
-                      <CardContent className="p-10 flex flex-col h-full">
-                        <div className="flex items-start justify-between mb-8">
+                      <CardContent className="p-8 flex flex-col h-full">
+                        <div className="flex items-start justify-between mb-6">
                           <motion.div 
-                            className={`w-20 h-20 bg-gradient-to-br ${section.gradient} rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 group-hover:scale-110 transition-all duration-500`}
+                            className={`w-16 h-16 bg-gradient-to-br ${section.gradient} rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 group-hover:scale-105 transition-all duration-500`}
                           >
-                            <Icon className="w-10 h-10 text-white" />
+                            <Icon className="w-8 h-8 text-white" />
                           </motion.div>
                           
-                          <div className={`text-4xl font-black opacity-5 group-hover:opacity-10 transition-opacity duration-500 ${section.textColor}`}>
+                          <div className={`text-3xl font-black opacity-5 group-hover:opacity-10 transition-opacity duration-500 ${section.textColor}`}>
                             0{index + 1}
                           </div>
                         </div>
                         
-                        <h3 className="text-3xl font-black text-gray-900 mb-4 group-hover:text-[#1887FC] transition-colors leading-tight">
+                        <h3 className="text-2xl font-black text-gray-900 mb-3 group-hover:text-[#1887FC] transition-colors leading-tight">
                           {section.title}
                         </h3>
                         
-                        <p className="text-gray-600 text-lg mb-8 leading-relaxed flex-grow">
+                        <p className="text-gray-600 text-base mb-6 leading-relaxed flex-grow line-clamp-3">
                           {section.description}
                         </p>
                         
                         <div className="mt-auto flex items-center gap-2">
-                          <span className={`text-xl font-bold ${section.textColor} flex items-center gap-2 group-hover:translate-x-2 transition-transform duration-300`}>
+                          <span className={`text-lg font-bold ${section.textColor} flex items-center gap-2 group-hover:translate-x-1 transition-transform duration-300`}>
                             Explore Project
                             <svg 
-                              width="24" 
-                              height="24" 
+                              width="20" 
+                              height="20" 
                               viewBox="0 0 24 24" 
                               fill="none" 
                               xmlns="http://www.w3.org/2000/svg"
-                              className="w-6 h-6"
+                              className="w-5 h-5"
                             >
                               <path 
                                 d="M5 12H19M19 12L13 6M19 12L13 18" 
@@ -215,7 +213,7 @@ export const OurWorkPage: React.FC = () => {
 
                         {/* Bottom Accent Bar */}
                         <motion.div 
-                          className={`absolute bottom-0 left-0 h-1.5 bg-gradient-to-r ${section.gradient} w-0 group-hover:w-full transition-all duration-500`}
+                          className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${section.gradient} w-0 group-hover:w-full transition-all duration-500`}
                         />
                       </CardContent>
                     </Card>

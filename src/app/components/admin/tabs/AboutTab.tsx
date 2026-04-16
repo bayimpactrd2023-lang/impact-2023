@@ -27,6 +27,10 @@ interface AboutTabProps {
  */
 export function AboutTab({ aboutText, onUpdateAbout, onSave }: AboutTabProps) {
   const handleSave = () => {
+    if (!aboutText.trim()) {
+      toast.error('About text is required');
+      return;
+    }
     onSave();
     toast.success('About section saved!', {
       description: 'Your changes have been saved successfully.',

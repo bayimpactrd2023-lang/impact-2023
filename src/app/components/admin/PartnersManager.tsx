@@ -3,7 +3,7 @@ import { Partner, PartnerForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { Card, CardContent } from '@/app/components/ui/card';
+import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Plus, Trash2, Edit, X, CheckCircle, Handshake, Building2 } from 'lucide-react';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
@@ -139,9 +139,21 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Manage Partners</h3>
-        <Button onClick={addPartner} size="sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100/50">
+            <Handshake className="w-5 h-5 stroke-[2.5px]" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">Manage Partners</h3>
+            <p className="text-xs text-gray-500 font-medium">Showcase your collaborators</p>
+          </div>
+        </div>
+        <Button 
+          onClick={addPartner} 
+          size="sm"
+          className="w-full sm:w-auto bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md h-10 sm:h-9 px-4 font-semibold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
           <Plus className="w-4 h-4 mr-2" /> Add Partner
         </Button>
       </div>
@@ -167,50 +179,62 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
           {pagination.loading ? (
             <AdminPageSkeleton message="Loading partners..." />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pagination.data.map((partner) => (
               <Card
                 key={partner.id}
-                className="cursor-pointer relative group"
+                className="cursor-pointer relative group overflow-hidden border-gray-100/50 hover:border-blue-200/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 rounded-3xl"
                 onClick={() => handleEdit(partner)}
               >
-                <div className="absolute top-2 left-2 z-10">
+                {/* Delete Button */}
+                <div className="absolute top-4 right-4 z-20">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 bg-white/90 shadow-sm"
+                    className="h-9 w-9 p-0 bg-white/90 backdrop-blur-md shadow-md hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all border border-gray-100"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(partner.id);
                     }}
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </div>
 
-                {partner.logoUrl ? (
-                  <div className="w-full h-48 overflow-hidden rounded-t-lg bg-white p-6 flex items-center justify-center">
-                    <img
-                      src={partner.logoUrl}
-                      alt={partner.name}
-                      className="w-full h-full object-contain"
-                    />
+                <div className="p-6">
+                  {/* Logo Container - Boxed with theme shadow */}
+                  <div className="relative mx-auto w-full aspect-square max-w-[160px] mb-4 group-hover:scale-105 transition-transform duration-500">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-[#1887FC] to-[#3b82f6] rounded-2xl opacity-0 group-hover:opacity-10 blur-xl transition-opacity" />
+                    <div className="relative w-full h-full rounded-2xl p-4 bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden">
+                      {partner.logoUrl ? (
+                        <img
+                          src={partner.logoUrl}
+                          alt={partner.name}
+                          className="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+                          <Building2 className="w-12 h-12 text-[#1887FC]" />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 rounded-t-lg flex items-center justify-center">
-                    <Building2 className="w-16 h-16 text-[#1887FC]" />
-                  </div>
-                )}
 
-                <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm text-center line-clamp-1">
-                    {partner.name || 'Unnamed Partner'}
-                  </h4>
-                  <div className="mt-3 flex items-center justify-center gap-2">
-                    <Edit className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">Click to edit</span>
+                  <div className="space-y-1 text-center">
+                    <h4 className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-[#1887FC] transition-colors">
+                      {partner.name || 'Unnamed Partner'}
+                    </h4>
                   </div>
-                </CardContent>
+
+                  <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        <Edit className="w-3 h-3 text-gray-400 group-hover:text-blue-500" />
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-500 transition-colors">Click to edit</span>
+                    </div>
+                  </div>
+                </div>
               </Card>
             ))}
             </div>

@@ -207,7 +207,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="blog-date">Date</Label>
+              <Label htmlFor="blog-date">Published Date *</Label>
               <Input
                 id="blog-date"
                 type="date"

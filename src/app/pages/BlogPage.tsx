@@ -146,7 +146,7 @@ export const BlogPage: React.FC = () => {
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ duration: 0.7, ease: "easeOut" }}
-                          className="w-32 h-32 sm:w-44 sm:h-44 rounded-[2.5rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.1)] flex items-center justify-center overflow-hidden border border-white/50 p-6 sm:p-10"
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-[2.5rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.1)] flex items-center justify-center overflow-hidden border border-white/50 p-4 sm:p-6"
                         >
                           <img 
                             src="/images/logos/placeholder.png" 
@@ -236,7 +236,7 @@ export const BlogPage: React.FC = () => {
                           </>
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center">
-                            <div className="w-40 h-40 rounded-[2rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.12)] flex items-center justify-center overflow-hidden border border-white/80 p-8">
+                            <div className="w-24 h-24 rounded-[2rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.12)] flex items-center justify-center overflow-hidden border border-white/80 p-6">
                               <img 
                                 src="/images/logos/placeholder.png" 
                                 alt="Placeholder" 

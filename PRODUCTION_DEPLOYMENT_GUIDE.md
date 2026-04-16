@@ -403,7 +403,7 @@ WHERE schemaname = 'public';
 3. **Key Features**:
    - ✅ Create, edit, delete content
    - ✅ Upload images and PDFs
-   - ✅ Manage team members
+   - ✅ Manage Board Members
    - ✅ Publish highlights and publications
 
 ### For Developers

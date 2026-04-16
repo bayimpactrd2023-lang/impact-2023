@@ -185,11 +185,12 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
                 value={draft.title}
                 onChange={(e) => setDraft({ ...draft, title: e.target.value })}
                 placeholder="Enter publication title"
+                className="text-base sm:text-lg font-semibold"
               />
             </div>
 
             <div>
-              <Label htmlFor="pub-authors">Authors</Label>
+              <Label htmlFor="pub-authors">Authors *</Label>
               <Input
                 id="pub-authors"
                 value={draft.authors}
@@ -200,7 +201,7 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="pub-date">Published Date</Label>
+                <Label htmlFor="pub-date">Published Date *</Label>
                 <Input
                   id="pub-date"
                   type="date"

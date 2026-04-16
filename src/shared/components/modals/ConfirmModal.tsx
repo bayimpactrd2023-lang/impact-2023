@@ -111,7 +111,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[480px] bg-white rounded-2xl shadow-2xl p-0 border-none overflow-hidden">
+      <DialogContent className="sm:max-w-[480px] bg-white rounded-2xl shadow-2xl p-0 border-none overflow-hidden duration-0">
         <div className="p-8">
           <DialogHeader className="flex flex-col items-start gap-4 space-y-0">
             <div className="flex items-center gap-4">
@@ -142,7 +142,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               variant={buttonVariant}
               onClick={handleConfirm}
               disabled={isLoading}
-              className={`flex-1 h-12 rounded-xl font-bold text-base shadow-lg transition-all active:scale-95 ${
+              className={`flex-1 h-12 rounded-xl font-bold text-base shadow-lg transition-all ${
                 variant === 'danger' 
                   ? 'bg-[#DC1E3C] hover:bg-[#B91932] text-white shadow-red-100' 
                   : ''

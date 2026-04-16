@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/app/components/ui/card';
+import { Card } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
+import { cn } from "@/app/components/ui/utils";
 import { VisualRichEditor } from './VisualRichEditor';
 import { SharedToolbar } from './SharedToolbar';
-import { Plus, Trash2, FileText, Edit, CheckCircle, X, Calendar } from 'lucide-react';
+import { Plus, Trash2, FileText, Edit, CheckCircle, X, Calendar, BookText } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,8 @@ import {
   validateMaxWords, 
   validateNoDigits, 
   validateRequiredTrimmed,
-  hasChanges
+  hasChanges,
+  stripHtmlAndImages
 } from '@/app/components/admin/utils/adminHelpers';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { RichTextContent } from '@/app/components/RichTextContent';
@@ -50,6 +52,19 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
+  const [deletedUrls, setDeletedUrls] = useState<string[]>([]);
+
+  // Track deleted images from editor
+  React.useEffect(() => {
+    const handleImageDeleted = (e: any) => {
+      const { url } = e.detail;
+      if (url && !url.startsWith('data:')) {
+        setDeletedUrls(prev => [...prev, url]);
+      }
+    };
+    window.addEventListener('editor-image-deleted', handleImageDeleted);
+    return () => window.removeEventListener('editor-image-deleted', handleImageDeleted);
+  }, []);
 
   const handleCommand = (cmd: string, val?: string) => {
     if (activeField) {
@@ -66,14 +81,11 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
       return;
     }
     
-    try {
-      const url = await uploadImage(file, 'blog');
-      handleCommand('insertImage', url);
-      toast.success('Image uploaded and inserted!');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
-    }
+    // Instead of immediate upload, send the file to the editor for local preview
+    const event = new CustomEvent(`editor-command-${activeField}`, { 
+      detail: { command: 'handleImageFile', value: file } 
+    });
+    window.dispatchEvent(event);
   };
   
   // Initialize delete confirmation hook
@@ -153,6 +165,43 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     }
   };
 
+  const processContentImages = async (content: string): Promise<string> => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const images = doc.querySelectorAll('img');
+    
+    for (const img of Array.from(images)) {
+      const src = img.getAttribute('src');
+      if (src && src.startsWith('data:image/')) {
+        try {
+          // Convert base64 to File object
+          const res = await fetch(src);
+          const blob = await res.blob();
+          const file = new File([blob], `blog-content-${Date.now()}.png`, { type: 'image/png' });
+          
+          // Upload to R2
+          const url = await uploadImage(file, 'blog');
+          img.setAttribute('src', url);
+          
+          // Clean up the wrapper for production HTML
+          const wrapper = img.closest('.image-wrapper');
+          if (wrapper) {
+            const deleteBtn = wrapper.querySelector('.delete-image-btn');
+            if (deleteBtn) deleteBtn.remove();
+            
+            const resizeHandle = wrapper.querySelector('.resize-handle');
+            if (resizeHandle) resizeHandle.remove();
+            
+            wrapper.removeAttribute('contenteditable');
+          }
+        } catch (error) {
+          console.error('Error uploading inline image:', error);
+        }
+      }
+    }
+    return doc.body.innerHTML;
+  };
+
   const handleSavePost = async () => {
     if (!editingPost) return;
 
@@ -177,7 +226,22 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     
     setIsSaving(true);
     try {
-      // Handle Image Uploads before saving to database
+      // Clean up deleted images from cloud
+      if (deletedUrls.length > 0) {
+        for (const url of deletedUrls) {
+          try {
+            await deleteStorageFile(url, 'blog');
+          } catch (err) {
+            console.error('Error deleting image during cleanup:', err);
+          }
+        }
+        setDeletedUrls([]); // Clear after cleanup
+      }
+
+      // Process content images (upload base64 to cloud)
+      const finalContent = await processContentImages(editingPost.content);
+
+      // Handle Cover Image Upload
       let finalImageUrl = editingPost.imageUrl;
       if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
         finalImageUrl = await uploadImage(finalImageUrl, 'blog');
@@ -198,7 +262,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
 
       const postData = {
         title: editingPost.title,
-        content: editingPost.content,
+        content: finalContent,
         author: editingPost.author,
         author_role: editingPost.authorRole,
         date: editingPost.date,
@@ -250,12 +314,22 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">
-          Manage Blog Posts
-        </h3>
-        <Button onClick={addPost} size="sm">
-          <Plus className="w-4 h-4 mr-2" /> Add Blog Post
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100/50">
+            <BookText className="w-5 h-5 stroke-[2.5px]" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">Manage Blog Posts</h3>
+            <p className="text-xs text-gray-500 font-medium">Write and publish articles</p>
+          </div>
+        </div>
+        <Button 
+          onClick={addPost} 
+          size="sm"
+          className="w-full sm:w-auto bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md h-10 sm:h-9 px-4 font-semibold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Add<span className="hidden sm:inline"> Blog Post</span>
         </Button>
       </div>
 
@@ -284,67 +358,78 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
           {pagination.loading ? (
             <AdminPageSkeleton message="Loading blog posts..." />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pagination.data.map((post) => (
               <Card
                 key={post.id}
-                className="cursor-pointer relative group"
+                className="cursor-pointer relative group overflow-hidden border-gray-100/50 hover:border-blue-200/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 rounded-3xl"
                 onClick={() => handleEdit(post)}
               >
-                <div className="absolute top-2 left-2 z-10">
+                {/* Delete Button */}
+                <div className="absolute top-4 right-4 z-20">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 bg-white/90 shadow-sm"
+                    className="h-9 w-9 p-0 bg-white/90 backdrop-blur-md shadow-md hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all border border-gray-100"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(post.id);
                     }}
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </div>
 
-                {post.imageUrl || (post.images && post.images.length > 0) ? (
-                  <div className="w-full h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={post.imageUrl || post.images?.[0] || ""}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
+                <div className="p-0">
+                  {/* Image Container */}
+                  <div className="relative w-full h-48 mb-0 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
+                    {post.imageUrl || (post.images && post.images.length > 0) ? (
+                      <img
+                        src={post.imageUrl || post.images?.[0] || ""}
+                        alt={post.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+                        <FileText className="w-16 h-16 text-[#1887FC]" />
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 rounded-t-lg flex items-center justify-center">
-                    <FileText className="w-16 h-16 text-[#1887FC]" />
-                  </div>
-                )}
 
-                <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm line-clamp-2 mb-2">
-                    {post.title || "Untitled Post"}
-                  </h4>
-                  <div className="text-xs text-gray-600 line-clamp-2">
-                    <RichTextContent text={post.content} className="text-xs text-gray-600" />
-                  </div>
-                  {post.date && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <Calendar className="w-3 h-3 text-blue-500" />
-                      <span className="text-xs text-blue-600">
-                        {new Date(post.date).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </span>
+                  <div className="p-6 space-y-3">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-gray-900 text-lg line-clamp-2 group-hover:text-[#1887FC] transition-colors leading-tight">
+                        {post.title || "Untitled Post"}
+                      </h4>
+                      {post.date && (
+                        <div className="flex items-center gap-1.5 pt-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#1887FC]" />
+                          <span className="text-xs font-bold text-[#1887FC] uppercase tracking-wider">
+                            {new Date(post.date).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="mt-3 flex items-center gap-2">
-                    <Edit className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">
-                      Click to edit
-                    </span>
+                    
+                    <div className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                      <RichTextContent text={post.content} className="text-sm text-gray-500" />
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                          <Edit className="w-3 h-3 text-gray-400 group-hover:text-blue-500" />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-500 transition-colors">Click to edit</span>
+                      </div>
+                    </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))}
             </div>
@@ -407,28 +492,40 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                       setEditingPost({ ...editingPost, title: e.target.value })
                     }
                     placeholder="Enter a compelling title for your story..."
-                    className="text-lg font-semibold"
+                    className="text-xs sm:text-lg font-semibold"
                   />
                 </div>
 
-                <VisualRichEditor
-                  id="modal-blog-content"
-                  label="Content"
-                  value={editingPost.content}
-                  onChange={(value: string) =>
-                    setEditingPost({ ...editingPost, content: value })
-                  }
-                  rows={12}
-                  required
-                  placeholder="Write your blog post content here..."
-                  showToolbar={false}
-                  onCommand={(cmd) => {
-                    if (cmd === 'focus') {
-                      setActiveField('modal-blog-content');
+                <div className="after:content-[''] after:table after:clear-both">
+                  <VisualRichEditor
+                    id="modal-blog-content"
+                    label="Content"
+                    value={editingPost.content}
+                    onChange={(value: string) =>
+                      setEditingPost({ ...editingPost, content: value })
                     }
-                  }}
-                  onImageUpload={handleImageUpload}
-                />
+                    rows={12}
+                    required
+                    placeholder="Write your blog post content here..."
+                    showToolbar={false}
+                    onCommand={(cmd) => {
+                      if (cmd === 'focus') {
+                        setActiveField('modal-blog-content');
+                      }
+                    }}
+                    onImageUpload={handleImageUpload}
+                  />
+                  <div className="flex justify-end mt-1 px-1">
+                    <span className={cn(
+                      "text-xs font-medium",
+                      stripHtmlAndImages(editingPost.content).length > AdminValidationRules.contentMaxChars 
+                        ? "text-red-500" 
+                        : "text-gray-400"
+                    )}>
+                      {stripHtmlAndImages(editingPost.content).length.toLocaleString()} / {AdminValidationRules.contentMaxChars.toLocaleString()} characters
+                    </span>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
@@ -458,7 +555,9 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="modal-blog-date" className="text-sm font-semibold text-gray-700 mb-1">Date</Label>
+                  <Label htmlFor="modal-blog-date" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    Published Date <span className="text-red-500 ml-0.5">*</span>
+                  </Label>
                   <Input
                     id="modal-blog-date"
                     type="date"

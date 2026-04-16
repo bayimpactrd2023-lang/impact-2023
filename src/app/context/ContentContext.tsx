@@ -182,9 +182,10 @@ interface ContentData {
   aboutDescription: string;
   heroBackgroundUrl: string;
   researchBayanihanImage: string;
-  internationallyFundedProjects: Project[];
-  locallyFundedProjects: Project[];
+  rdProjects: Project[];
   communityTransformationProjects: Project[];
+  technologySpinoffsProjects: Project[];
+  studentSupportProjects: Project[];
   internshipPrograms: Project[];
   financialStatements: FinancialStatement[];
   studyFindings: Project[];
@@ -207,9 +208,10 @@ interface ContentContextType {
   updateHero: (title: string, subtitle: string) => void;
   updateAbout: (text: string) => void;
   updateHeroBackground: (url: string) => void;
-  updateInternationallyFundedProjects: (projects: Project[]) => void;
-  updateLocallyFundedProjects: (projects: Project[]) => void;
+  updateRDProjects: (projects: Project[]) => void;
   updateCommunityTransformationProjects: (projects: Project[]) => void;
+  updateTechnologySpinoffsProjects: (projects: Project[]) => void;
+  updateStudentSupportProjects: (projects: Project[]) => void;
   updateInternshipPrograms: (programs: Project[]) => void;
   updateFinancialStatements: (statements: FinancialStatement[]) => void;
   updateStudyFindings: (findings: Project[]) => void;
@@ -224,9 +226,10 @@ interface ContentContextType {
   fetchBlogPosts: () => Promise<void>;
   fetchHeroSection: () => Promise<void>;
   fetchAboutSection: () => Promise<void>;
-  fetchInternationallyFundedProjects: () => Promise<void>;
-  fetchLocallyFundedProjects: () => Promise<void>;
+  fetchRDProjects: () => Promise<void>;
   fetchCommunityTransformationProjects: () => Promise<void>;
+  fetchTechnologySpinoffsProjects: () => Promise<void>;
+  fetchStudentSupportProjects: () => Promise<void>;
   fetchInternshipPrograms: () => Promise<void>;
   fetchStudyFindings: () => Promise<void>;
   fetchFinancialStatements: () => Promise<void>;
@@ -241,9 +244,10 @@ interface ContentContextType {
     blogPosts: boolean;
     hero: boolean;
     about: boolean;
-    internationallyFunded: boolean;
-    locallyFunded: boolean;
+    rdProjects: boolean;
     communityTransformation: boolean;
+    technologySpinoffs: boolean;
+    studentSupport: boolean;
     internshipPrograms: boolean;
     studyFindings: boolean;
     financialStatements: boolean;
@@ -265,9 +269,10 @@ const initialContent: ContentData = {
   aboutDescription: "",
   heroBackgroundUrl: "",
   researchBayanihanImage: researchBayanihanImg,
-  internationallyFundedProjects: [],
-  locallyFundedProjects: [],
+  rdProjects: [],
   communityTransformationProjects: [],
+  technologySpinoffsProjects: [],
+  studentSupportProjects: [],
   internshipPrograms: [],
   financialStatements: [],
   studyFindings: [],
@@ -292,9 +297,10 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
     blogPosts: false,
     hero: false,
     about: false,
-    internationallyFunded: false,
-    locallyFunded: false,
+    rdProjects: false,
     communityTransformation: false,
+    technologySpinoffs: false,
+    studentSupport: false,
     internshipPrograms: false,
     studyFindings: false,
     financialStatements: false,
@@ -361,9 +367,10 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         publicationsData,
         teamData,
         blogData,
-        internationalProjects,
-        localProjects,
+        rdProjectsData,
         communityProjects,
+        technologyProjects,
+        studentProjects,
         internshipProjects,
         studyFindingsData,
         financialStatementsData,
@@ -377,9 +384,10 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         getAllPublications(),
         getAllTeamMembers(),
         getAllBlogPosts(),
-        getProjectsByCategory('internationally_funded'),
-        getProjectsByCategory('locally_funded'),
+        getProjectsByCategory('rd_projects'),
         getProjectsByCategory('community_transformation'),
+        getProjectsByCategory('technology_spinoffs'),
+        getProjectsByCategory('thesis_support'),
         getProjectsByCategory('internship_program'),
         getProjectsByCategory('study_findings'),
         getAllFinancialStatements(),
@@ -411,9 +419,10 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
       const mappedPublications = (publicationsData || []).map((item: any) => mapDbToApp(item));
       const mappedTeam = (teamData || []).map((item: any) => mapDbToApp(item));
       const mappedBlogs = (blogData || []).map((item: any) => mapDbToApp(item));
-      const mappedInternational = (internationalProjects || []).map((item: any) => mapDbToApp(item));
-      const mappedLocal = (localProjects || []).map((item: any) => mapDbToApp(item));
+      const mappedRD = (rdProjectsData || []).map((item: any) => mapDbToApp(item));
       const mappedCommunity = (communityProjects || []).map((item: any) => mapDbToApp(item));
+      const mappedTechnology = (technologyProjects || []).map((item: any) => mapDbToApp(item));
+      const mappedStudent = (studentProjects || []).map((item: any) => mapDbToApp(item));
       const mappedInternship = (internshipProjects || []).map((item: any) => mapDbToApp(item));
       const mappedFindings = (studyFindingsData || []).map((item: any) => mapDbToApp(item));
       const mappedFinancialStatements = (financialStatementsData || []).map((item: any) => mapDbToApp(item));
@@ -426,9 +435,10 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         publications: mappedPublications,
         teamMembers: mappedTeam,
         blogPosts: mappedBlogs,
-        internationallyFundedProjects: mappedInternational,
-        locallyFundedProjects: mappedLocal,
+        rdProjects: mappedRD,
         communityTransformationProjects: mappedCommunity,
+        technologySpinoffsProjects: mappedTechnology,
+        studentSupportProjects: mappedStudent,
         internshipPrograms: mappedInternship,
         studyFindings: mappedFindings,
         heroTitle: (heroData as any)?.title || initialContent.heroTitle,
@@ -521,16 +531,20 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
     setContent((prev) => ({ ...prev, heroBackgroundUrl: url }));
   };
 
-  const updateInternationallyFundedProjects = (projects: Project[]) => {
-    setContent((prev) => ({ ...prev, internationallyFundedProjects: projects }));
-  };
-
-  const updateLocallyFundedProjects = (projects: Project[]) => {
-    setContent((prev) => ({ ...prev, locallyFundedProjects: projects }));
+  const updateRDProjects = (projects: Project[]) => {
+    setContent((prev) => ({ ...prev, rdProjects: projects }));
   };
 
   const updateCommunityTransformationProjects = (projects: Project[]) => {
     setContent((prev) => ({ ...prev, communityTransformationProjects: projects }));
+  };
+
+  const updateTechnologySpinoffsProjects = (projects: Project[]) => {
+    setContent((prev) => ({ ...prev, technologySpinoffsProjects: projects }));
+  };
+
+  const updateStudentSupportProjects = (projects: Project[]) => {
+    setContent((prev) => ({ ...prev, studentSupportProjects: projects }));
   };
 
   const updateInternshipPrograms = (programs: Project[]) => {
@@ -681,31 +695,17 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  const fetchInternationallyFundedProjects = async () => {
-    setLoadingStates(prev => ({ ...prev, internationallyFunded: true }));
+  const fetchRDProjects = async () => {
+    setLoadingStates(prev => ({ ...prev, rdProjects: true }));
     try {
-      const internationalProjects = await getProjectsByCategory('internationally_funded');
-      const mappedInternational = (internationalProjects || []).map((item: any) => mapDbToApp(item));
-      setContent(prev => ({ ...prev, internationallyFundedProjects: mappedInternational }));
+      const rdProjects = await getProjectsByCategory('rd_projects');
+      const mappedRD = (rdProjects || []).map((item: any) => mapDbToApp(item));
+      setContent(prev => ({ ...prev, rdProjects: mappedRD }));
     } catch (err) {
-      console.error("Error fetching internationally funded projects:", err);
-      setError("Failed to load internationally funded projects. Please check your Supabase configuration.");
+      console.error("Error fetching R&D projects:", err);
+      setError("Failed to load R&D projects. Please check your Supabase configuration.");
     } finally {
-      setLoadingStates(prev => ({ ...prev, internationallyFunded: false }));
-    }
-  };
-
-  const fetchLocallyFundedProjects = async () => {
-    setLoadingStates(prev => ({ ...prev, locallyFunded: true }));
-    try {
-      const localProjects = await getProjectsByCategory('locally_funded');
-      const mappedLocal = (localProjects || []).map((item: any) => mapDbToApp(item));
-      setContent(prev => ({ ...prev, locallyFundedProjects: mappedLocal }));
-    } catch (err) {
-      console.error("Error fetching locally funded projects:", err);
-      setError("Failed to load locally funded projects. Please check your Supabase configuration.");
-    } finally {
-      setLoadingStates(prev => ({ ...prev, locallyFunded: false }));
+      setLoadingStates(prev => ({ ...prev, rdProjects: false }));
     }
   };
 
@@ -720,6 +720,34 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
       setError("Failed to load community transformation projects. Please check your Supabase configuration.");
     } finally {
       setLoadingStates(prev => ({ ...prev, communityTransformation: false }));
+    }
+  };
+
+  const fetchTechnologySpinoffsProjects = async () => {
+    setLoadingStates(prev => ({ ...prev, technologySpinoffs: true }));
+    try {
+      const technologyProjects = await getProjectsByCategory('technology_spinoffs');
+      const mappedTechnology = (technologyProjects || []).map((item: any) => mapDbToApp(item));
+      setContent(prev => ({ ...prev, technologySpinoffsProjects: mappedTechnology }));
+    } catch (err) {
+      console.error("Error fetching technology spinoffs projects:", err);
+      setError("Failed to load technology spinoffs projects. Please check your Supabase configuration.");
+    } finally {
+      setLoadingStates(prev => ({ ...prev, technologySpinoffs: false }));
+    }
+  };
+
+  const fetchStudentSupportProjects = async () => {
+    setLoadingStates(prev => ({ ...prev, studentSupport: true }));
+    try {
+      const studentProjects = await getProjectsByCategory('thesis_support');
+      const mappedStudent = (studentProjects || []).map((item: any) => mapDbToApp(item));
+      setContent(prev => ({ ...prev, studentSupportProjects: mappedStudent }));
+    } catch (err) {
+      console.error("Error fetching thesis support projects:", err);
+      setError("Failed to load thesis support projects. Please check your Supabase configuration.");
+    } finally {
+      setLoadingStates(prev => ({ ...prev, studentSupport: false }));
     }
   };
 
@@ -794,9 +822,10 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         updateHero,
         updateAbout,
         updateHeroBackground,
-        updateInternationallyFundedProjects,
-        updateLocallyFundedProjects,
+        updateRDProjects,
         updateCommunityTransformationProjects,
+        updateTechnologySpinoffsProjects,
+        updateStudentSupportProjects,
         updateInternshipPrograms,
         updateFinancialStatements,
         updateStudyFindings,
@@ -811,9 +840,10 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         fetchBlogPosts,
         fetchHeroSection,
         fetchAboutSection,
-        fetchInternationallyFundedProjects,
-        fetchLocallyFundedProjects,
+        fetchRDProjects,
         fetchCommunityTransformationProjects,
+        fetchTechnologySpinoffsProjects,
+        fetchStudentSupportProjects,
         fetchInternshipPrograms,
         fetchStudyFindings,
         fetchFinancialStatements,

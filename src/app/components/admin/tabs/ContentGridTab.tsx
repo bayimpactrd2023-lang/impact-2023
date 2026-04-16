@@ -13,7 +13,7 @@ import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmat
 
 interface ContentGridTabProps<T extends { id: string }> {
   /** Tab title */
-  title: string;
+  title: string | ReactNode;
   
   /** Button label for adding new items */
   addButtonLabel: string;
@@ -77,7 +77,7 @@ export function ContentGridTab<T extends { id: string }>({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h3 className="text-lg font-semibold">{title}</h3>
+        <div className="text-lg font-semibold">{title}</div>
         <Button onClick={onAdd} size="sm" className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" /> {addButtonLabel}
         </Button>
@@ -103,7 +103,7 @@ export function ContentGridTab<T extends { id: string }>({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 bg-white/90 shadow-sm"
-                  onClick={e => handleDelete(e, item.id, title)}
+                  onClick={e => handleDelete(e, item.id, typeof title === 'string' ? title : 'item')}
                 >
                   <Trash2 className="w-4 h-4 text-red-600" />
                 </Button>

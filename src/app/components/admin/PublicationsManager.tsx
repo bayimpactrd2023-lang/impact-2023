@@ -5,9 +5,9 @@ import { Input } from '@/app/components/ui/input';
 import { VisualRichEditor } from './VisualRichEditor';
 import { SharedToolbar } from './SharedToolbar';
 import { Label } from '@/app/components/ui/label';
-import { Card, CardContent } from '@/app/components/ui/card';
+import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
-import { Plus, Trash2, Edit, X, CheckCircle, FileText, Star } from 'lucide-react';
+import { Plus, Trash2, FileText, Edit, CheckCircle, X, Star, BookOpen } from 'lucide-react';
 import { Switch } from '@/app/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
@@ -248,14 +248,31 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Manage Publications</h3>
-        <div className="flex gap-2">
-          <Button onClick={handleShowFeatured} variant="default" size="sm" className="bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md">
-            <Star className="w-4 h-4 mr-2" /> Show All Featured
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100/50">
+            <BookOpen className="w-5 h-5 stroke-[2.5px]" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">Manage Publications</h3>
+            <p className="text-xs text-gray-500 font-medium">Add or edit scientific publications</p>
+          </div>
+        </div>
+        <div className="flex w-full sm:w-auto gap-2">
+          <Button 
+            onClick={handleShowFeatured} 
+            variant="default" 
+            size="sm" 
+            className="flex-1 sm:flex-initial bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md h-10 sm:h-9 px-4 font-semibold rounded-xl"
+          >
+            <Star className="w-4 h-4 mr-2" /> <span className="hidden sm:inline">Show All </span>Featured
           </Button>
-          <Button onClick={addPublication} size="sm">
-            <Plus className="w-4 h-4 mr-2" /> Add Publication
+          <Button 
+            onClick={addPublication} 
+            size="sm"
+            className="flex-1 sm:flex-initial bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 h-10 sm:h-9 px-4 font-semibold rounded-xl"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add<span className="hidden sm:inline"> Publication</span>
           </Button>
         </div>
       </div>
@@ -281,57 +298,75 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
           {pagination.loading ? (
             <AdminPageSkeleton message="Loading publications..." />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {pagination.data.map((pub) => (
                 <Card
                   key={pub.id}
-                  className="cursor-pointer relative group"
+                  className="cursor-pointer relative group overflow-hidden border-gray-100/50 hover:border-blue-200/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 rounded-3xl"
                   onClick={() => handleEdit(pub)}
                 >
+                  {/* Featured Badge */}
                   {pub.featured && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <div className="bg-[#1887FC] text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                    <div className="absolute top-4 left-16 z-20">
+                      <div className="bg-blue-600/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-blue-500/30 border border-blue-400/30">
                         <Star className="w-3 h-3 fill-current" />
                         Featured
                       </div>
                     </div>
                   )}
 
-                  <div className="absolute top-2 left-2 z-10">
+                  {/* Delete Button */}
+                  <div className="absolute top-4 right-4 z-20">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 bg-white/90 shadow-sm"
+                      className="h-9 w-9 p-0 bg-white/90 backdrop-blur-md shadow-md hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all border border-gray-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(pub.id);
                       }}
                     >
-                      <Trash2 className="w-4 h-4 text-red-600" />
+                      <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </div>
 
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 rounded-t-lg flex items-center justify-center">
-                    <FileText className="w-16 h-16 text-blue-400" />
-                  </div>
-
-                  <CardContent className="p-4">
-                    <h4 className="font-semibold text-sm line-clamp-2 mb-2">
-                      {pub.title || 'Untitled Publication'}
-                    </h4>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-1">
-                      {pub.authors || 'No authors'}
-                    </p>
-                    {pub.publishedDate && (
-                      <p className="text-xs text-gray-500">
-                        {new Date(pub.publishedDate).toLocaleDateString()}
-                      </p>
-                    )}
-                    <div className="mt-3 flex items-center gap-2">
-                      <Edit className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs text-gray-500">Click to edit</span>
+                  <div className="p-0">
+                    {/* Visual Container */}
+                    <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center relative overflow-hidden group-hover:from-blue-100 group-hover:to-blue-200 transition-colors duration-500">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_70%)] opacity-50" />
+                      <FileText className="w-20 h-20 text-[#1887FC] transition-transform duration-500 group-hover:scale-110 drop-shadow-sm" />
                     </div>
-                  </CardContent>
+
+                    <div className="p-6 space-y-3">
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-gray-900 text-lg line-clamp-2 group-hover:text-[#1887FC] transition-colors leading-tight">
+                          {pub.title || 'Untitled Publication'}
+                        </h4>
+                        <p className="text-sm font-semibold text-[#1887FC] line-clamp-1">
+                          {pub.authors || 'No authors'}
+                        </p>
+                        {pub.publishedDate && (
+                          <div className="flex items-center gap-1.5 pt-1">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                              {new Date(pub.publishedDate).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short'
+                              })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                            <Edit className="w-3 h-3 text-gray-400 group-hover:text-blue-500" />
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-500 transition-colors">Click to edit</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -415,38 +450,40 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
               className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
             >
               <div className="space-y-8 py-6">
-                <div>
-                  <Label htmlFor="pub-title" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                    Title <span className="text-red-500 ml-0.5">*</span>
-                  </Label>
-                  <Input
-                    id="pub-title"
-                    value={editingPublication.title}
-                    onChange={(e) =>
-                      setEditingPublication({ ...editingPublication, title: e.target.value })
-                    }
-                    placeholder="Enter publication title"
-                    className="text-lg font-semibold"
-                  />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <Label htmlFor="pub-title" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      Title <span className="text-red-500 ml-0.5">*</span>
+                    </Label>
+                    <Input
+                      id="pub-title"
+                      value={editingPublication.title}
+                      onChange={(e) =>
+                        setEditingPublication({ ...editingPublication, title: e.target.value })
+                      }
+                      placeholder="Enter publication title"
+                      className="text-base sm:text-lg font-semibold"
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="pub-authors" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                    Authors <span className="text-red-500 ml-0.5">*</span>
-                  </Label>
-                  <Input
-                    id="pub-authors"
-                    value={editingPublication.authors}
-                    onChange={(e) =>
-                      setEditingPublication({ ...editingPublication, authors: e.target.value })
-                    }
-                    placeholder="e.g., John Doe, Jane Smith"
-                  />
+                  <div>
+                    <Label htmlFor="pub-authors" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      Authors <span className="text-red-500 ml-0.5">*</span>
+                    </Label>
+                    <Input
+                      id="pub-authors"
+                      value={editingPublication.authors}
+                      onChange={(e) =>
+                        setEditingPublication({ ...editingPublication, authors: e.target.value })
+                      }
+                      placeholder="e.g., John Doe, Jane Smith"
+                    />
+                  </div>
                 </div>
 
                 <VisualRichEditor
                   id="pub-content"
-                  label="Abstract/Description"
+                  label="Project Description"
                   value={editingPublication.content || ''}
                   onChange={(value: string) =>
                     setEditingPublication({ ...editingPublication, content: value })
@@ -475,7 +512,9 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                   </div>
 
                   <div>
-                    <Label htmlFor="pub-date" className="text-sm font-semibold text-gray-700 mb-1">Published Date</Label>
+                    <Label htmlFor="pub-date" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      Published Date <span className="text-red-500 ml-0.5">*</span>
+                    </Label>
                     <Input
                       id="pub-date"
                       type="date"

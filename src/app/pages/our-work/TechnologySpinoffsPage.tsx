@@ -5,23 +5,23 @@ import { ProjectList } from '@/app/components/ProjectList';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { getProjectsPaginated } from '@/services/optimizedSupabaseService';
 
-export const CommunityTransformationPage: React.FC = () => {
+export const TechnologySpinoffsPage: React.FC = () => {
   // Use server-side pagination with 6 items per page
   const pagination = useServerPagination<Project>({
-    fetchFunction: (page, itemsPerPage) => getProjectsPaginated('community_transformation', page, itemsPerPage),
+    fetchFunction: (page, itemsPerPage) => getProjectsPaginated('technology_spinoffs', page, itemsPerPage),
     itemsPerPage: 6,
   });
 
   // Show full-page skeleton during any loading
   if (pagination.loading) {
-    return <PageSkeletonLoader message="Loading Community Transformation Projects..." />;
+    return <PageSkeletonLoader message="Loading Technology Spinoffs..." />;
   }
 
   return (
-    <ProjectList
+    <ProjectList 
       projects={pagination.data}
-      title="Community Transformation"
-      subtitle="Discover our various outreach activities, community engagements, and events we have attended to drive positive social change."
+      title="Technology Spinoffs" 
+      subtitle="Explore our innovative applications, dashboards, and systems developed from our research findings."
       pagination={pagination}
     />
   );

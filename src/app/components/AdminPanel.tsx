@@ -8,7 +8,6 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { Label } from '@/app/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
@@ -89,8 +88,7 @@ export const AdminPanel: React.FC = () => {
     updateHighlights,
     updateTeamMembers,
     updateAbout,
-    updateInternationallyFundedProjects,
-    updateLocallyFundedProjects,
+    updateRDProjects,
     updateCommunityTransformationProjects,
     updateFinancialStatements,
     updateStudyFindings,
@@ -229,6 +227,18 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  // About Section active field for toolbar
+  const [aboutActiveField, setAboutActiveField] = useState<string | null>(null);
+
+  const handleAboutCommand = (cmd: string, val?: string) => {
+    if (aboutActiveField) {
+      const event = new CustomEvent(`editor-command-${aboutActiveField}`, {
+        detail: { command: cmd, value: val }
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
   // Partners modal state
   const [editingPartner, setEditingPartner] = useState<PartnerForm | null>(null);
   const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
@@ -263,11 +273,10 @@ export const AdminPanel: React.FC = () => {
         await Promise.all([fetchHeroSection(), fetchAboutSection()]);
         
         // Load database counts for home tab
-        const [highlights, publications, intProjects, localProjects, commProjects, testimonials] = await Promise.all([
+        const [highlights, publications, rdProjects, commProjects, testimonials] = await Promise.all([
           getAllHighlights(),
           getAllPublications(),
-          getProjectsByCategory('internationally_funded'),
-          getProjectsByCategory('locally_funded'),
+          getProjectsByCategory('rd_projects'),
           getProjectsByCategory('community_transformation'),
           getAllInternshipTestimonials(),
         ]);
@@ -275,7 +284,7 @@ export const AdminPanel: React.FC = () => {
         setDbCounts({
           highlights: highlights?.length || 0,
           publications: publications?.length || 0,
-          projects: (intProjects?.length || 0) + (localProjects?.length || 0) + (commProjects?.length || 0),
+          projects: (rdProjects?.length || 0) + (commProjects?.length || 0),
           testimonials: testimonials?.length || 0,
         });
       } catch (error) {
@@ -473,6 +482,8 @@ export const AdminPanel: React.FC = () => {
 
     const validation = mergeValidationResults(
       validateRequiredTrimmed(publicationDraft.title, 'Title'),
+      validateRequiredTrimmed(publicationDraft.authors || '', 'Authors'),
+      validateRequiredTrimmed(publicationDraft.publishedDate || '', 'Published date'),
       validateMaxChars(publicationDraft.title.trim(), AdminValidationRules.shortTitleMaxChars, 'Title'),
       validateMaxWords(publicationDraft.title.trim(), AdminValidationRules.shortTitleMaxWords, 'Title'),
       validateRequiredTrimmed(publicationDraft.content || '', 'Content'),
@@ -630,64 +641,7 @@ export const AdminPanel: React.FC = () => {
       toast.error('Failed to delete news item.');
     }
   };
-  
-  const updateNewsItem = <K extends keyof NewsItem>(id: string, field: K, value: NewsItem[K]) => setNewsItems(newsItems.map(i => i.id === id ? { ...i, [field]: value } : i));
-  const updateNewsItemImages = (id: string, images: Array<string | File>) => {
-    const sanitized = images.filter((img): img is string => typeof img === 'string');
-    setNewsItems(newsItems.map(i => i.id === id ? { ...i, images: sanitized, imageUrl: sanitized[0] || '' } : i));
-  };
-  const updateHighlightImages = (id: string, images: Array<string | File>) => {
-    const sanitized = images.filter((img): img is string => typeof img === 'string');
-    setHighlights(highlights.map(h => h.id === id ? { ...h, images: sanitized, imageUrl: sanitized[0] || '' } : h));
-  };
 
-  const handleSavePartners = async (partner?: PartnerForm) => {
-    try {
-      const itemsToSave = partner ? [partner] : partners;
-      
-      for (const item of itemsToSave) {
-        // Handle Image Upload before saving
-        let finalLogoUrl = item.logoUrl;
-        if (typeof finalLogoUrl === 'object' && (finalLogoUrl as any) instanceof File) {
-          finalLogoUrl = await uploadImage(finalLogoUrl as any, 'partners');
-        }
-
-        const partnerData = {
-          name: item.name,
-          logo_url: (finalLogoUrl as string) || ''
-        };
-        
-        if (item.id.startsWith('temp-')) {
-          const created = await createPartner(partnerData);
-          if (created && partner) {
-            setPartners(partners.map(p => 
-              p.id === item.id ? { ...item, id: created.id, logoUrl: (finalLogoUrl as string) } : p
-            ));
-          }
-        } else {
-          await updatePartnerInDb(item.id, partnerData);
-        }
-      }
-      
-      await refreshContent();
-      toast.success('Partners saved successfully!');
-    } catch (error) {
-      console.error('Error saving partners:', error);
-      toast.error('Failed to save partners.');
-      throw error;
-    }
-  };
-  
-  const addPartner = () => {
-    const p: PartnerForm = {
-      id: `temp-${Date.now()}`,
-      name: '',
-      logoUrl: ''
-    };
-    setEditingPartner(p);
-    setIsPartnerModalOpen(true);
-  };
-  
   const deletePartner = async (id: string) => {
     try {
       const confirmed = await confirmDelete({
@@ -713,8 +667,45 @@ export const AdminPanel: React.FC = () => {
       toast.error('Failed to delete partner.');
     }
   };
-  
+
+  const deleteHighlight = async (id: string) => {
+    try {
+      const confirmed = await confirmDelete({
+        itemName: 'highlight',
+        title: 'Delete Highlight',
+        message: 'Are you sure you want to delete this highlight? This action cannot be undone.'
+      });
+      if (!confirmed) return;
+
+      if (!id.startsWith('temp-')) {
+        // Find the item to get its image URLs
+        const itemToDelete = highlights.find(h => h.id === id);
+        if (itemToDelete) {
+          // Delete main image
+          if (itemToDelete.imageUrl) {
+            await deleteStorageFile(itemToDelete.imageUrl, 'highlights');
+          }
+          // Delete additional images
+          if (itemToDelete.images && itemToDelete.images.length > 0) {
+            for (const imgUrl of itemToDelete.images) {
+              await deleteStorageFile(imgUrl, 'highlights');
+            }
+          }
+        }
+        await deleteHighlightFromDb(id);
+      }
+      setHighlights(highlights.filter(h => h.id !== id));
+      await refreshContent();
+      toast.success('Highlight deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting highlight:', error);
+      toast.error('Failed to delete highlight.');
+    }
+  };
+
   const updatePartner = <K extends keyof Partner>(id: string, field: K, value: Partner[K]) => setPartners(partners.map(p => p.id === id ? { ...p, [field]: value } : p));
+
+  const updateHighlight = <K extends keyof Highlight>(id: string, field: K, value: Highlight[K]) => setHighlights(highlights.map(h => h.id === id ? { ...h, [field]: value } : h));
 
   // Highlights handlers - Now saves to Supabase with image upload
   const handleSaveHighlights = async (highlight?: HighlightForm) => {
@@ -800,44 +791,65 @@ export const AdminPanel: React.FC = () => {
     setEditingHighlight(h);
     setIsHighlightModalOpen(true);
   };
-  
-  const deleteHighlight = async (id: string) => {
-    try {
-      const confirmed = await confirmDelete({
-        itemName: 'highlight',
-        title: 'Delete Highlight',
-        message: 'Are you sure you want to delete this highlight? This action cannot be undone.'
-      });
-      if (!confirmed) return;
 
-      if (!id.startsWith('temp-')) {
-        // Find the item to get its image URLs
-        const itemToDelete = highlights.find(h => h.id === id);
-        if (itemToDelete) {
-          // Delete main image
-          if (itemToDelete.imageUrl) {
-            await deleteStorageFile(itemToDelete.imageUrl, 'highlights');
-          }
-          // Delete additional images
-          if (itemToDelete.images && itemToDelete.images.length > 0) {
-            for (const imgUrl of itemToDelete.images) {
-              await deleteStorageFile(imgUrl, 'highlights');
-            }
-          }
+  const updateNewsItem = <K extends keyof NewsItem>(id: string, field: K, value: NewsItem[K]) => setNewsItems(newsItems.map(i => i.id === id ? { ...i, [field]: value } : i));
+  const updateNewsItemImages = (id: string, images: Array<string | File>) => {
+    const sanitized = images.filter((img): img is string => typeof img === 'string');
+    setNewsItems(newsItems.map(i => i.id === id ? { ...i, images: sanitized, imageUrl: sanitized[0] || '' } : i));
+  };
+  const updateHighlightImages = (id: string, images: Array<string | File>) => {
+    const sanitized = images.filter((img): img is string => typeof img === 'string');
+    setHighlights(highlights.map(h => h.id === id ? { ...h, images: sanitized, imageUrl: sanitized[0] || '' } : h));
+  };
+
+  const handleSavePartners = async (partner?: PartnerForm) => {
+    try {
+      const itemsToSave = partner ? [partner] : partners;
+      
+      for (const item of itemsToSave) {
+        // Handle Image Upload before saving
+        let finalLogoUrl = item.logoUrl;
+        if (typeof finalLogoUrl === 'object' && (finalLogoUrl as any) instanceof File) {
+          finalLogoUrl = await uploadImage(finalLogoUrl as any, 'partners');
         }
-        await deleteHighlightFromDb(id);
+
+        const partnerData = {
+          name: item.name,
+          logo_url: (finalLogoUrl as string) || ''
+        };
+        
+        if (item.id.startsWith('temp-')) {
+          const created = await createPartner(partnerData);
+          if (created && partner) {
+            setPartners(partners.map(p => 
+              p.id === item.id ? { ...item, id: created.id, logoUrl: (finalLogoUrl as string) } : p
+            ));
+          }
+        } else {
+          await updatePartnerInDb(item.id, partnerData);
+        }
       }
-      setHighlights(highlights.filter(h => h.id !== id));
+      
       await refreshContent();
-      toast.success('Highlight deleted successfully!');
+      toast.success('Partners saved successfully!');
     } catch (error) {
-      console.error('Error deleting highlight:', error);
-      toast.error('Failed to delete highlight.');
+      console.error('Error saving partners:', error);
+      toast.error('Failed to save partners.');
+      throw error;
     }
   };
-  const updateHighlight = <K extends keyof Highlight>(id: string, field: K, value: Highlight[K]) => setHighlights(highlights.map(h => h.id === id ? { ...h, [field]: value } : h));
+  
+  const addPartner = () => {
+    const p: PartnerForm = {
+      id: `temp-${Date.now()}`,
+      name: '',
+      logoUrl: ''
+    };
+    setEditingPartner(p);
+    setIsPartnerModalOpen(true);
+  };
 
-  // Team Members handlers - Now saves to Supabase with image upload
+  // Team handlers - Now saves to Supabase
   const handleSaveTeamMembers = async (member?: TeamMemberForm) => {
     try {
       const itemsToSave = member ? [member] : teamMembers;
@@ -876,9 +888,9 @@ export const AdminPanel: React.FC = () => {
       throw error;
     }
   };
-  
+
   const addTeamMember = () => { const m: TeamMemberForm = { id: `temp-${Date.now()}`, name: '', role: '', description: '', imageUrl: '' }; setEditingTeamMember(m); setIsTeamMemberModalOpen(true); };
-  
+
   const deleteTeamMember = async (id: string) => {
     try {
       const confirmed = await confirmDelete({
@@ -1000,21 +1012,21 @@ export const AdminPanel: React.FC = () => {
           <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
           <div className="overflow-x-auto px-2 sm:px-4 scrollbar-hide">
-            <TabsList className="flex justify-start items-center min-w-full bg-transparent h-auto py-2 gap-0.5">
+            <TabsList className="flex justify-start items-center min-w-full bg-transparent h-auto py-2 gap-0.5 sm:gap-1">
               {[
-                { value: 'home',         icon: <Home className="w-3.5 h-3.5" />,      label: 'Home' },
-                { value: 'blog',         icon: <FileText className="w-3.5 h-3.5" />,  label: 'Blog' },
-                { value: 'news',         icon: <Newspaper className="w-3.5 h-3.5" />, label: 'News' },
-                { value: 'highlights',   icon: <Sparkles className="w-3.5 h-3.5" />,  label: 'Highlights' },
-                { value: 'team',         icon: <Users className="w-3.5 h-3.5" />,     label: 'Team' },
-                { value: 'about',        icon: <Info className="w-3.5 h-3.5" />,      label: 'About' },
-                { value: 'our-work',     icon: <Briefcase className="w-3.5 h-3.5" />, label: 'Work' },
-                { value: 'publications', icon: <BookOpen className="w-3.5 h-3.5" />,  label: 'Pubs' },
-                { value: 'partners',     icon: <Handshake className="w-3.5 h-3.5" />, label: 'Partners' },
+                { value: 'home',         icon: <Home className="w-4 h-4 sm:w-3.5 sm:h-3.5" />,      label: 'Home' },
+                { value: 'blog',         icon: <FileText className="w-4 h-4 sm:w-3.5 sm:h-3.5" />,  label: 'Blog' },
+                { value: 'news',         icon: <Newspaper className="w-4 h-4 sm:w-3.5 sm:h-3.5" />, label: 'News' },
+                { value: 'highlights',   icon: <Sparkles className="w-4 h-4 sm:w-3.5 sm:h-3.5" />,  label: 'Highlights' },
+                { value: 'team',         icon: <Users className="w-4 h-4 sm:w-3.5 sm:h-3.5" />,     label: 'Team' },
+                { value: 'about',        icon: <Info className="w-4 h-4 sm:w-3.5 sm:h-3.5" />,      label: 'About' },
+                { value: 'our-work',     icon: <Briefcase className="w-4 h-4 sm:w-3.5 sm:h-3.5" />, label: 'Work' },
+                { value: 'publications', icon: <BookOpen className="w-4 h-4 sm:w-3.5 sm:h-3.5" />,  label: 'Pubs' },
+                { value: 'partners',     icon: <Handshake className="w-4 h-4 sm:w-3.5 sm:h-3.5" />, label: 'Partners' },
               ].map(t => (
                 <TabsTrigger key={t.value} value={t.value}
-                  className="flex-shrink-0 flex items-center justify-center gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1887FC] data-[state=active]:to-[#3b82f6] data-[state=active]:text-white rounded-md px-2.5 py-2 transition-all hover:scale-105 text-xs whitespace-nowrap">
-                  {t.icon}<span>{t.label}</span>
+                  className="flex-shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1887FC] data-[state=active]:to-[#3b82f6] data-[state=active]:text-white rounded-md px-3 py-2.5 sm:px-4 sm:py-2.5 transition-all hover:scale-105 text-sm whitespace-nowrap font-semibold">
+                  {t.icon}<span className="hidden sm:inline">{t.label}</span><span className="hidden xs:inline sm:hidden">{t.label}</span>
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -1121,7 +1133,7 @@ export const AdminPanel: React.FC = () => {
                     </div>
                   </Button>
 
-                  {/* ★ Add Team Member */}
+                  {/* ★ Add Board Member */}
                   <Button
                     variant="outline"
                     className="justify-start h-auto py-5 px-5 hover:border-violet-200 hover:bg-violet-50/30 transition-all group rounded-2xl border-gray-100 shadow-sm"
@@ -1132,7 +1144,7 @@ export const AdminPanel: React.FC = () => {
                         <Users className="w-6 h-6" />
                       </div>
                       <div className="text-left space-y-0.5">
-                        <div className="font-bold text-[15px] text-gray-900">Add Team Member</div>
+                        <div className="font-bold text-[15px] text-gray-900">Add Board Member</div>
                         <p className="text-xs text-gray-500 font-medium group-hover:text-violet-600/80 transition-colors">Manage your <span className="text-violet-600 underline underline-offset-2">team</span></p>
                       </div>
                     </div>
@@ -1205,50 +1217,87 @@ export const AdminPanel: React.FC = () => {
           </TabsContent>
 
           {/* ── ABOUT TAB ──────────────────────────────────────────────────── */}
-          <TabsContent value="about" className="space-y-4">
+          <TabsContent value="about" className="space-y-4 relative">
+            <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md pb-4 pt-2 -mx-2 px-2 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center sm:bg-transparent sm:w-auto sm:h-auto">
+                  <Info className="w-5 h-5 text-[#1887FC]" />
+                </div>
+                <h3 className="font-bold text-gray-900 text-sm sm:text-base">About Section Editor</h3>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                <div className="w-full sm:w-auto">
+                  <SharedToolbar onCommand={handleAboutCommand} />
+                </div>
+                <Button 
+                  size="sm"
+                  className="bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md h-10 sm:h-9 px-4 w-full sm:w-auto font-semibold sm:font-normal"
+                  onClick={handleSaveAbout}
+                  disabled={isSavingHero}
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save Changes
+                </Button>
+              </div>
+            </div>
+
             <Card>
               <CardHeader>
-                <CardTitle>About Section</CardTitle>
-                <CardDescription>Edit the about section content including Mission and Vision</CardDescription>
+                <CardTitle>About Section Content</CardTitle>
+                <CardDescription>Edit the mission, vision, and core story of Impact R&D</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
-                  <Label htmlFor="about-mission" className="text-sm font-semibold text-gray-700">Mission</Label>
-                  <Textarea 
-                    id="about-mission" 
-                    value={aboutMission} 
-                    onChange={(e) => setAboutMission(e.target.value)} 
-                    rows={4} 
+                  <VisualRichEditor
+                    id="about-mission"
+                    label="Mission"
+                    value={aboutMission}
+                    onChange={setAboutMission}
+                    rows={4}
                     placeholder="Enter the organization's mission..."
-                    className="mt-1.5 focus:ring-2 focus:ring-[#1887FC]" 
+                    showToolbar={false}
+                    onCommand={(cmd) => {
+                      if (cmd === 'focus') setAboutActiveField('about-mission');
+                    }}
                   />
-                  <p className="text-xs text-gray-500 italic">Tip: Use &lt;span class='text-[#1887FC] font-bold'&gt;keywords&lt;/span&gt; to highlight text.</p>
+                  <p className="text-xs text-gray-500 italic flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-[#1887FC]" />
+                    Tip: Use the toolbar above to highlight important keywords.
+                  </p>
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="about-vision" className="text-sm font-semibold text-gray-700">Vision</Label>
-                  <Textarea 
-                    id="about-vision" 
-                    value={aboutVision} 
-                    onChange={(e) => setAboutVision(e.target.value)} 
-                    rows={4} 
+                  <VisualRichEditor
+                    id="about-vision"
+                    label="Vision"
+                    value={aboutVision}
+                    onChange={setAboutVision}
+                    rows={4}
                     placeholder="Enter the organization's vision..."
-                    className="mt-1.5 focus:ring-2 focus:ring-[#1887FC]" 
+                    showToolbar={false}
+                    onCommand={(cmd) => {
+                      if (cmd === 'focus') setAboutActiveField('about-vision');
+                    }}
                   />
-                  <p className="text-xs text-gray-500 italic">Tip: Use &lt;span class='text-[#1887FC] font-bold'&gt;keywords&lt;/span&gt; to highlight text.</p>
+                  <p className="text-xs text-gray-500 italic flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-[#1887FC]" />
+                    Tip: Use the toolbar above to highlight important keywords.
+                  </p>
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="about-text" className="text-sm font-semibold text-gray-700">About Text / Story</Label>
-                  <Textarea id="about-text" value={aboutText} onChange={(e) => setAboutText(e.target.value)} rows={6} className="mt-1.5 focus:ring-2 focus:ring-[#1887FC]" />
+                  <VisualRichEditor
+                    id="about-text"
+                    label="About Text / Story"
+                    value={aboutText}
+                    onChange={setAboutText}
+                    rows={12}
+                    placeholder="Enter the organization's story..."
+                    showToolbar={false}
+                    onCommand={(cmd) => {
+                      if (cmd === 'focus') setAboutActiveField('about-text');
+                    }}
+                  />
                 </div>
-                
-                <Button 
-                  className="w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
-                  onClick={handleSaveAbout}
-                >
-                  <Save className="w-4 h-4 mr-2" /> Save About Section
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1349,10 +1398,10 @@ export const AdminPanel: React.FC = () => {
                       />
                     </div>
 
-                    {/* Date */}
+                    {/* Published Date */}
                     <div className="space-y-1.5">
-                      <Label htmlFor="news-date" className="text-sm font-semibold">
-                        Date <span className="text-red-500">*</span>
+                      <Label htmlFor="news-date" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                        Published Date <span className="text-red-500 ml-0.5">*</span>
                       </Label>
                       <Input
                         id="news-date"
@@ -1573,8 +1622,8 @@ export const AdminPanel: React.FC = () => {
           {/* OLD TEAM CODE - DO NOT EXECUTE */}
           <TabsContent value="team-old" className="space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <h3 className="text-lg font-semibold">Manage Team Members</h3>
-              <Button onClick={addTeamMember} size="sm" className="w-full sm:w-auto"><Plus className="w-4 h-4 mr-2" /> Add Team Member</Button>
+              <h3 className="text-lg font-semibold">Manage Board Members</h3>
+              <Button onClick={addTeamMember} size="sm" className="w-full sm:w-auto"><Plus className="w-4 h-4 mr-2" /> Add Board Member</Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {false && [].map((member: any) => (
@@ -1634,17 +1683,15 @@ export const AdminPanel: React.FC = () => {
           {/* ── OUR WORK TAB ───────────────────────────────────────────────── */}
           <TabsContent value="our-work" className="space-y-4">
             <h3 className="text-lg font-semibold mb-4">Manage "Our Work" Sections</h3>
-            <Tabs defaultValue="internationally-funded">
+            <Tabs defaultValue="rd-projects">
               <TabsList className="w-full flex-wrap h-auto mb-4">
-                <TabsTrigger value="internationally-funded">Int. Funded</TabsTrigger>
-                <TabsTrigger value="locally-funded">Loc. Funded</TabsTrigger>
+                <TabsTrigger value="rd-projects">R&D Projects</TabsTrigger>
                 <TabsTrigger value="community">Community</TabsTrigger>
                 <TabsTrigger value="internship">Internship</TabsTrigger>
                 <TabsTrigger value="financial">Financial</TabsTrigger>
                 <TabsTrigger value="findings">Findings</TabsTrigger>
               </TabsList>
-              <TabsContent value="internationally-funded"><ProjectManager projects={content.internationallyFundedProjects as Project[]} onUpdate={updateInternationallyFundedProjects} title="Internationally Funded Projects" category="internationally_funded" /></TabsContent>
-              <TabsContent value="locally-funded"><ProjectManager projects={content.locallyFundedProjects as Project[]} onUpdate={updateLocallyFundedProjects} title="Locally Funded Projects" category="locally_funded" /></TabsContent>
+              <TabsContent value="rd-projects"><ProjectManager projects={content.rdProjects as Project[]} onUpdate={updateRDProjects} title="R&D Projects" category="rd_projects" /></TabsContent>
               <TabsContent value="community"><ProjectManager projects={content.communityTransformationProjects as Project[]} onUpdate={updateCommunityTransformationProjects} title="Community Transformation" category="community_transformation" /></TabsContent>
               <TabsContent value="internship"><InternshipTestimonialManager testimonials={content.internshipTestimonials as InternshipTestimonial[]} onUpdate={updateInternshipTestimonials} /></TabsContent>
               <TabsContent value="financial"><FinancialStatementManager statements={content.financialStatements as FinancialStatement[]} onUpdate={updateFinancialStatements} /></TabsContent>
@@ -1725,14 +1772,14 @@ export const AdminPanel: React.FC = () => {
       <Dialog open={isQuickBlogOpen} onOpenChange={setIsQuickBlogOpen}>
         <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
           {/* Header */}
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
-                <FileText className="w-5 h-5" />
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-gray-100 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <DialogTitle className="text-xl font-bold text-gray-900">Create New Blog Post</DialogTitle>
-                <DialogDescription className="text-sm text-gray-500 mt-0.5">
+              <div className="min-w-0">
+                <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900">Create New Blog Post</DialogTitle>
+                <DialogDescription className="text-xs sm:text-sm text-gray-500 mt-0.5">
                   Your post will appear instantly in the Blog tab — no need to switch tabs.
                 </DialogDescription>
               </div>
@@ -1818,12 +1865,12 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           {/* Sticky Footer */}
-          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
-            <Button variant="outline" className="flex-1 w-full" onClick={() => setIsQuickBlogOpen(false)}>
+          <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+            <Button variant="outline" className="flex-1 w-full h-11 sm:h-auto" onClick={() => setIsQuickBlogOpen(false)}>
               <X className="w-4 h-4 mr-2" /> Cancel
             </Button>
             <Button
-              className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+              className="flex-1 w-full h-11 sm:h-auto bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
               onClick={publishQuickBlog}
               disabled={isSavingQuickBlog}
             >
@@ -1837,30 +1884,30 @@ export const AdminPanel: React.FC = () => {
       <Dialog open={isQuickPublicationOpen} onOpenChange={setIsQuickPublicationOpen}>
         <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
           {/* Header */}
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
-                <BookOpen className="w-5 h-5" />
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-gray-100 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
+                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <DialogTitle className="text-xl font-bold text-gray-900">Create New Publication</DialogTitle>
-                <DialogDescription className="text-sm text-gray-500 mt-0.5">
+              <div className="min-w-0">
+                <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900">Create New Publication</DialogTitle>
+                <DialogDescription className="text-xs sm:text-sm text-gray-500 mt-0.5">
                   Create a new publication entry. Your post will appear in the Pubs tab.
                 </DialogDescription>
               </div>
             </div>
             {/* Shared Toolbar */}
-            <div className="pt-3">
+            <div className="pt-2 sm:pt-3">
               <SharedToolbar onCommand={handleQuickPubCommand} />
             </div>
           </DialogHeader>
 
           {/* Scrollable body */}
           <div
-            className="flex-1 overflow-y-auto px-6 pb-6"
+            className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            <div className="space-y-5 pt-4">
+            <div className="space-y-4 sm:space-y-5 pt-3 sm:pt-4">
               {/* Title */}
               <div className="space-y-1.5">
                 <Label htmlFor="qp-title" className="text-sm font-semibold">
@@ -1949,12 +1996,12 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           {/* Sticky Footer */}
-          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
-            <Button variant="outline" className="flex-1 w-full" onClick={() => setIsQuickPublicationOpen(false)}>
+          <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+            <Button variant="outline" className="flex-1 w-full h-11 sm:h-auto" onClick={() => setIsQuickPublicationOpen(false)}>
               <X className="w-4 h-4 mr-2" /> Cancel
             </Button>
             <Button
-              className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+              className="flex-1 w-full h-11 sm:h-auto bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
               onClick={publishQuickPublication}
               disabled={isSavingQuickPublication}
             >
@@ -1968,16 +2015,16 @@ export const AdminPanel: React.FC = () => {
           <Dialog open={isHighlightModalOpen} onOpenChange={setIsHighlightModalOpen}>
             <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
               {/* Header */}
-              <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
-                    <Sparkles className="w-5 h-5" />
+              <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-gray-100 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div>
-                    <DialogTitle className="text-xl font-bold text-gray-900">
+                  <div className="min-w-0">
+                    <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900">
                       {editingHighlight?.id?.startsWith('temp-') ? 'Create Highlight' : 'Edit Highlight'}
                     </DialogTitle>
-                    <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                    <DialogDescription className="text-xs sm:text-sm text-gray-500 mt-0.5">
                       {editingHighlight?.id?.startsWith('temp-')
                         ? 'Create a new highlight to feature your work on the Home page.'
                         : 'Update the details for this highlight and click Save to persist changes.'}
@@ -1992,11 +2039,11 @@ export const AdminPanel: React.FC = () => {
 
               {/* Scrollable body */}
               <div
-                className="flex-1 overflow-y-auto px-6 pb-6"
+                className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {editingHighlight && (
-                  <div className="space-y-5 pt-4">
+                  <div className="space-y-4 sm:space-y-5 pt-3 sm:pt-4">
                     {/* Title */}
                     <div className="space-y-1.5">
                       <Label htmlFor="highlight-title" className="text-sm font-semibold">
@@ -2035,34 +2082,6 @@ export const AdminPanel: React.FC = () => {
                         }
                       }}
                     />
-
-                    {/* Icon */}
-                    <div className="space-y-1.5">
-                      <Label htmlFor="highlight-icon" className="text-sm font-semibold">Icon</Label>
-                      <Select
-                        value={editingHighlight.iconName}
-                        onValueChange={(v) => { 
-                          const u = { ...editingHighlight, iconName: v }; 
-                          setEditingHighlight(u); 
-                          updateHighlight(editingHighlight.id, 'iconName', v); 
-                        }}
-                      >
-                        <SelectTrigger id="highlight-icon" className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Satellite">Satellite</SelectItem>
-                          <SelectItem value="Sprout">Sprout</SelectItem>
-                          <SelectItem value="BarChart3">BarChart3</SelectItem>
-                          <SelectItem value="Globe">Globe</SelectItem>
-                          <SelectItem value="Star">Star</SelectItem>
-                          <SelectItem value="Award">Award</SelectItem>
-                          <SelectItem value="TrendingUp">TrendingUp</SelectItem>
-                          <SelectItem value="CheckCircle">CheckCircle</SelectItem>
-                          <SelectItem value="Info">Info</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
 
                     {/* Detailed Content */}
                     <VisualRichEditor
@@ -2165,12 +2184,12 @@ export const AdminPanel: React.FC = () => {
               </div>
 
               {/* Sticky Footer */}
-              <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
-                <Button variant="outline" className="flex-1 w-full" onClick={() => setIsHighlightModalOpen(false)}>
+              <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+                <Button variant="outline" className="flex-1 w-full h-11 sm:h-auto" onClick={() => setIsHighlightModalOpen(false)}>
                   <X className="w-4 h-4 mr-2" /> Cancel
                 </Button>
                 <Button
-                  className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+                  className="flex-1 w-full h-11 sm:h-auto bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
                   disabled={isSavingHighlight}
                   onClick={async () => {
                     if (editingHighlight && !isSavingHighlight) {
@@ -2206,16 +2225,16 @@ export const AdminPanel: React.FC = () => {
       <Dialog open={isTeamMemberModalOpen} onOpenChange={setIsTeamMemberModalOpen}>
         <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
           {/* Header */}
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
-                <Users className="w-5 h-5" />
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-gray-100 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <DialogTitle className="text-xl font-bold text-gray-900">
+              <div className="min-w-0">
+                <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900">
                   {editingTeamMember?.id?.startsWith('temp-') ? 'Create Team Member' : 'Edit Team Member'}
                 </DialogTitle>
-                <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                <DialogDescription className="text-xs sm:text-sm text-gray-500 mt-0.5">
                   {editingTeamMember?.id?.startsWith('temp-')
                     ? 'Add a new team member to showcase on your website.'
                     : 'Update the details for this team member and click Save to persist changes.'}
@@ -2223,18 +2242,18 @@ export const AdminPanel: React.FC = () => {
               </div>
             </div>
             {/* Shared Toolbar */}
-            <div className="pt-3">
+            <div className="pt-2 sm:pt-3">
               <SharedToolbar onCommand={handleTeamCommand} />
             </div>
           </DialogHeader>
 
           {/* Scrollable body */}
           <div
-            className="flex-1 overflow-y-auto px-6 pb-6"
+            className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {editingTeamMember && (
-              <div className="space-y-5 pt-4">
+              <div className="space-y-4 sm:space-y-5 pt-3 sm:pt-4">
                 {/* Name */}
                 <div className="space-y-1.5">
                   <Label htmlFor="team-name" className="text-sm font-semibold">
@@ -2312,12 +2331,12 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           {/* Sticky Footer */}
-          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
-            <Button variant="outline" className="flex-1 w-full" onClick={() => setIsTeamMemberModalOpen(false)}>
+          <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+            <Button variant="outline" className="flex-1 w-full h-11 sm:h-auto" onClick={() => setIsTeamMemberModalOpen(false)}>
               <X className="w-4 h-4 mr-2" /> Cancel
             </Button>
             <Button
-              className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+              className="flex-1 w-full h-11 sm:h-auto bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
               disabled={isSavingTeamMember}
               onClick={async () => {
                 if (editingTeamMember && !isSavingTeamMember) {
@@ -2352,16 +2371,16 @@ export const AdminPanel: React.FC = () => {
       <Dialog open={isPartnerModalOpen} onOpenChange={setIsPartnerModalOpen}>
         <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
           {/* Header */}
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
-                <Handshake className="w-5 h-5" />
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-gray-100 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0">
+                <Handshake className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <DialogTitle className="text-xl font-bold text-gray-900">
+              <div className="min-w-0">
+                <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900">
                   {editingPartner?.id?.startsWith('temp-') ? 'Create Partner' : 'Edit Partner'}
                 </DialogTitle>
-                <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                <DialogDescription className="text-xs sm:text-sm text-gray-500 mt-0.5">
                   {editingPartner?.id?.startsWith('temp-')
                     ? 'Add a new partner to showcase your collaborations.'
                     : 'Update the details for this partner and click Save to persist changes.'}
@@ -2372,11 +2391,11 @@ export const AdminPanel: React.FC = () => {
 
           {/* Scrollable body */}
           <div
-            className="flex-1 overflow-y-auto px-6 pb-6"
+            className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {editingPartner && (
-              <div className="space-y-5 pt-4">
+              <div className="space-y-4 sm:space-y-5 pt-3 sm:pt-4">
                 {/* Name */}
                 <div className="space-y-1.5">
                   <Label htmlFor="partner-name" className="text-sm font-semibold">
@@ -2416,12 +2435,12 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           {/* Sticky Footer */}
-          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
-            <Button variant="outline" className="flex-1 w-full" onClick={() => setIsPartnerModalOpen(false)}>
+          <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6 border-t border-gray-100 shrink-0 bg-gray-50/50 rounded-b-2xl">
+            <Button variant="outline" className="flex-1 w-full h-11 sm:h-auto" onClick={() => setIsPartnerModalOpen(false)}>
               <X className="w-4 h-4 mr-2" /> Cancel
             </Button>
             <Button
-              className="flex-1 w-full bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
+              className="flex-1 w-full h-11 sm:h-auto bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md"
               disabled={isSavingPartner}
               onClick={async () => {
                 if (editingPartner && !isSavingPartner) {
@@ -2451,9 +2470,9 @@ export const AdminPanel: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmDialog />
+
+      {/* Delete Confirmation Modal - Only render on home tab to prevent flashing when switching to other tabs */}
+      {activeTab === 'home' && <DeleteConfirmDialog />}
     </div>
   );
 };

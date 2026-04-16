@@ -12,6 +12,9 @@ import {
   Handshake,
   BookOpen,
   Layout,
+  Lightbulb,
+  BarChart3,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -72,7 +75,7 @@ const createQuickActions = (handlers: HomeTabProps['quickActions']): QuickAction
   },
   {
     id: 'add-team-member',
-    label: 'Add Team Member',
+    label: 'Add Add Board Member',
     description: 'Manage your team',
     icon: <Users className="w-5 h-5" />,
     color: {
@@ -155,7 +158,10 @@ export function HomeTab({ counts, quickActions }: HomeTabProps) {
         {/* Tips Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">💡 Tips</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-blue-500 stroke-[3px]" />
+              <span>Tips</span>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {[
@@ -175,7 +181,10 @@ export function HomeTab({ counts, quickActions }: HomeTabProps) {
         {/* Content Overview Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">🎯 Content Overview</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-500 stroke-[3px]" />
+              <span>Content Overview</span>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {[
@@ -196,7 +205,10 @@ export function HomeTab({ counts, quickActions }: HomeTabProps) {
       {/* Quick Actions Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-blue-500 stroke-[3px]" />
+            <span>Quick Actions</span>
+          </CardTitle>
           <CardDescription>Common tasks and shortcuts</CardDescription>
         </CardHeader>
         <CardContent>

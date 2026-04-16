@@ -3,10 +3,10 @@ import { HighlightForm, Highlight as AppHighlight } from '@/app/context/ContentC
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { Card, CardContent } from '@/app/components/ui/card';
+import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Switch } from '@/app/components/ui/switch';
-import { Plus, Trash2, Edit, X, CheckCircle, Star, Sparkles, Calendar } from 'lucide-react';
+import { Plus, Trash2, Edit, CheckCircle, X, Sparkles, Star, Lightbulb, Calendar } from 'lucide-react';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { toast } from 'sonner';
@@ -326,14 +326,31 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Manage Highlights</h3>
-        <div className="flex gap-2">
-          <Button onClick={handleShowFeatured} variant="default" size="sm" className="bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md">
-            <Star className="w-4 h-4 mr-2" /> Show All Featured
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100/50">
+            <Lightbulb className="w-5 h-5 stroke-[2.5px]" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">Manage Highlights</h3>
+            <p className="text-xs text-gray-500 font-medium">Feature your best work</p>
+          </div>
+        </div>
+        <div className="flex w-full sm:w-auto gap-2">
+          <Button 
+            onClick={handleShowFeatured} 
+            variant="default" 
+            size="sm" 
+            className="flex-1 sm:flex-initial bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:from-[#1570d8] hover:to-[#2563eb] text-white shadow-md h-10 sm:h-9 px-4 font-semibold rounded-xl"
+          >
+            <Star className="w-4 h-4 mr-2" /> <span className="hidden sm:inline">Show All </span>Featured
           </Button>
-          <Button onClick={addHighlight} size="sm">
-            <Plus className="w-4 h-4 mr-2" /> Add Highlight
+          <Button 
+            onClick={addHighlight} 
+            size="sm"
+            className="flex-1 sm:flex-initial bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 h-10 sm:h-9 px-4 font-semibold rounded-xl"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add<span className="hidden sm:inline"> Highlight</span>
           </Button>
         </div>
       </div>
@@ -359,74 +376,88 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
           {pagination.loading ? (
             <AdminPageSkeleton message="Loading highlights..." />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pagination.data.map((highlight) => (
               <Card
                 key={highlight.id}
-                className="cursor-pointer relative group"
+                className="cursor-pointer relative group overflow-hidden border-gray-100/50 hover:border-blue-200/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 rounded-3xl"
                 onClick={() => handleEdit(highlight)}
               >
+                {/* Featured Badge */}
                 {highlight.featured && (
-                  <div className="absolute top-2 right-2 z-10">
-                    <div className="bg-[#1887FC] text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                  <div className="absolute top-4 left-16 z-20">
+                    <div className="bg-blue-600/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-blue-500/30 border border-blue-400/30">
                       <Star className="w-3 h-3 fill-current" />
                       Featured
                     </div>
                   </div>
                 )}
 
-                <div className="absolute top-2 left-2 z-10">
+                {/* Delete Button */}
+                <div className="absolute top-4 right-4 z-20">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 bg-white/90 shadow-sm"
+                    className="h-9 w-9 p-0 bg-white/90 backdrop-blur-md shadow-md hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all border border-gray-100"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(highlight.id);
                     }}
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </div>
 
-                {highlight.imageUrl ? (
-                  <div className="w-full h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={getImageUrl(highlight.imageUrl)}
-                      alt={highlight.title}
-                      className="w-full h-full object-cover"
-                    />
+                <div className="p-0">
+                  {/* Image Container */}
+                  <div className="relative w-full h-48 mb-0 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
+                    {highlight.imageUrl ? (
+                      <img
+                        src={getImageUrl(highlight.imageUrl)}
+                        alt={highlight.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+                        <Sparkles className="w-16 h-16 text-[#1887FC]" />
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 rounded-t-lg flex items-center justify-center">
-                    <Sparkles className="w-16 h-16 text-[#1887FC]" />
-                  </div>
-                )}
 
-                <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm line-clamp-2 mb-2">
-                    {highlight.title || 'Untitled'}
-                  </h4>
-                  <div className="text-xs text-gray-600 line-clamp-2">
-                    <RichTextContent text={highlight.description} className="text-xs text-gray-600" />
-                  </div>
-                  {highlight.publishedDate && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <Calendar className="w-3 h-3 text-blue-500" />
-                      <span className="text-xs text-blue-600">
-                        {new Date(highlight.publishedDate).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </span>
+                  <div className="p-6 space-y-3">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-gray-900 text-lg line-clamp-2 group-hover:text-[#1887FC] transition-colors leading-tight">
+                        {highlight.title || 'Untitled'}
+                      </h4>
+                      {highlight.publishedDate && (
+                        <div className="flex items-center gap-1.5 pt-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#1887FC]" />
+                          <span className="text-xs font-bold text-[#1887FC] uppercase tracking-wider">
+                            {new Date(highlight.publishedDate).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="mt-3 flex items-center gap-2">
-                    <Edit className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">Click to edit</span>
+                    
+                    <div className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                      <RichTextContent text={highlight.description} className="text-sm text-gray-500" />
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                          <Edit className="w-3 h-3 text-gray-400 group-hover:text-blue-500" />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-500 transition-colors">Click to edit</span>
+                      </div>
+                    </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))}
             </div>
@@ -449,16 +480,16 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
       {/* Highlight Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
-          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
-                <Sparkles className="w-6 h-6" />
+          <DialogHeader className="p-4 sm:p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+              <div className="min-w-0">
+                <DialogTitle className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
                   {editingHighlight?.id?.startsWith('temp-') ? 'Create' : 'Edit'} Highlight
                 </DialogTitle>
-                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+                <DialogDescription className="text-sm sm:text-base text-gray-500 mt-0.5 font-medium">
                   {editingHighlight?.id?.startsWith('temp-')
                     ? 'Create a new highlight entry'
                     : 'Update the details for this highlight'}
@@ -507,9 +538,9 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
 
           {editingHighlight && (
             <div
-              className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+              className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6 scrollbar-hide"
             >
-              <div className="space-y-8 py-6">
+              <div className="space-y-6 sm:space-y-8 py-4 sm:py-6">
                 <div>
                   <Label htmlFor="highlight-title" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
                     Title <span className="text-red-500 ml-0.5">*</span>
@@ -548,7 +579,6 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                 <div>
                   <Label htmlFor="highlight-published-date" className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
                     Published Date <span className="text-red-500 ml-0.5">*</span>
-                    <span className="text-xs text-gray-400 font-normal ml-2">(2000 - {new Date().toISOString().split('T')[0]})</span>
                   </Label>
                   <Input
                     id="highlight-published-date"
@@ -608,23 +638,23 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
             <Button
               variant="outline"
-              className="flex-1 h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all"
+              className="flex-1 h-11 sm:h-12 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white hover:border-gray-300 transition-all"
               onClick={() => {
                 setIsModalOpen(false);
                 setEditingHighlight(null);
               }}
             >
-              <X className="w-5 h-4 mr-2" /> Cancel
+              <X className="w-4 h-4 sm:w-5 sm:h-4 mr-2" /> Cancel
             </Button>
             <Button
-              className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
+              className="flex-1 h-11 sm:h-12 rounded-xl font-bold bg-gradient-to-r from-[#1887FC] to-[#3b82f6] hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all transform hover:-translate-y-0.5"
               disabled={isSaving}
               onClick={handleSave}
             >
-              <CheckCircle className="w-5 h-5 mr-2" /> {isSaving ? 'Saving...' : 'Save Highlight'}
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {isSaving ? 'Saving...' : 'Save Highlight'}
             </Button>
           </div>
         </DialogContent>
@@ -633,22 +663,22 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
       {/* Featured Highlights Modal */}
       <Dialog open={isFeaturedModalOpen} onOpenChange={setIsFeaturedModalOpen}>
         <DialogContent className="w-[95%] sm:w-[90%] md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden bg-white border-none shadow-2xl rounded-2xl flex flex-col p-0">
-          <DialogHeader className="p-6 pb-2 border-b border-gray-100 shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
-                <Star className="w-6 h-6 fill-current" />
+          <DialogHeader className="p-4 sm:p-6 pb-2 border-b border-gray-100 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#1887FC] to-[#3b82f6] text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <Star className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
               </div>
-              <div>
-                <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">Featured Highlights</DialogTitle>
-                <DialogDescription className="text-base text-gray-500 mt-0.5 font-medium">
+              <div className="min-w-0">
+                <DialogTitle className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Featured Highlights</DialogTitle>
+                <DialogDescription className="text-sm sm:text-base text-gray-500 mt-0.5 font-medium">
                   Toggle featured status for highlights. Maximum of 3 featured items allowed. Changes are saved immediately.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div 
-            className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide"
+          <div
+            className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6 scrollbar-hide"
           >
             <div className="pt-4">
               {loadingFeatured ? (
@@ -679,23 +709,23 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                     {featuredHighlights.map((highlight) => (
                       <div
                         key={highlight.id}
-                        className="flex items-center gap-4 p-4 border rounded-2xl hover:bg-gray-50 transition-colors"
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border rounded-2xl hover:bg-gray-50 transition-colors"
                       >
                         {highlight.imageUrl && (
                           <img
                             src={getImageUrl(highlight.imageUrl as string)}
                             alt={highlight.title}
-                            className="w-16 h-16 object-cover rounded-xl shadow-sm"
+                            className="w-full sm:w-16 h-32 sm:h-16 object-cover rounded-xl shadow-sm"
                           />
                         )}
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-sm">{highlight.title}</h4>
-                          <div className="text-xs text-gray-500 line-clamp-1">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm line-clamp-1">{highlight.title}</h4>
+                          <div className="text-xs text-gray-500 line-clamp-2 sm:line-clamp-1">
                             <RichTextContent text={highlight.description} className="text-xs text-gray-500" />
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex flex-col items-end mr-2">
+                        <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                          <div className="flex flex-col items-start sm:items-end sm:mr-2">
                             <span className={`text-[10px] font-bold uppercase tracking-wider ${highlight.featured ? 'text-blue-600' : 'text-gray-400'}`}>
                               {highlight.featured ? 'Featured' : 'Inactive'}
                             </span>
@@ -713,10 +743,10 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
               )}
             </div>
           </div>
-          <div className="flex justify-end p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+          <div className="flex justify-end p-4 sm:p-6 border-t border-gray-100 shrink-0 bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
             <Button
               variant="outline"
-              className="px-8 h-11 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white transition-all"
+              className="px-6 sm:px-8 h-11 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-white transition-all w-full sm:w-auto"
               onClick={() => setIsFeaturedModalOpen(false)}
             >
               Close

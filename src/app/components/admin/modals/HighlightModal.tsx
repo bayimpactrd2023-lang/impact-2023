@@ -10,13 +10,6 @@ import { Highlight } from '../types/admin.types';
 import { EntityValidator } from '../utils/adminHelpers';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/app/components/ui/select';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { Star } from 'lucide-react';
@@ -83,27 +76,6 @@ export function HighlightModal({
             required
           />
 
-          {/* Icon Selector */}
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
-              Icon <span className="text-red-500 ml-0.5">*</span>
-            </Label>
-            <Select
-              value={item.iconName}
-              onValueChange={value => updateField('iconName', value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Satellite">Satellite</SelectItem>
-                <SelectItem value="Sprout">Sprout</SelectItem>
-                <SelectItem value="BarChart3">BarChart3</SelectItem>
-                <SelectItem value="Globe">Globe</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Detailed Content Field */}
           <InteractiveRichEditor
             id="highlight-content"
@@ -116,9 +88,12 @@ export function HighlightModal({
 
           {/* Published Date Field */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-700 mb-1">Published Date</Label>
+            <Label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              Published Date <span className="text-red-500">*</span>
+            </Label>
             <Input
               type="date"
+              required
               value={item.publishedDate || ''}
               onChange={e => updateField('publishedDate', e.target.value)}
               min="2000-01-01"

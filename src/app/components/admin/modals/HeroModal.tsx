@@ -45,6 +45,18 @@ export function HeroModal({
   onSave,
 }: HeroModalProps) {
   const handleSave = () => {
+    if (!heroTitle.trim()) {
+      toast.error('Hero title is required');
+      return;
+    }
+    if (!heroSubtitle.trim()) {
+      toast.error('Hero subtitle is required');
+      return;
+    }
+    if (!heroBackgroundUrl.trim()) {
+      toast.error('Hero background image is required');
+      return;
+    }
     onSave();
     onClose();
     toast.success('Hero section saved!', {

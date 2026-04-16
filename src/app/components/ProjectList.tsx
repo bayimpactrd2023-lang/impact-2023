@@ -296,7 +296,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                 const isExpanded = expandedId === project.id;
                 const coverImage =
                   project.imageUrl ||
-                  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400";
+                  "/images/logos/placeholder.png";
                 const displayImages =
                   project.images && project.images.length > 0
                     ? project.images
@@ -305,12 +305,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                       : [];
 
                 return (
-                  <motion.div
+                  <div
                     key={project.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    viewport={{ once: true }}
                     className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100/50"
                   >
                     
@@ -452,7 +448,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                                   <ImageWithFallback
                                     src={
                                       img ||
-                                      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400"
+                                      "/images/logos/placeholder.png"
                                     }
                                     alt={`${project.title} - Image ${idx + 1}`}
                                     className="w-full h-full object-cover cursor-pointer"
@@ -480,7 +476,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                         </button>
                       </div>
                     )}
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -574,7 +570,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                             {selectedProject.images.map((img, idx) => (
                               <div key={idx} className="flex-[0_0_100%] min-w-0 flex items-center justify-center">
                                 <ImageWithFallback
-                                  src={img || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400"}
+                                  src={img || "/images/logos/placeholder.png"}
                                   alt={`${selectedProject.title} - Image ${idx + 1}`}
                                   className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-all duration-300 cursor-pointer"
                                   onClick={() => {
@@ -642,7 +638,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                 </DialogPrimitive.Content>
               </DialogPortal>
               <GalleryModal
-                images={selectedProject.images && selectedProject.images.length > 0 ? selectedProject.images : ([selectedProject.imageUrl].filter(Boolean) as string[])}
+                images={selectedProject.images && selectedProject.images.length > 0 
+                  ? selectedProject.images 
+                  : (selectedProject.imageUrl ? [selectedProject.imageUrl] : ["/images/logos/placeholder.png"])}
                 isOpen={isGalleryOpen}
                 onClose={() => setIsGalleryOpen(false)}
                 title={selectedProject.title}

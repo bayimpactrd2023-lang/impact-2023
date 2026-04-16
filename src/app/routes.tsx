@@ -1,6 +1,5 @@
 import React from 'react';
 import { createBrowserRouter } from 'react-router';
-import type { RouteObject } from 'react-router';
 import { Layout } from '@/app/pages/Layout';
 import { AdminLayout } from '@/app/pages/AdminLayout';
 import { ErrorPage } from '@/app/pages/ErrorPage';
@@ -20,9 +19,10 @@ const AdminDashboardPage = React.lazy(() => import('@/app/pages/AdminDashboardPa
 const NotFoundPage = React.lazy(() => import('@/app/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Lazy load Our Work sub-pages
-const InternationallyFundedPage = React.lazy(() => import('@/app/pages/our-work/InternationallyFundedPage').then(m => ({ default: m.InternationallyFundedPage })));
-const LocallyFundedPage = React.lazy(() => import('@/app/pages/our-work/LocallyFundedPage').then(m => ({ default: m.LocallyFundedPage })));
+const RDProjectsPage = React.lazy(() => import('@/app/pages/our-work/RDProjectsPage').then(m => ({ default: m.RDProjectsPage })));
 const CommunityTransformationPage = React.lazy(() => import('@/app/pages/our-work/CommunityTransformationPage').then(m => ({ default: m.CommunityTransformationPage })));
+const TechnologySpinoffsPage = React.lazy(() => import('@/app/pages/our-work/TechnologySpinoffsPage').then(m => ({ default: m.TechnologySpinoffsPage })));
+const ResearchStudentSupportPage = React.lazy(() => import('@/app/pages/our-work/ResearchStudentSupportPage').then(m => ({ default: m.ResearchStudentSupportPage })));
 const InternshipProgramPage = React.lazy(() => import('@/app/pages/our-work/InternshipProgramPage').then(m => ({ default: m.InternshipProgramPage })));
 const FinancialStatementsPage = React.lazy(() => import('@/app/pages/our-work/FinancialStatementsPage').then(m => ({ default: m.FinancialStatementsPage })));
 const StudyFindingsPage = React.lazy(() => import('@/app/pages/our-work/StudyFindingsPage').then(m => ({ default: m.StudyFindingsPage })));
@@ -40,9 +40,10 @@ export const router = createBrowserRouter(
         { path: 'our-work', element: <OurWorkPage /> },
 
         // New Our Work Sub-routes
-        { path: 'our-work/internationally-funded', element: <InternationallyFundedPage /> },
-        { path: 'our-work/locally-funded', element: <LocallyFundedPage /> },
+        { path: 'our-work/rd-projects', element: <RDProjectsPage /> },
         { path: 'our-work/community-transformation', element: <CommunityTransformationPage /> },
+        { path: 'our-work/technology-spinoffs', element: <TechnologySpinoffsPage /> },
+        { path: 'our-work/thesis-support', element: <ResearchStudentSupportPage /> },
         { path: 'our-work/internship-program', element: <InternshipProgramPage /> },
         { path: 'our-work/financial-statements', element: <FinancialStatementsPage /> },
         { path: 'our-work/study-findings', element: <StudyFindingsPage /> },
@@ -64,9 +65,4 @@ export const router = createBrowserRouter(
       ],
     },
   ],
-  {
-    future: {
-      v7_startTransition: true,
-    },
-  }
 );

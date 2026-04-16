@@ -22,24 +22,31 @@ function validateR2Config() {
 
 async function getSupabaseAuthHeaders(): Promise<Record<string, string>> {
   // Get current session
-  const { data: sessionData, error } = await supabase.auth.getSession();
-  let currentData = sessionData;
+  const { data: { session }, error } = await supabase.auth.getSession();
   
-  // If session is missing or potentially expired, try to refresh it
-  if (!sessionData.session || error) {
-    DEBUG && console.log('[R2] Session missing or error, attempting refresh...');
+  let token = session?.access_token;
+
+  // If session is missing, expired, or error, try to refresh it
+  const isExpired = session?.expires_at ? session.expires_at < Math.floor(Date.now() / 1000) : true;
+  
+  if (!session || isExpired || error) {
+    DEBUG && console.log('[R2] Session missing, expired, or error, attempting refresh...', {
+      hasSession: !!session,
+      isExpired,
+      error: error?.message
+    });
+    
     const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
       DEBUG && console.error('[R2] Session refresh failed:', refreshError);
-      throw new Error(`Authentication error: ${refreshError.message}`);
+      throw new Error(`Authentication error: ${refreshError.message}. Please try logging in again.`);
     }
-    currentData = refreshData;
+    token = refreshData.session?.access_token;
   }
   
-  const token = currentData.session?.access_token;
   if (!token) {
     DEBUG && console.error('[R2] No active session or access token found after refresh attempt');
-    throw new Error('Not authenticated: No active session');
+    throw new Error('Not authenticated: No active session. Please log in.');
   }
 
   // Debug JWT payload (non-sensitive parts)
@@ -52,11 +59,14 @@ async function getSupabaseAuthHeaders(): Promise<Record<string, string>> {
       expired: payload.exp < now,
       sub: payload.sub
     });
+    
+    if (payload.exp < now) {
+      DEBUG && console.error('[R2] Token is still expired after refresh!');
+    }
   } catch (e: unknown) {
     DEBUG && console.error('[R2] Failed to parse JWT payload for debugging');
   }
   
-  DEBUG && console.log('[R2] Auth token found, length:', token.length);
   return {
     Authorization: `Bearer ${token}`,
   };
@@ -94,18 +104,26 @@ export async function uploadImageToR2(
     const fileName = `${folder}/${timestamp}-${randomStr}.${ext}`;
 
     const edgeBaseUrl = getEdgeFunctionBaseUrl();
+    const headers = await getSupabaseAuthHeaders();
+    DEBUG && console.log('[R2] Requesting with headers:', { hasAuth: !!headers.Authorization });
+
     const response = await fetch(`${edgeBaseUrl}/${fileName}`, {
       method: 'PUT',
       body: file,
       headers: {
         'Content-Type': file.type || 'image/jpeg',
-        ...(await getSupabaseAuthHeaders()),
+        ...headers,
       },
     });
 
     if (!response.ok) {
       const responseText = await response.text().catch(() => 'No response body');
       DEBUG && console.log('[R2] Upload response:', response.status, response.statusText, 'Response:', responseText);
+      
+      if (response.status === 401) {
+        throw new Error('Authentication failed (401). Please ensure your Supabase Edge Function has SUPABASE_ANON_KEY set in its Secrets dashboard.');
+      }
+      
       throw new Error(`Upload failed: ${response.status} - ${responseText}`);
     }
 

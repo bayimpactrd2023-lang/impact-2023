@@ -30,8 +30,15 @@ const URL_REGEX = /(https?:\/\/[^\s<>"{}|\^`\[\]]+|www\.[^\s<>"{}|\^`\[\]]+\.[a-
 
 // Sanitize and clean HTML from WYSIWYG editor
 const sanitizeHTML = (html: string): string => {
+  if (!html) return '';
+  
+  // Remove editor-specific UI elements (buttons and resize handles)
+  let cleaned = html
+    .replace(/<button[^>]*class="[^"]*delete-image-btn[^"]*"[^>]*>[\s\S]*?<\/button>/gi, '')
+    .replace(/<div[^>]*class="[^"]*resize-handle[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+
   // Remove extra ** that might be wrapped in <b> tags
-  let cleaned = html.replace(/<b>\*\*/g, '<b>').replace(/\*\*<\/b>/g, '</b>');
+  cleaned = cleaned.replace(/<b>\*\*/g, '<b>').replace(/\*\*<\/b>/g, '</b>');
   
   // Remove empty paragraphs
   cleaned = cleaned.replace(/<p><br><\/p>/g, '');
@@ -270,14 +277,28 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as HTMLElement;
         
-        // Handle images for full-screen modal
-        if (el.tagName === 'IMG' && onImageClick) {
+        // Handle images for full-screen modal and 404 errors
+        if (el.tagName === 'IMG') {
           const img = el as HTMLImageElement;
-          img.style.cursor = 'pointer';
-          img.onclick = (e) => {
-            e.stopPropagation();
-            onImageClick(img.src);
+          
+          // Remove image if it fails to load (404)
+          img.onerror = () => {
+            console.warn('[RichTextContent] Removing broken image:', img.src);
+            const wrapper = img.closest('.image-wrapper');
+            if (wrapper) {
+              wrapper.remove();
+            } else {
+              img.remove();
+            }
           };
+
+          if (onImageClick) {
+            img.style.cursor = 'pointer';
+            img.onclick = (e) => {
+              e.stopPropagation();
+              onImageClick(img.src);
+            };
+          }
         }
 
         // Don't process content inside existing links or buttons
@@ -307,9 +328,11 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
     return (
       <div 
         ref={containerRef}
-        className={`prose prose-lg max-w-none ${className} [&_a]:text-[#1887FC] [&_a]:underline [&_a:hover]:text-[#0d6fd8]
-          [&_img]:max-w-[50%] [&_img]:rounded-lg [&_img]:shadow-md [&_img.float-left]:float-left [&_img.float-left]:mr-4 [&_img.float-left]:mb-4
+        className={`prose prose-base max-w-none ${className} [&_a]:text-[#1887FC] [&_a]:underline [&_a:hover]:text-[#0d6fd8]
+          [&_img]:rounded-lg [&_img]:shadow-md [&_img.float-left]:float-left [&_img.float-left]:mr-4 [&_img.float-left]:mb-4
           [&_img.float-right]:float-right [&_img.float-right]:ml-4 [&_img.float-right]:mb-4
+          [&_.image-wrapper_img]:max-w-full
+          [&_.delete-image-btn]:hidden [&_.resize-handle]:hidden
         `}
         dangerouslySetInnerHTML={{ __html: cleanedHTML }}
         style={{ 

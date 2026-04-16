@@ -4,7 +4,7 @@
  * Tab for managing team members.
  */
 
-import { FileText } from 'lucide-react';
+import { FileText, Users } from 'lucide-react';
 import { ContentGridTab } from './ContentGridTab';
 import { TeamMember } from '../types/admin.types';
 import { CardContent } from '@/app/components/ui/card';
@@ -56,8 +56,13 @@ export function TeamTab({ teamMembers, onAdd, onEdit, onDelete }: TeamTabProps) 
 
   return (
     <ContentGridTab
-      title="Manage Team Members"
-      addButtonLabel="Add Team Member"
+      title={
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-blue-500 stroke-[3px]" />
+          <span>Manage Board Members</span>
+        </div>
+      }
+      addButtonLabel="Add Board Member"
       items={teamMembers}
       onAdd={onAdd}
       onEdit={onEdit}

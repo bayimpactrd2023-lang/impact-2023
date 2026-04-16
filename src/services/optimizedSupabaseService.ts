@@ -594,8 +594,8 @@ export const getProjectsByCategory = async (category: string) => {
   );
 };
 
-export const getProjectsPaginated = async (category: string, page: number, limit: number) => {
-  const cacheKey = generateCacheKey('projects', 'page', category, page, limit);
+export const getProjectsPaginated = async (category: string | string[], page: number, limit: number) => {
+  const cacheKey = generateCacheKey('projects', 'page', Array.isArray(category) ? category.join(',') : category, page, limit);
 
   return cachedFetch(
     cacheKey,
@@ -603,17 +603,27 @@ export const getProjectsPaginated = async (category: string, page: number, limit
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
+      let query = supabase
+        .from('projects')
+        .select(FIELD_SELECTIONS.projectsList);
+      
+      let countQuery = supabase
+        .from('projects')
+        .select('id', { count: 'exact', head: true });
+
+      if (Array.isArray(category)) {
+        query = query.in('category', category);
+        countQuery = countQuery.in('category', category);
+      } else {
+        query = query.eq('category', category);
+        countQuery = countQuery.eq('category', category);
+      }
+
       const [dataResponse, countResponse] = await Promise.all([
-        supabase
-          .from('projects')
-          .select(FIELD_SELECTIONS.projectsList)
-          .eq('category', category)
+        query
           .order('date', { ascending: false, nullsFirst: false })
           .range(from, to),
-        supabase
-          .from('projects')
-          .select('id', { count: 'exact', head: true })
-          .eq('category', category)
+        countQuery
       ]);
 
       if (dataResponse.error) throw dataResponse.error;

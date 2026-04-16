@@ -5,23 +5,25 @@ import { ProjectList } from '@/app/components/ProjectList';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { getProjectsPaginated } from '@/services/optimizedSupabaseService';
 
-export const CommunityTransformationPage: React.FC = () => {
+export const RDProjectsPage: React.FC = () => {
   // Use server-side pagination with 6 items per page
+  // Fetch R&D projects for the unified category
   const pagination = useServerPagination<Project>({
-    fetchFunction: (page, itemsPerPage) => getProjectsPaginated('community_transformation', page, itemsPerPage),
+    fetchFunction: (page, itemsPerPage) => 
+      getProjectsPaginated('rd_projects', page, itemsPerPage),
     itemsPerPage: 6,
   });
 
   // Show full-page skeleton during any loading
   if (pagination.loading) {
-    return <PageSkeletonLoader message="Loading Community Transformation Projects..." />;
+    return <PageSkeletonLoader message="Loading R&D Projects..." />;
   }
 
   return (
-    <ProjectList
+    <ProjectList 
       projects={pagination.data}
-      title="Community Transformation"
-      subtitle="Discover our various outreach activities, community engagements, and events we have attended to drive positive social change."
+      title="R&D Projects" 
+      subtitle="Discover our ongoing and past research initiatives driving innovation in agriculture and sustainable development."
       pagination={pagination}
     />
   );

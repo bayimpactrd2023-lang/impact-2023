@@ -165,13 +165,9 @@ export const PublicationsPage: React.FC = () => {
                 ) : (
                   <>
                     <div className="space-y-6">
-                      {pagination.data.map((publication, index) => (
-                        <motion.div
+                      {pagination.data.map((publication) => (
+                        <div
                           key={publication.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          viewport={{ once: true }}
                         >
                           <Card className="hover:shadow-xl transition-all duration-300 border-0 shadow-md cursor-pointer"
                                 onClick={() => {
@@ -255,7 +251,7 @@ export const PublicationsPage: React.FC = () => {
                               </div>
                             </CardContent>
                           </Card>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
 

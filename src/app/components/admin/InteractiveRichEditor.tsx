@@ -134,6 +134,51 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
     }, 0);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+
+      if (start === end) {
+        // No selection, just insert 4 spaces
+        const newText = text.substring(0, start) + '    ' + text.substring(end);
+        onChange(newText);
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(start + 4, start + 4);
+          }
+        }, 0);
+      } else {
+        // Multi-line indentation
+        const beforeText = text.substring(0, start);
+        const lineStart = beforeText.lastIndexOf('\n') + 1;
+        const afterText = text.substring(end);
+        const lineEnd = end + (afterText.indexOf('\n') === -1 ? afterText.length : afterText.indexOf('\n'));
+
+        const selectionText = text.substring(lineStart, lineEnd);
+        const indentedText = selectionText.split('\n').map(line => '    ' + line).join('\n');
+        
+        const newText = text.substring(0, lineStart) + indentedText + text.substring(lineEnd);
+        onChange(newText);
+
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            // Select the newly indented lines
+            textareaRef.current.setSelectionRange(lineStart, lineStart + indentedText.length);
+          }
+        }, 0);
+      }
+    }
+  };
+
   const handleCommand = (command: string, _value?: string) => {
     // If we're using a single shared toolbar, we need to handle the focus properly
     if (textareaRef.current) {
@@ -184,6 +229,7 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
           if (onCommand) onCommand('focus'); // Notify parent that this field is active
         }}
         onBlur={() => setIsFocused(false)}
+        onKeyDown={handleKeyDown}
         rows={rows}
         placeholder={placeholder}
         className={cn(

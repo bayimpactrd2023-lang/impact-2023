@@ -25,6 +25,8 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     setIsLoaded(true)
   }
 
+  const isPlaceholder = typeof src === 'string' && src.includes('placeholder.png')
+
   return (
     <div className={`relative overflow-hidden ${className ?? ''}`} style={style}>
       {/* Skeleton/Placeholder */}
@@ -48,7 +50,9 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
         <img
           src={finalSrc}
           alt={alt}
-          className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`w-full h-full transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${
+            isPlaceholder ? 'object-contain p-12 opacity-50 bg-gray-50' : 'object-cover'
+          }`}
           {...rest}
           onLoad={handleLoad}
           onError={handleError}
