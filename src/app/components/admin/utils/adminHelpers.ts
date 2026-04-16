@@ -29,7 +29,7 @@ export const AdminValidationRules = {
   roleMaxWords: 12,
   authorsMaxChars: 200,
   authorsMaxWords: 35,
-  contentMaxChars: 35000, // ~5000 words max
+  contentMaxChars: 50000, // ~5000 words max
 } as const;
 
 const digitsRegex = /\d/;

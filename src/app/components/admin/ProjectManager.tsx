@@ -155,6 +155,11 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
         'Project overview'
       ),
       validateMaxWords(
+        editingProject.description.trim(),
+        5000,
+        'Project overview'
+      ),
+      validateMaxWords(
         editingProject.objectives?.trim() || '',
         5000,
         'Objectives'
