@@ -159,10 +159,10 @@ export const BlogPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="prose prose-lg sm:prose-xl max-w-none">
+                <div className="prose prose-sm sm:prose-base max-w-none">
                   <RichTextContent 
                     text={selectedPost.content} 
-                    className="text-gray-800 leading-relaxed space-y-8 text-lg sm:text-xl"
+                    className="text-gray-800 leading-relaxed"
                     onImageClick={openGallery}
                   />
                 </div>

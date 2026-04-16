@@ -328,17 +328,14 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
     return (
       <div 
         ref={containerRef}
-        className={`prose prose-base max-w-none ${className} [&_a]:text-[#1887FC] [&_a]:underline [&_a:hover]:text-[#0d6fd8]
+        className={`prose prose-sm sm:prose-base max-w-none ${className} [&_a]:text-[#1887FC] [&_a]:underline [&_a:hover]:text-[#0d6fd8]
           [&_img]:rounded-lg [&_img]:shadow-md [&_img.float-left]:float-left [&_img.float-left]:mr-4 [&_img.float-left]:mb-4
           [&_img.float-right]:float-right [&_img.float-right]:ml-4 [&_img.float-right]:mb-4
           [&_.image-wrapper_img]:max-w-full
           [&_.delete-image-btn]:hidden [&_.resize-handle]:hidden
+          after:content-[''] after:table after:clear-both
         `}
         dangerouslySetInnerHTML={{ __html: cleanedHTML }}
-        style={{ 
-          whiteSpace: 'pre-wrap',
-          wordWrap: 'break-word'
-        }}
       />
     );
   }

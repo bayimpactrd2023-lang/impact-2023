@@ -144,7 +144,7 @@ export const AdminLoginPage: React.FC = () => {
                   <div>
                     <p className="font-medium text-gray-700 mb-1">Development Credentials:</p>
                     <p>Username: <code className="bg-white px-1.5 py-0.5 rounded text-gray-800">admin</code></p>
-                    <p>Password: <code className="bg-white px-1.5 py-0.5 rounded text-gray-800">admin123</code></p>
+                    <p>Password: <code className="bg-white px-1.5 py-0.5 rounded text-gray-800">impact2024</code></p>
                   </div>
                 </motion.div>
               )}

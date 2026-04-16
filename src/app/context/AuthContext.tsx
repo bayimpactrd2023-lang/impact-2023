@@ -26,7 +26,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Basic auth credentials (fallback for development)
 const BASIC_AUTH_USERNAME = 'admin';
-const BASIC_AUTH_PASSWORD = 'admin123';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -115,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } else {
         // Fallback to basic auth
-        if (username === BASIC_AUTH_USERNAME && password === BASIC_AUTH_PASSWORD) {
+        if (username === BASIC_AUTH_USERNAME && password === 'impact2024') {
           localStorage.setItem('isAdminAuthenticated', 'true');
           setBasicAuthAuthenticated(true);
           setIsAdmin(true);
