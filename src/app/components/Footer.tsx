@@ -20,7 +20,7 @@ export const Footer: FC = () => {
           <div>
             <div className="space-y-0.5 mb-3">
               <p className="text-sm text-white font-medium">IMPACT R&D</p>
-              <p className="text-xs text-gray-400 uppercase tracking-wider">A DOST-Certified Science Foundation</p>
+              <p className="text-xs text-gray-400 uppercase tracking-wider">A DOST-certified Science & Technology Foundation</p>
             </div>
 
             <div className="space-y-1.5 text-sm">
