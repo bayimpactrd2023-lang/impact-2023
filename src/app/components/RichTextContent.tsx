@@ -35,9 +35,7 @@ const sanitizeHTML = (html: string): string => {
   // Remove editor-specific UI elements (buttons and resize handles)
   let cleaned = html
     .replace(/<button[^>]*class="[^"]*delete-image-btn[^"]*"[^>]*>[\s\S]*?<\/button>/gi, '')
-    .replace(/<button[^>]*class="[^"]*delete-split-btn[^"]*"[^>]*>[\s\S]*?<\/button>/gi, '')
-    .replace(/<div[^>]*class="[^"]*resize-handle[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
-    .replace(/<div[^>]*class="[^"]*split-image-container[^"]*"[^>]*>\s*Click to upload image\s*<\/div>/gi, '');
+    .replace(/<div[^>]*class="[^"]*resize-handle[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
 
   // Remove persistent selection styles from images that might have been saved
   cleaned = cleaned.replace(/(<img[^>]*?style="[^"]*?)(outline|box-shadow|ring):[^;"]*;?/gi, '$1');
@@ -342,37 +340,44 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
       <div 
         ref={containerRef}
         className={`prose prose-sm sm:prose-base max-w-none ${className} [&_a]:text-[#1887FC] [&_a]:underline [&_a:hover]:text-[#0d6fd8]
-          [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:my-10 [&_img]:max-w-full [&_img]:w-full sm:[&_img]:w-auto
-          [&_img.float-left]:float-none [&_img.float-left]:mx-auto [&_img.float-left]:mb-10 sm:[&_img.float-left]:float-left sm:[&_img.float-left]:mr-12 sm:[&_img.float-left]:max-w-[45%] sm:[&_img.float-left]:!w-auto
-          [&_img.float-right]:float-none [&_img.float-right]:mx-auto [&_img.float-right]:mb-10 sm:[&_img.float-right]:float-right sm:[&_img.float-right]:ml-12 sm:[&_img.float-right]:max-w-[45%] sm:[&_img.float-right]:!w-auto
-          [&_img.mx-auto]:block [&_img.mx-auto]:mx-auto [&_img.mx-auto]:mb-10 sm:[&_img.mx-auto]:max-w-[85%]
-          [&_.image-wrapper]:!block sm:[&_.image-wrapper]:!inline-block [&_.image-wrapper]:my-10 [&_.image-wrapper]:max-w-full [&_.image-wrapper]:w-full sm:[&_.image-wrapper]:w-auto
-          [&_.image-wrapper.float-left]:float-none [&_.image-wrapper.float-left]:mx-auto [&_.image-wrapper.float-left]:mb-10 sm:[&_.image-wrapper.float-left]:float-left sm:[&_.image-wrapper.float-left]:mr-12 sm:[&_.image-wrapper.float-left]:max-w-[45%]
-          [&_.image-wrapper.float-right]:float-none [&_.image-wrapper.float-right]:mx-auto [&_.image-wrapper.float-right]:mb-10 sm:[&_.image-wrapper.float-right]:float-right sm:[&_.image-wrapper.float-right]:ml-12 sm:[&_.image-wrapper.float-right]:max-w-[45%]
-          [&_.image-wrapper.mx-auto]:block [&_.image-wrapper.mx-auto]:mx-auto [&_.image-wrapper.mx-auto]:w-full sm:[&_.image-wrapper.mx-auto]:max-w-[85%]
-          [&_.image-wrapper_img]:w-full sm:[&_.image-wrapper_img]:max-w-full
-          [&_.delete-image-btn]:hidden [&_.resize-handle]:hidden
-          [&_p]:mb-6 last:[&_p]:mb-0 [&_p]:display-flow-root [&_p]:text-gray-700 [&_p]:leading-[1.8] [&_p]:whitespace-pre-wrap [&_p]:break-words
-          [&_h1]:text-3xl [&_h1]:sm:text-4xl [&_h1]:font-black [&_h1]:mt-12 [&_h1]:mb-6 [&_h1]:clear-both [&_h1]:tracking-tight [&_h1]:display-flow-root [&_h1]:break-words
-          [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-extrabold [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:clear-both [&_h2]:tracking-tight [&_h2]:display-flow-root [&_h2]:break-words
-          [&_h3]:text-xl [&_h3]:sm:text-2xl [&_h3]:font-bold [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:clear-both [&_h3]:display-flow-root [&_h3]:break-words
-          [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-8 [&_ul]:space-y-3 [&_ul]:clear-both [&_ul]:display-flow-root [&_ul]:break-words
-          [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-8 [&_ol]:space-y-3 [&_ol]:clear-both [&_ol]:display-flow-root [&_ol]:break-words
-          [&_p[style*="text-align: center"]]:text-center [&_p[style*="text-align:center"]]:text-center
+          [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:my-12 [&_img]:max-w-full [&_img]:w-full sm:[&_img]:w-auto
+          [&_img.float-left]:float-none [&_img.float-left]:mx-auto [&_img.float-left]:mb-10 sm:[&_img.float-left]:float-left sm:[&_img.float-left]:mr-12 sm:[&_img.float-left]:max-w-[45%] sm:[&_img.float-left]:!w-[45%] sm:[&_img.float-left]:clear-left sm:[&_img.float-left]:-mt-2
+          [&_img.float-right]:float-none [&_img.float-right]:mx-auto [&_img.float-right]:mb-10 sm:[&_img.float-right]:float-right sm:[&_img.float-right]:ml-12 sm:[&_img.float-right]:max-w-[45%] sm:[&_img.float-right]:!w-[45%] sm:[&_img.float-right]:clear-right sm:[&_img.float-right]:-mt-2
+          [&_.image-wrapper.float-left]:float-none [&_.image-wrapper.float-left]:mx-auto [&_.image-wrapper.float-left]:mb-10 sm:[&_.image-wrapper.float-left]:float-left sm:[&_.image-wrapper.float-left]:mr-12 sm:[&_.image-wrapper.float-left]:max-w-[45%] sm:[&_.image-wrapper.float-left]:clear-left sm:[&_.image-wrapper.float-left]:-mt-25
+          [&_.image-wrapper.float-right]:float-none [&_.image-wrapper.float-right]:mx-auto [&_.image-wrapper.float-right]:mb-10 sm:[&_.image-wrapper.float-right]:float-right sm:[&_.image-wrapper.float-right]:ml-12 sm:[&_.image-wrapper.float-right]:max-w-[45%] sm:[&_.image-wrapper.float-right]:clear-right sm:[&_.image-wrapper.float-right]:-mt-2
+          [&_p]:mb-10 last:[&_p]:mb-0 [&_p]:text-gray-700 [&_p]:leading-[1.9] [&_p]:whitespace-pre-wrap [&_p]:break-words [&_p]:display-flow-root [&_p]:mt-0
+          [&_p:has(~_img.float-left)]:sm:w-[48%] [&_p:has(~_img.float-left)]:sm:float-right
+          [&_p:has(~_img.float-right)]:sm:w-[48%] [&_p:has(~_img.float-right)]:sm:float-left
+          [&_img.float-left~p]:sm:w-[48%] [&_img.float-left~p]:sm:float-right
+          [&_img.float-right~p]:sm:w-[48%] [&_img.float-right~p]:sm:float-left
+          [&_h1]:text-4xl [&_h1]:sm:text-5xl [&_h1]:font-black [&_h1]:mt-16 [&_h1]:mb-12 [&_h1]:clear-both [&_h1]:tracking-tight [&_h1]:break-words [&_h1]:w-full
+          [&_h2]:text-3xl [&_h2]:sm:text-4xl [&_h2]:font-extrabold [&_h2]:mt-14 [&_h2]:mb-10 [&_h2]:clear-both [&_h2]:tracking-tight [&_h2]:break-words [&_h2]:w-full
+          [&_h3]:text-2xl [&_h3]:sm:text-3xl [&_h3]:font-bold [&_h3]:mt-12 [&_h3]:mb-8 [&_h3]:clear-both [&_h3]:break-words [&_h3]:w-full
+          [&_b]:clear-both [&_b]:block [&_b]:mt-10 [&_b]:mb-8 [&_b]:text-2xl [&_b]:font-black [&_b]:w-full
+          [&_strong]:clear-both [&_strong]:block [&_strong]:mt-10 [&_strong]:mb-8 [&_strong]:text-2xl [&_strong]:font-black [&_strong]:w-full
+          [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-10 [&_ul]:space-y-4 [&_ul]:clear-both [&_ul]:break-words [&_ul]:display-flow-root
+          [&_ul:has(~_img.float-left)]:sm:w-[48%] [&_ul:has(~_img.float-left)]:sm:float-right
+          [&_ul:has(~_img.float-right)]:sm:w-[48%] [&_ul:has(~_img.float-right)]:sm:float-left
+          [&_img.float-left~ul]:sm:w-[48%] [&_img.float-left~ul]:sm:float-right
+          [&_img.float-right~ul]:sm:w-[48%] [&_img.float-right~ul]:sm:float-left
+          [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-10 [&_ol]:space-y-4 [&_ol]:clear-both [&_ol]:break-words [&_ol]:display-flow-root
+          [&_ol:has(~_img.float-left)]:sm:w-[48%] [&_ol:has(~_img.float-left)]:sm:float-right
+          [&_ol:has(~_img.float-right)]:sm:w-[48%] [&_ol:has(~_img.float-right)]:sm:float-left
+          [&_img.float-left~ol]:sm:w-[48%] [&_img.float-left~ol]:sm:float-right
+          [&_img.float-right~ol]:sm:w-[48%] [&_img.float-right~ol]:sm:float-left
+          [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:transition-all [&_img]:duration-300
+          [&_img:not(.float-left):not(.float-right)]:block [&_img:not(.float-left):not(.float-right)]:mx-auto [&_img:not(.float-left):not(.float-right)]:my-10
+          [&_.image-wrapper]:max-w-full sm:[&_.image-wrapper]:max-w-[45%] [&_.image-wrapper]:w-full sm:[&_.image-wrapper]:w-[45%] [&_.image-wrapper]:mx-auto sm:[&_.image-wrapper]:float-left sm:[&_.image-wrapper]:mr-[5%] sm:[&_.image-wrapper]:clear-left
+          [&_.image-wrapper.float-left]:mr-12 [&_.image-wrapper.float-left]:mb-8 [&_.image-wrapper.float-left]:float-left [&_.image-wrapper.float-left]:clear-left [&_.image-wrapper.float-left]:mx-0
+          [&_.image-wrapper.float-right]:ml-12 [&_.image-wrapper.float-right]:mb-8 [&_.image-wrapper.float-right]:float-right [&_.image-wrapper.float-right]:clear-right [&_.image-wrapper.float-right]:mx-0
+          [&_.image-wrapper.mx-auto]:block [&_.image-wrapper.mx-auto]:mx-auto [&_.image-wrapper.mx-auto]:mb-12 [&_.image-wrapper.mx-auto]:max-w-[85%]
+          [&_p]:mb-8 [&_p]:leading-[1.8] [&_p]:text-gray-700 [&_p]:text-lg [&_p]:break-words
+          [&_p[style*="text-align: center"]]:text-center [&_p[style*="text-align:center"]]:text-center [&_p[style*="text-align: center"]]:sm:float-none [&_p[style*="text-align: center"]]:sm:w-full
           [&_p[style*="text-align: right"]]:text-right [&_p[style*="text-align:right"]]:text-right
           [&_p[style*="text-align: justify"]]:text-justify [&_p[style*="text-align:justify"]]:text-justify
-          [&_div[style*="text-align: center"]]:text-center [&_div[style*="text-align:center"]]:text-center
+          [&_div[style*="text-align: center"]]:text-center [&_div[style*="text-align:center"]]:text-center [&_div[style*="text-align: center"]]:sm:float-none [&_div[style*="text-align: center"]]:sm:w-full
           [&_div[style*="text-align: right"]]:text-right [&_div[style*="text-align:right"]]:text-right
           [&_div[style*="text-align: justify"]]:text-justify [&_div[style*="text-align:justify"]]:text-justify
-          [&_.split-layout-wrapper]:flex [&_.split-layout-wrapper]:flex-col md:[&_.split-layout-wrapper]:flex-row [&_.split-layout-wrapper]:gap-6 md:[&_.split-layout-wrapper]:gap-12 [&_.split-layout-wrapper]:items-start [&_.split-layout-wrapper]:my-10 md:[&_.split-layout-wrapper]:my-16 [&_.split-layout-wrapper]:w-full [&_.split-layout-wrapper]:clear-both
-          [&_.split-layout-wrapper[style*="flex-direction: row-reverse"]]:md:flex-row-reverse
-          [&_.split-layout-wrapper[style*="flex-direction: column"]]:flex-col
-          [&_.split-layout-wrapper[style*="flex-direction: column"]_.split-image-container]:md:max-w-full
-          [&_.split-layout-wrapper[style*="flex-direction: column"]_.split-text-container]:md:pt-0
-          [&_.split-image-container]:hidden md:[&_.split-image-container]:flex md:[&_.split-image-container]:flex-1 [&_.split-image-container]:w-full md:[&_.split-image-container]:max-w-[45%] [&_.split-image-container]:mb-6 md:[&_.split-image-container]:mb-0
-          [&_.split-text-container]:flex-1 [&_.split-text-container]:w-full [&_.split-text-container]:min-w-0 [&_.split-text-container]:whitespace-pre-wrap [&_.split-text-container]:break-words md:[&_.split-text-container]:pt-2
-          [&_.split-text-container]:!max-h-none [&_.split-text-container]:!overflow-visible [&_.split-text-container]:!p-0 [&_.split-text-container]:!border-none
-          [&_.split-text-container_p]:mb-6 last:[&_.split-text-container_p]:mb-0 [&_.split-text-container_p]:leading-[1.8]
           [&_div]:whitespace-pre-wrap [&_div]:break-words
           after:content-[''] after:table after:clear-both
         `}

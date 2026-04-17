@@ -280,47 +280,88 @@ export const AboutPage: React.FC = () => {
               <div className="w-20 h-1 bg-gradient-to-r from-[#1887FC] to-[#4da3fd] mx-auto rounded-full" />
             </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {content.teamMembers.map((member, index) => (
-                <motion.div
-                  key={member.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: index * 0.1,
-                    duration: 0.6,
-                  }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -8 }}
-                  onClick={() => handleTeamMemberClick(member)}
-                  className="cursor-pointer"
-                >
-                  <Card className="h-full hover:shadow-2xl transition-all duration-300 bg-white border-0 shadow-md">
-                    <CardContent className="p-6">
-                  {member.imageUrl && (
-                    <div className="mb-6 relative w-40 h-40 mx-auto">
-                      <ImageWithFallback
-                        src={member.imageUrl}
-                        alt={member.name}
-                        className="w-full h-full rounded-full object-cover border-4 border-[#1887FC] shadow-lg"
-                      />
-                    </div>
-                  )}
-                      <div className="text-center">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                          {member.name}
-                        </h3>
-                        <p className="text-[#1887FC] font-semibold mb-4">
-                          {member.role}
-                        </p>
-                        <div className="text-gray-600 leading-relaxed">
-                          <RichTextContent text={member.description} />
+            <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
+              {(() => {
+                const roleOrder = [
+                  "president",
+                  "vice president",
+                  "executive director",
+                  "director",
+                  "secretary",
+                  "treasurer",
+                  "board member",
+                  "member",
+                  "research associate",
+                  "research assistant"
+                ];
+
+                const sortedMembers = [...content.teamMembers].sort((a, b) => {
+                  const roleA = a.role?.toLowerCase() || "";
+                  const roleB = b.role?.toLowerCase() || "";
+                  const nameA = a.name?.toLowerCase() || "";
+                  const nameB = b.name?.toLowerCase() || "";
+
+                  // Handle TBA (To Be Announced) - always at the bottom
+                  const isTBAA = nameA.includes("tba") || roleA.includes("tba");
+                  const isTBAB = nameB.includes("tba") || roleB.includes("tba");
+
+                  if (isTBAA && !isTBAB) return 1;
+                  if (!isTBAA && isTBAB) return -1;
+                  if (isTBAA && isTBAB) return 0;
+                  
+                  const indexA = roleOrder.findIndex(r => roleA.includes(r));
+                  const indexB = roleOrder.findIndex(r => roleB.includes(r));
+                  
+                  if (indexA === -1 && indexB === -1) return 0;
+                  if (indexA === -1) return 1;
+                  if (indexB === -1) return -1;
+                  return indexA - indexB;
+                });
+
+                return sortedMembers.map((member, index) => (
+                  <motion.div
+                    key={member.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: index * 0.1,
+                      duration: 0.6,
+                    }}
+                    viewport={{ once: true }}
+                    whileHover={{ y: -8 }}
+                    onClick={() => handleTeamMemberClick(member)}
+                    className={`cursor-pointer w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-2rem)] max-w-sm ${
+                      sortedMembers.length === 1 ? 'lg:w-full max-w-md' : 
+                      sortedMembers.length === 2 && index < 2 ? 'lg:w-[calc(45%-1rem)]' : ''
+                    }`}
+                  >
+                    <Card className="h-full hover:shadow-2xl transition-all duration-300 bg-white border-0 shadow-md">
+                      <CardContent className="p-6">
+                        {member.imageUrl && (
+                          <div className="mb-6 relative w-40 h-40 mx-auto">
+                            <ImageWithFallback
+                              src={member.imageUrl}
+                              alt={member.name}
+                              className="w-full h-full rounded-full object-cover border-4 border-[#1887FC] shadow-lg"
+                            />
+                          </div>
+                        )}
+                        <div className="text-center">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {member.name}
+                          </h3>
+                          <p className="text-[#1887FC] font-semibold mb-4 uppercase tracking-wider text-sm">
+                            {member.role}
+                          </p>
+                          <div className="text-gray-600 leading-relaxed line-clamp-3">
+                            <RichTextContent text={member.description} />
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ));
+              })()}
             </div>
           </div>
         </section>

@@ -148,13 +148,59 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     } else if (command === 'number') {
       document.execCommand('insertOrderedList', false);
     } else if (command === 'justifyLeft') {
+      // Use standard alignment
       document.execCommand('justifyLeft', false);
+      
+      // Proactively fix alignment if execCommand is inconsistent
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let container = selection.getRangeAt(0).commonAncestorContainer;
+        if (container.nodeType === 3) container = container.parentNode!;
+        
+        const parentP = (container as HTMLElement).closest('p, div[contenteditable="true"] > div, h1, h2, h3');
+        if (parentP && parentP.getAttribute('contenteditable') !== 'false') {
+          (parentP as HTMLElement).style.textAlign = 'left';
+        }
+      }
     } else if (command === 'justifyCenter') {
       document.execCommand('justifyCenter', false);
+      
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let container = selection.getRangeAt(0).commonAncestorContainer;
+        if (container.nodeType === 3) container = container.parentNode!;
+        
+        const parentP = (container as HTMLElement).closest('p, div[contenteditable="true"] > div, h1, h2, h3');
+        if (parentP && parentP.getAttribute('contenteditable') !== 'false') {
+          (parentP as HTMLElement).style.textAlign = 'center';
+        }
+      }
     } else if (command === 'justifyRight') {
       document.execCommand('justifyRight', false);
+      
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let container = selection.getRangeAt(0).commonAncestorContainer;
+        if (container.nodeType === 3) container = container.parentNode!;
+        
+        const parentP = (container as HTMLElement).closest('p, div[contenteditable="true"] > div, h1, h2, h3');
+        if (parentP && parentP.getAttribute('contenteditable') !== 'false') {
+          (parentP as HTMLElement).style.textAlign = 'right';
+        }
+      }
     } else if (command === 'justifyFull') {
       document.execCommand('justifyFull', false);
+      
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let container = selection.getRangeAt(0).commonAncestorContainer;
+        if (container.nodeType === 3) container = container.parentNode!;
+        
+        const parentP = (container as HTMLElement).closest('p, div[contenteditable="true"] > div, h1, h2, h3');
+        if (parentP && parentP.getAttribute('contenteditable') !== 'false') {
+          (parentP as HTMLElement).style.textAlign = 'justify';
+        }
+      }
     }
     
     handleInput();
@@ -172,24 +218,7 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
       container = container.parentNode!;
     }
     
-    // Check if we are inside a split layout
-    const splitWrapper = (container as HTMLElement).closest('.split-layout-wrapper') as HTMLElement;
-    if (splitWrapper) {
-      if (side === 'left') {
-        splitWrapper.style.flexDirection = 'row';
-        splitWrapper.className = "split-layout-wrapper my-8 w-full flex flex-col md:flex-row gap-8 items-center group/split relative";
-      } else if (side === 'right') {
-        splitWrapper.style.flexDirection = 'row-reverse';
-        splitWrapper.className = "split-layout-wrapper my-8 w-full flex flex-col md:flex-row-reverse gap-8 items-center group/split relative";
-      } else if (side === 'center') {
-        splitWrapper.style.flexDirection = 'column';
-        splitWrapper.className = "split-layout-wrapper my-8 w-full flex flex-col gap-8 items-center group/split relative";
-      }
-      handleInput();
-      return;
-    }
-
-    // Standard image alignment (not in split layout)
+    // Standard image alignment
     const images = (container as HTMLElement).querySelectorAll?.('img');
     let targetImg = (container.nodeName === 'IMG' ? container : (images?.length === 1 ? images[0] : null)) as HTMLImageElement;
     
@@ -243,69 +272,32 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     if (editorRef.current) {
       editorRef.current.focus();
       
+      // Find current selection to see if we are updating an image
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        let container = range.commonAncestorContainer;
+        if (container.nodeType === 3) container = container.parentNode!;
+        
+        const existingImg = (container as HTMLElement).closest('img') || 
+                           (container as HTMLElement).querySelector('img');
+        
+        if (existingImg) {
+          existingImg.src = url;
+          handleInput();
+          return;
+        }
+      }
+
       // Create a wrapper for the image
       const id = `img-${Date.now()}`;
       const imgHtml = `
         <div class="image-wrapper relative inline-block group float-left mr-12 mb-8" data-id="${id}" contenteditable="false" style="position: relative; user-select: none; width: fit-content; max-width: 45%; display: inline-block; float: left; margin-right: 3rem; margin-bottom: 2rem;">
-          <img src="${url}" class="max-w-full rounded-2xl shadow-xl" style="display: block; max-width: 100%; border-radius: 16px; width: 450px; height: auto;" />
+          <img src="${url}" class="max-w-full rounded-2xl shadow-xl cursor-pointer hover:ring-4 hover:ring-blue-500/30 transition-all duration-300" style="display: block; max-width: 100%; border-radius: 16px; width: 450px; height: auto;" />
         </div><p><br></p>`;
       
       document.execCommand('insertHTML', false, imgHtml);
       handleInput();
-    }
-  };
-
-  const insertSplitLayout = () => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-      
-      // Ensure we are at the end of the content or have a clean insertion point
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.collapse(false); // Collapse to end of current selection
-      }
-
-      const id = `split-${Date.now()}`;
-      const splitHtml = `
-        <div class="split-layout-wrapper my-8 w-full flex flex-col md:flex-row gap-8 items-center group/split relative" data-id="${id}" style="display: flex; flex-direction: row; gap: 2rem; align-items: center; margin: 2rem 0; width: 100%; position: relative;">
-          <button 
-            type="button" 
-            class="delete-split-btn absolute -top-4 -right-4 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/split:opacity-100 transition-opacity z-50 hover:bg-red-600"
-            onclick="this.closest('.split-layout-wrapper').remove(); window.dispatchEvent(new Event('input'));"
-            contenteditable="false"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-          </button>
-          <div class="split-image-container flex-1" style="flex: 1; max-width: 50%;">
-            <div class="image-wrapper relative inline-block group" contenteditable="false" style="position: relative; user-select: none; width: 100%;">
-               <div class="flex items-center justify-center bg-gray-100 rounded-2xl aspect-video border-2 border-dashed border-gray-300 text-gray-400">
-                 Click to upload image
-               </div>
-            </div>
-          </div>
-          <div class="split-text-container flex-1 min-w-0 relative" data-placeholder="Write your story here..." style="flex: 1; min-width: 0; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
-            <p><br></p>
-          </div>
-        </div>
-        <p><br></p>
-      `;
-      document.execCommand('insertHTML', false, splitHtml);
-      
-      // Force immediate focus on the newly inserted text area
-      setTimeout(() => {
-        const newSplit = editorRef.current?.querySelector(`[data-id="${id}"] .split-text-container p`);
-        if (newSplit) {
-          const range = document.createRange();
-          const sel = window.getSelection();
-          range.setStart(newSplit, 0);
-          range.collapse(true);
-          sel?.removeAllRanges();
-          sel?.addRange(range);
-          (newSplit as HTMLElement).focus();
-        }
-        handleInput();
-      }, 10);
     }
   };
 
@@ -436,8 +428,26 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
         if (isActive || isTargeted) handleImageFile(cmdValue);
       } else if (command === 'alignImage') {
         if (isActive || isTargeted) alignImage(cmdValue as any);
-      } else if (command === 'insertSplitLayout') {
-        if (isActive || isTargeted) insertSplitLayout();
+      } else if (command === 'deleteSelectedImage') {
+        if (isActive || isTargeted) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const selectedImg = range.startContainer.nodeName === 'IMG' 
+              ? range.startContainer 
+              : (range.startContainer.childNodes[range.startOffset] as HTMLElement);
+
+            if (selectedImg && (selectedImg as HTMLElement).tagName === 'IMG') {
+              const wrapper = (selectedImg as HTMLElement).closest('.image-wrapper');
+              if (wrapper) {
+                const url = (selectedImg as HTMLImageElement).src;
+                wrapper.remove();
+                window.dispatchEvent(new CustomEvent('editor-image-deleted', { detail: { id, url } }));
+                handleInput();
+              }
+            }
+          }
+        }
       } else {
         if (isActive || isTargeted) execCommand(command, cmdValue);
       }
@@ -489,35 +499,6 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
           onMouseDown={(e) => {
-            const target = e.target as HTMLElement;
-            
-            // Handle image upload click for split layout placeholders
-            if (target.closest('.split-image-container') && !target.querySelector('img')) {
-              const fileInput = document.createElement('input');
-              fileInput.type = 'file';
-              fileInput.accept = 'image/*';
-              fileInput.onchange = (ev: any) => {
-                const file = ev.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (re) => {
-                    const result = re.target?.result as string;
-                    const container = target.closest('.split-image-container');
-                    if (container) {
-                      const wrapper = container.querySelector('.image-wrapper');
-                      if (wrapper) {
-                        wrapper.innerHTML = `<img src="${result}" class="max-w-full rounded-2xl shadow-xl" style="display: block; max-width: 100%; border-radius: 16px; width: 100%; height: auto;" />`;
-                        handleInput();
-                      }
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                }
-              };
-              fileInput.click();
-              return;
-            }
-
             // If we click an image, explicitly select it
             if ((e.target as HTMLElement).tagName === 'IMG') {
               const target = e.target as HTMLElement;
@@ -590,7 +571,7 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
               }
             }
           }}
-          className="w-full h-full min-h-[inherit] p-3 outline-none empty:before:content-[attr(data-placeholder)] prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_img]:cursor-pointer text-sm sm:text-base leading-relaxed [&_p]:display-flow-root [&_p]:break-words [&_div]:break-words [&_.split-text-container:empty]:before:content-[attr(data-placeholder)] [&_.split-text-container:empty]:before:text-gray-400 [&_.split-text-container:empty]:before:pointer-events-none"
+          className="w-full h-full min-h-[inherit] p-3 outline-none empty:before:content-[attr(data-placeholder)] prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_img]:cursor-pointer text-sm sm:text-base leading-relaxed [&_p]:display-flow-root [&_p]:break-words [&_div]:break-words"
           style={{ minHeight: `${rows * 24}px` }}
           suppressContentEditableWarning
         />

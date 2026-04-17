@@ -6,12 +6,13 @@ import {
   Highlighter,
   Bold,
   ChevronDown,
+  Image as ImageIcon,
+  Trash2,
   Type,
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify,
-  Columns
+  AlignJustify
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -251,21 +252,51 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
                   </DropdownMenuItem>
 
                   <div className="h-px bg-gray-100 my-1" />
-                  <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Layouts</div>
-                  <DropdownMenuItem 
-                    onClick={() => onCommand('insertSplitLayout')} 
-                    className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
-                  >
-                    <Columns className="w-4 h-4" />
-                    <span>Image + Text Split</span>
-                  </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        {/* Separator for mobile between row 1 and 2 */}
+        <div className="w-[1px] h-4 bg-gray-300 mx-0.5 hidden sm:block" />
+
+        {/* Image Upload & Actions */}
+        <div className="flex items-center gap-0.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200"
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file && onImageUpload) {
+                  onImageUpload(file);
+                }
+              };
+              input.click();
+            }}
+            title="Upload Image"
+          >
+            <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
+            <span className="text-[11px] sm:text-xs">Image</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 sm:px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+            onClick={() => onCommand('deleteSelectedImage')}
+            title="Delete Selected Image"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+
         <div className="sm:hidden w-full h-[1px] bg-gray-200 my-0.5" />
 
         {/* Row 2: List, Image & Alignment (Mobile) */}

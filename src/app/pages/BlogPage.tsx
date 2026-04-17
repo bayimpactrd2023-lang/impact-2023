@@ -101,69 +101,69 @@ export const BlogPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-20"
             >
-              <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-12">
-                  <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1887FC] text-xs sm:text-sm font-bold mb-6 uppercase tracking-wider">
+              <div className="max-w-6xl mx-auto px-4">
+                <div className="text-center mb-16">
+                  <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1887FC] text-xs sm:text-sm font-bold mb-8 uppercase tracking-wider">
                     {targetPostId ? 'Reading Article' : 'Latest Insight'}
                   </span>
-                  <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-10 leading-[1.15] tracking-tight w-full max-w-4xl mx-auto px-4">
+                  <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-gray-900 mb-12 leading-[1.1] tracking-tight w-full max-w-5xl mx-auto">
                     {selectedPost.title}
                   </h1>
-                  <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-12 text-gray-500 text-base sm:text-lg border-y border-gray-100 py-8 mb-12">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC] shadow-sm">
-                        <User size={22} />
+                  <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 text-gray-500 text-base sm:text-lg border-y border-gray-100 py-10 mb-16">
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC] shadow-sm">
+                        <User size={26} />
                       </div>
                       <div className="text-left">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-0.5">Author</p>
-                        <p className="font-bold text-gray-900 leading-tight">{selectedPost.author}</p>
+                        <p className="text-[11px] uppercase tracking-[0.25em] text-gray-400 font-bold mb-1">Author</p>
+                        <p className="font-bold text-gray-900 text-xl leading-tight">{selectedPost.author}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC] shadow-sm">
-                        <Calendar size={22} />
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC] shadow-sm">
+                        <Calendar size={26} />
                       </div>
                       <div className="text-left">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-0.5">Published</p>
-                        <p className="font-bold text-gray-900 leading-tight">{new Date(selectedPost.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="text-[11px] uppercase tracking-[0.25em] text-gray-400 font-bold mb-1">Published</p>
+                        <p className="font-bold text-gray-900 text-xl leading-tight">{new Date(selectedPost.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div 
-                  className="relative flex items-center justify-center mb-16 group transition-all duration-500 overflow-hidden cursor-pointer w-screen -mx-4 sm:w-full sm:mx-0"
+                  className="relative flex items-center justify-center mb-20 group transition-all duration-500 overflow-hidden cursor-pointer w-full"
                   onClick={() => selectedPost.imageUrl && openGallery(selectedPost.imageUrl)}
                 >
                   {selectedPost.imageUrl ? (
-                    <div className="relative w-full overflow-hidden">
+                    <div className="relative w-full overflow-hidden rounded-3xl shadow-2xl">
                       <ImageWithFallback
                         src={selectedPost.imageUrl}
                         alt={selectedPost.title}
-                        className="w-full h-auto max-h-[750px] object-contain transition-transform duration-1000 group-hover:scale-[1.01]"
+                        className="w-full h-auto max-h-[850px] object-cover transition-transform duration-1000 group-hover:scale-[1.02]"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
                       <div className="absolute inset-0 ring-1 ring-black/5 pointer-events-none" />
                     </div>
                   ) : (
-                    <div className="w-full aspect-[16/9] sm:aspect-[21/9] bg-[#f8fafc] flex items-center justify-center rounded-[1.5rem] border border-blue-100/30 overflow-hidden relative min-h-[220px] sm:min-h-[280px] max-w-2xl mx-auto">
+                    <div className="w-full aspect-[16/9] sm:aspect-[21/9] bg-[#f8fafc] flex items-center justify-center rounded-[2rem] border border-blue-100/30 overflow-hidden relative min-h-[220px] sm:min-h-[280px]">
                       {/* Subtle Pattern Background */}
                       <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
                         style={{ 
                           backgroundImage: `radial-gradient(#1887FC 1.5px, transparent 1.5px)`, 
-                          backgroundSize: '24px 24px' 
+                          backgroundSize: '32px 32px' 
                         }} 
                       />
                       
                       {/* Large Animated Gradient Glow */}
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-blue-100/30 blur-[80px] rounded-full" />
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-blue-100/30 blur-[100px] rounded-full" />
                       
                       <div className="relative flex flex-col items-center">
                         <motion.div 
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ duration: 0.7, ease: "easeOut" }}
-                          className="w-20 h-20 sm:w-28 sm:h-28 rounded-[3.5rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.1)] flex items-center justify-center overflow-hidden border border-white/50 p-5 sm:p-7"
+                          className="w-24 h-24 sm:w-32 sm:h-32 rounded-[4rem] bg-white shadow-[0_20px_50px_rgba(24,135,252,0.15)] flex items-center justify-center overflow-hidden border border-white/50 p-6 sm:p-8"
                         >
                           <img 
                             src="/images/logos/placeholder.png" 
@@ -176,10 +176,10 @@ export const BlogPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="prose prose-sm sm:prose-base max-w-none px-4 sm:px-0">
+                <div className="prose prose-lg sm:prose-xl max-w-none px-0">
                   <RichTextContent 
                     text={selectedPost.content} 
-                    className="text-gray-800 leading-[1.8] text-base sm:text-xl text-justify sm:text-left"
+                    className="text-gray-800 leading-[1.8] text-lg sm:text-2xl text-justify"
                     onImageClick={openGallery}
                   />
                 </div>
