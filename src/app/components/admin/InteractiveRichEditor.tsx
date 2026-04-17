@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
+import { SharedToolbar } from './SharedToolbar';
 import { cn } from "@/app/components/ui/utils";
 import { Textarea } from '@/app/components/ui/textarea';
 import { Label } from '@/app/components/ui/label';
@@ -34,7 +34,13 @@ export const InteractiveRichEditor: React.FC<InteractiveRichEditorProps> = ({
   useEffect(() => {
     const handleToolbarCommand = (e: any) => {
       const { command, value: cmdValue } = e.detail;
-      handleCommand(command, cmdValue);
+      
+      // Check if THIS editor is actually the one that was focused/active
+      // We use document.activeElement and compare with our ID or ref
+      const activeEl = document.activeElement;
+      if (activeEl && activeEl.id === id) {
+        handleCommand(command, cmdValue);
+      }
     };
 
     window.addEventListener(`editor-command-${id}`, handleToolbarCommand);

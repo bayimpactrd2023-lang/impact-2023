@@ -45,7 +45,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
   const [loadingFeatured, setLoadingFeatured] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
 
-  const handleCommand = (cmd: string, val?: string) => {
+  const handleCommand = (cmd: string, val: any = '') => {
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -141,7 +141,8 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
       return;
     }
 
-    // Validation: Ensure at least one image is uploaded
+    // Validation: Image is now optional
+    /*
     const hasImage = editingHighlight.imageUrl && 
       (typeof editingHighlight.imageUrl === 'string' 
         ? editingHighlight.imageUrl.trim() !== '' 
@@ -150,6 +151,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
       toast.error('Please upload at least one image for the highlight.');
       return;
     }
+    */
 
     // Validation: Ensure published date is set and valid
     const minDate = '2000-01-01';
@@ -182,11 +184,22 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
     try {
       // Handle Image Uploads before saving to database
       let finalImageUrl = editingHighlight.imageUrl;
+      const originalHighlight = pagination.data.find(h => h.id === editingHighlight.id);
+      
       if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
         finalImageUrl = await uploadImage(finalImageUrl, 'highlights');
+        // Delete old cover image if it was replaced
+        if (originalHighlight?.imageUrl && originalHighlight.imageUrl !== finalImageUrl) {
+          await deleteStorageFile(originalHighlight.imageUrl, 'highlights');
+        }
+      } else if (!finalImageUrl && originalHighlight?.imageUrl) {
+        // Cover image was removed
+        await deleteStorageFile(originalHighlight.imageUrl, 'highlights');
       }
 
       let finalImages = editingHighlight.images || [];
+      const originalImages = originalHighlight?.images || [];
+
       if (editingHighlight.images && editingHighlight.images.some(img => typeof img === 'object')) {
         const filesToUpload = editingHighlight.images.filter(img => typeof img === 'object') as File[];
         const uploadedUrls = await uploadImages(filesToUpload, 'highlights');
@@ -197,6 +210,14 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
           }
           return img as string;
         });
+      }
+
+      // Cleanup gallery images that were removed from the array
+      const currentGalleryUrls = finalImages.filter(img => typeof img === 'string') as string[];
+      for (const oldImg of originalImages) {
+        if (!currentGalleryUrls.includes(oldImg)) {
+          await deleteStorageFile(oldImg, 'highlights');
+        }
       }
 
       const highlightData: any = {
@@ -419,8 +440,12 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-                        <Sparkles className="w-16 h-16 text-[#1887FC]" />
+                      <div className="w-full h-full bg-blue-50/50 flex items-center justify-center p-10">
+                        <img 
+                          src="/images/logos/placeholder.png" 
+                          alt="Placeholder" 
+                          className="w-1/2 h-1/2 object-contain opacity-30"
+                        />
                       </div>
                     )}
                   </div>

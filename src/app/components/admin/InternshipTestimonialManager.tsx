@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { InternshipTestimonial, InternshipTestimonialForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
-import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
+import { VisualRichEditor } from './VisualRichEditor';
+import { SharedToolbar } from './SharedToolbar';
 import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -173,6 +173,9 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
     try {
       // Handle image uploads before saving to database
       let finalImages = editingTestimonial.images || [];
+      const originalTestimonial = pagination.data.find(t => t.id === editingTestimonial.id);
+      const originalImages = originalTestimonial?.images || [];
+
       if (editingTestimonial.images && editingTestimonial.images.some(img => typeof img === 'object')) {
         const filesToUpload = editingTestimonial.images.filter(img => typeof img === 'object') as File[];
         const uploadedUrls = await uploadImages(filesToUpload, 'testimonials');
@@ -183,6 +186,14 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
           }
           return img as string;
         });
+      }
+
+      // Cleanup gallery images that were removed from the array
+      const currentGalleryUrls = finalImages.filter(img => typeof img === 'string') as string[];
+      for (const oldImg of originalImages) {
+        if (!currentGalleryUrls.includes(oldImg)) {
+          await deleteStorageFile(oldImg, 'testimonials');
+        }
       }
 
       const testimonialData = {
@@ -383,7 +394,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
             </div>
             <div className="pt-2">
               <SharedToolbar 
-                onCommand={(cmd, val) => {
+                onCommand={(cmd: string, val: any = '') => {
                   if (activeField) {
                     const event = new CustomEvent(`editor-command-${activeField}`, { 
                       detail: { command: cmd, value: val } 

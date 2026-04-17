@@ -233,10 +233,12 @@ export const HighlightsPage: React.FC = () => {
                                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-all duration-500" />
                                   </>
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1887FC] to-[#0b5ab8]">
-                                    <span className="text-white text-7xl font-bold drop-shadow-2xl">
-                                      IMPACT
-                                    </span>
+                                  <div className="w-full h-full flex items-center justify-center bg-blue-50/50 p-16">
+                                    <img 
+                                      src="/images/logos/placeholder.png" 
+                                      alt="Placeholder" 
+                                      className="w-1/2 h-1/2 object-contain opacity-40"
+                                    />
                                   </div>
                                 )}
 
@@ -254,7 +256,7 @@ export const HighlightsPage: React.FC = () => {
                               {/* Text Section - Alternating Position */}
                               <div className="flex flex-col justify-between h-full">
                                 <div className="flex-1">
-                                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight group-hover:text-[#1887FC] transition-colors duration-300 mb-3">
+                                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight group-hover:text-[#1887FC] transition-colors duration-300 mb-3 break-words line-clamp-3">
                                     {highlight.title}
                                   </h3>
                                   <div className="text-gray-600 text-base leading-relaxed h-48 overflow-hidden relative">

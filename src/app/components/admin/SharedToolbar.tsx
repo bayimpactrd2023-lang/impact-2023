@@ -7,11 +7,11 @@ import {
   Bold,
   ChevronDown,
   Type,
-  Image as ImageIcon,
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify
+  AlignJustify,
+  Columns
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -53,20 +53,6 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
     alignJustify: false
   });
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && onImageUpload) {
-      onImageUpload(file);
-    }
-    // Reset input so the same file can be selected again
-    e.target.value = '';
-  };
 
   useEffect(() => {
     const checkFormats = () => {
@@ -257,18 +243,21 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
                     <span>Float Left</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => onCommand('alignImage', 'center')} 
-                    className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
-                  >
-                    <AlignCenter className="w-4 h-4" />
-                    <span>Center Block</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
                     onClick={() => onCommand('alignImage', 'right')} 
                     className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
                   >
                     <AlignRight className="w-4 h-4" />
                     <span>Float Right</span>
+                  </DropdownMenuItem>
+
+                  <div className="h-px bg-gray-100 my-1" />
+                  <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Layouts</div>
+                  <DropdownMenuItem 
+                    onClick={() => onCommand('insertSplitLayout')} 
+                    className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
+                  >
+                    <Columns className="w-4 h-4" />
+                    <span>Image + Text Split</span>
                   </DropdownMenuItem>
                 </>
               )}
@@ -321,30 +310,6 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {onImageUpload && (
-            <>
-              <div className="w-[1px] h-4 bg-gray-300 mx-0.5" />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0"
-                onClick={handleImageClick}
-                title="Insert Image"
-              >
-                <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
-                <span className="text-[11px] sm:text-xs">Image</span>
-              </Button>
-            </>
-          )}
         </div>
       </div>
     </div>

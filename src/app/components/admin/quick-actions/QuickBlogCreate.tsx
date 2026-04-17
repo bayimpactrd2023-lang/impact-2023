@@ -26,8 +26,8 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
-import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
+import { VisualRichEditor } from '../VisualRichEditor';
+import { SharedToolbar } from '../SharedToolbar';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 
@@ -47,7 +47,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
 
-  const handleCommand = (cmd: string, val?: string) => {
+  const handleCommand = (cmd: string, val: any = '') => {
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 

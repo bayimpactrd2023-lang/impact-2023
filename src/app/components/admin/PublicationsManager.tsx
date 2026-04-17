@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Publication, PublicationForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { VisualRichEditor } from './VisualRichEditor';
-import { SharedToolbar } from './SharedToolbar';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -46,7 +46,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
   const [loadingFeatured, setLoadingFeatured] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
 
-  const handleCommand = (cmd: string, val?: string) => {
+  const handleCommand = (cmd: string, val: any = '') => {
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -144,8 +144,17 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
     try {
       // Handle PDF Upload before saving to database
       let finalPdfUrl = editingPublication.pdfUrl;
+      const original = pagination.data.find(p => p.id === editingPublication.id);
+
       if (finalPdfUrl instanceof File) {
         finalPdfUrl = await uploadPDF(finalPdfUrl, 'publications');
+        // Delete old PDF if it was replaced
+        if (original?.pdfUrl && original.pdfUrl !== finalPdfUrl) {
+          await deleteStorageFile(original.pdfUrl, 'publications');
+        }
+      } else if (!finalPdfUrl && original?.pdfUrl) {
+        // PDF was removed
+        await deleteStorageFile(original.pdfUrl, 'publications');
       }
 
       const pubData = {

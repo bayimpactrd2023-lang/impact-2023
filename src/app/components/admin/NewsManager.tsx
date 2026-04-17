@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { NewsItem, NewsItemForm } from '@/app/context/ContentContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { VisualRichEditor } from './VisualRichEditor';
-import { SharedToolbar } from './SharedToolbar';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
@@ -39,7 +39,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
   const [isSaving, setIsSaving] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
 
-  const handleCommand = (cmd: string, val?: string) => {
+  const handleCommand = (cmd: string, val: any = '') => {
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -135,9 +135,23 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
       let finalImageUrl = editingNews.imageUrl;
       if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
         finalImageUrl = await uploadImage(finalImageUrl, 'news');
+        // Delete old cover image if it was replaced
+        const originalNews = pagination.data.find(n => n.id === editingNews.id);
+        if (originalNews?.imageUrl && originalNews.imageUrl !== finalImageUrl) {
+          await deleteStorageFile(originalNews.imageUrl, 'news');
+        }
+      } else if (!finalImageUrl) {
+        // Cover image was removed
+        const originalNews = pagination.data.find(n => n.id === editingNews.id);
+        if (originalNews?.imageUrl) {
+          await deleteStorageFile(originalNews.imageUrl, 'news');
+        }
       }
 
       let finalImages = editingNews.images || [];
+      const originalNews = pagination.data.find(n => n.id === editingNews.id);
+      const originalImages = originalNews?.images || [];
+
       if (editingNews.images && editingNews.images.some(img => typeof img === 'object')) {
         const filesToUpload = editingNews.images.filter(img => typeof img === 'object') as File[];
         const uploadedUrls = await uploadImages(filesToUpload, 'news');
@@ -149,6 +163,14 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
           }
           return img as string;
         });
+      }
+
+      // Cleanup gallery images that were removed from the array
+      const currentGalleryUrls = finalImages.filter(img => typeof img === 'string') as string[];
+      for (const oldImg of originalImages) {
+        if (!currentGalleryUrls.includes(oldImg)) {
+          await deleteStorageFile(oldImg, 'news');
+        }
       }
 
       const newsData = {

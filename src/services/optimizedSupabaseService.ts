@@ -43,7 +43,7 @@ const FIELD_SELECTIONS = {
   teamDetail: 'id,name,role,description,image_url',
 
   // Blog Posts
-  blogList: 'id,title,author,author_role,date,image_url,images,likes,content',
+  blogList: 'id,slug,title,author,author_role,date,image_url,images,likes,content',
   blogDetail: '*',
 
   // Projects
@@ -491,6 +491,7 @@ export const getAllBlogPosts = async () => {
       // Optimize images
       const mappedData: BlogPost[] = (data || []).map((item: any) => ({
         id: item.id,
+        slug: item.slug,
         title: item.title,
         content: item.content,
         author: item.author,
@@ -532,6 +533,7 @@ export const getBlogPostsPaginated = async (page: number, limit: number) => {
       // Optimize images and transform snake_case to camelCase
       const optimizedData: BlogPost[] = (dataResponse.data || []).map((item: any) => ({
         id: item.id,
+        slug: item.slug,
         title: item.title,
         author: item.author,
         authorRole: item.author_role,

@@ -11,13 +11,21 @@ import { useServerPagination } from '@/hooks/useServerPagination';
 import { getBlogPostsPaginated } from '@/services/optimizedSupabaseService';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
+import { stripHtmlAndImages } from '@/app/components/admin/utils/adminHelpers';
+
+const validateUUID = (id: string | null): boolean => {
+  if (!id) return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
 
 export const BlogPage: React.FC = () => {
   const [targetPostId, setTargetPostId] = useState<string | null>(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Use server-side pagination with 4 items per page (1 featured + 3 stories)
   const pagination = useServerPagination<BlogPost>({
@@ -28,16 +36,25 @@ export const BlogPage: React.FC = () => {
   // Production-ready scroll-to-top
   const scrollRef = useScrollToTop([pagination.currentPage, targetPostId]);
 
-  // Handle deep-linking from header dropdown
+  // Handle selection from internal state (Hides ID from URL)
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const postId = params.get('post');
-    if (postId) {
-      setTargetPostId(postId);
+    // Check if a post was passed through navigation state (hidden from URL)
+    const statePostId = location.state?.postId;
+    
+    if (statePostId && validateUUID(statePostId)) {
+      setTargetPostId(statePostId);
     } else {
-      setTargetPostId(null);
+      // Also check query params just in case of refresh/legacy, but we won't generate these anymore
+      const params = new URLSearchParams(location.search);
+      const queryPostId = params.get('post');
+      
+      if (queryPostId && validateUUID(queryPostId)) {
+        setTargetPostId(queryPostId);
+      } else {
+        setTargetPostId(null);
+      }
     }
-  }, [location.search]);
+  }, [location.state, location.search]);
 
   // Show full-page skeleton during initial loading
   if (pagination.loading && pagination.currentPage === 1 && pagination.data.length === 0) {
@@ -56,7 +73,7 @@ export const BlogPage: React.FC = () => {
   // Logic to determine which post to show as "featured" (the main article at the top)
   // 1. If targetPostId is set, find that post
   // 2. Otherwise use the first post on the current page
-  const selectedPost = targetPostId 
+  const selectedPost = targetPostId
     ? pagination.data.find(p => p.id === targetPostId) 
     : (pagination.currentPage === 1 ? pagination.data[0] : null);
 
@@ -85,41 +102,41 @@ export const BlogPage: React.FC = () => {
               className="mb-20"
             >
               <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-10">
-                  <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1887FC] text-sm font-bold mb-6 uppercase tracking-wider">
+                <div className="text-center mb-12">
+                  <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1887FC] text-xs sm:text-sm font-bold mb-6 uppercase tracking-wider">
                     {targetPostId ? 'Reading Article' : 'Latest Insight'}
                   </span>
-                  <h1 className="text-2xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-8 leading-[1.2] sm:leading-[1.1] tracking-tight w-full max-w-4xl mx-auto">
+                  <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-10 leading-[1.15] tracking-tight w-full max-w-4xl mx-auto px-4">
                     {selectedPost.title}
                   </h1>
-                  <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-gray-500 text-base sm:text-lg border-y border-gray-100 py-6 mb-12">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC]">
-                        <User size={20} />
+                  <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-12 text-gray-500 text-base sm:text-lg border-y border-gray-100 py-8 mb-12">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC] shadow-sm">
+                        <User size={22} />
                       </div>
                       <div className="text-left">
-                        <p className="text-xs uppercase tracking-widest text-gray-400 font-bold">Author</p>
-                        <p className="font-bold text-gray-900 leading-none">{selectedPost.author}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-0.5">Author</p>
+                        <p className="font-bold text-gray-900 leading-tight">{selectedPost.author}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC]">
-                        <Calendar size={20} />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#1887FC] shadow-sm">
+                        <Calendar size={22} />
                       </div>
                       <div className="text-left">
-                        <p className="text-xs uppercase tracking-widest text-gray-400 font-bold">Published</p>
-                        <p className="font-bold text-gray-900 leading-none">{new Date(selectedPost.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-0.5">Published</p>
+                        <p className="font-bold text-gray-900 leading-tight">{new Date(selectedPost.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div 
-                  className="relative flex items-center justify-center mb-16 group transition-all duration-500 overflow-hidden cursor-pointer"
+                  className="relative flex items-center justify-center mb-16 group transition-all duration-500 overflow-hidden cursor-pointer w-screen -mx-4 sm:w-full sm:mx-0"
                   onClick={() => selectedPost.imageUrl && openGallery(selectedPost.imageUrl)}
                 >
                   {selectedPost.imageUrl ? (
-                    <div className="relative w-full overflow-hidden shadow-sm">
+                    <div className="relative w-full overflow-hidden">
                       <ImageWithFallback
                         src={selectedPost.imageUrl}
                         alt={selectedPost.title}
@@ -146,7 +163,7 @@ export const BlogPage: React.FC = () => {
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ duration: 0.7, ease: "easeOut" }}
-                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-[2.5rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.1)] flex items-center justify-center overflow-hidden border border-white/50 p-4 sm:p-6"
+                          className="w-20 h-20 sm:w-28 sm:h-28 rounded-[3.5rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.1)] flex items-center justify-center overflow-hidden border border-white/50 p-5 sm:p-7"
                         >
                           <img 
                             src="/images/logos/placeholder.png" 
@@ -159,10 +176,10 @@ export const BlogPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="prose prose-sm sm:prose-base max-w-none">
+                <div className="prose prose-sm sm:prose-base max-w-none px-4 sm:px-0">
                   <RichTextContent 
                     text={selectedPost.content} 
-                    className="text-gray-800 leading-relaxed"
+                    className="text-gray-800 leading-[1.8] text-base sm:text-xl text-justify sm:text-left"
                     onImageClick={openGallery}
                   />
                 </div>
@@ -212,12 +229,12 @@ export const BlogPage: React.FC = () => {
                       viewport={{ once: true }}
                       className="group cursor-pointer"
                       onClick={() => {
-                        // Navigate to the post directly instead of opening a modal
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                        setTargetPostId(post.id);
-                        // Update URL without full page reload if possible, or just use the state
-                        const newUrl = `${window.location.pathname}?post=${post.id}`;
-                        window.history.pushState({}, '', newUrl);
+                        // Navigate to the post using internal state to keep the URL hidden
+                        if (validateUUID(post.id)) {
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                          setTargetPostId(post.id);
+                          navigate('/blog', { state: { postId: post.id }, replace: true });
+                        }
                       }}
                     >
                       <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full bg-[#f8fafc] rounded-2xl overflow-hidden mb-6 shadow-md group-hover:shadow-xl transition-all duration-500">
@@ -236,7 +253,7 @@ export const BlogPage: React.FC = () => {
                           </>
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center">
-                            <div className="w-24 h-24 rounded-[2rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.12)] flex items-center justify-center overflow-hidden border border-white/80 p-6">
+                            <div className="w-28 h-28 rounded-[2.5rem] bg-white shadow-[0_15px_40px_rgba(24,135,252,0.12)] flex items-center justify-center overflow-hidden border border-white/80 p-7">
                               <img 
                                 src="/images/logos/placeholder.png" 
                                 alt="Placeholder" 
@@ -253,8 +270,8 @@ export const BlogPage: React.FC = () => {
                       <h3 className="text-2xl font-bold text-gray-900 group-hover:text-[#1887FC] transition-colors line-clamp-2 leading-tight mb-4">
                         {post.title}
                       </h3>
-                      <div className="text-gray-600 text-lg line-clamp-2 leading-relaxed">
-                        <RichTextContent text={post.content} className="text-lg line-clamp-2" />
+                      <div className="text-gray-600 text-lg line-clamp-3 leading-relaxed">
+                        {stripHtmlAndImages(post.content)}
                       </div>
                     </motion.div>
                   ))}

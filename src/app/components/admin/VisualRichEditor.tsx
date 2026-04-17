@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
+import { SharedToolbar } from './SharedToolbar';
 import { Label } from '@/app/components/ui/label';
 import { cn } from "@/app/components/ui/utils";
 
@@ -41,44 +41,16 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     images.forEach(img => {
       // Skip if already wrapped
       if (img.parentElement?.classList.contains('image-wrapper')) {
-        // Ensure buttons/handles exist even if wrapped (might have been stripped on save)
-        const wrapper = img.parentElement;
-        if (!wrapper.querySelector('.delete-image-btn')) {
-          const id = wrapper.getAttribute('data-id') || `img-${Date.now()}`;
-          const url = img.src;
-          
-          // Add resize handle
-          if (!wrapper.querySelector('.resize-handle')) {
-            const handle = document.createElement('div');
-            handle.className = "resize-handle absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity rounded-tl-md";
-            handle.style.cssText = "position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; background: #3b82f6; cursor: se-resize; border-top-left-radius: 4px;";
-            wrapper.appendChild(handle);
-          }
-          
-          // Add delete button
-          const btn = document.createElement('button');
-          btn.className = "delete-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity";
-          btn.type = "button";
-          btn.style.cssText = "position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border-radius: 9999px; padding: 4px; border: none; cursor: pointer; line-height: 1;";
-          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-          btn.onclick = () => {
-            wrapper.remove();
-            window.dispatchEvent(new CustomEvent('editor-image-deleted', { detail: { id, url } }));
-            handleInput();
-          };
-          wrapper.appendChild(btn);
-        }
         return;
       }
       
       // Wrap bare images
       const id = `img-${Date.now()}`;
-      const url = img.src;
       const wrapper = document.createElement('div');
-      wrapper.className = "image-wrapper relative inline-block group float-left mr-4 mb-4";
+      wrapper.className = "image-wrapper relative inline-block group float-left mr-12 mb-8";
       wrapper.setAttribute('data-id', id);
       wrapper.setAttribute('contenteditable', 'false');
-      wrapper.style.cssText = "display: inline-block; position: relative; user-select: none;";
+      wrapper.style.cssText = "display: inline-block; position: relative; user-select: none; max-width: 45%;";
       
       // Move styles from img to wrapper if they are floating styles
       if (img.style.float) {
@@ -90,26 +62,7 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
       
       img.parentNode?.replaceChild(wrapper, img);
       wrapper.appendChild(img);
-      img.className = "resizable-image max-w-full rounded-lg shadow-md";
-      
-      // Add resize handle
-      const handle = document.createElement('div');
-      handle.className = "resize-handle absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity rounded-tl-md";
-      handle.style.cssText = "position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; background: #3b82f6; cursor: se-resize; border-top-left-radius: 4px;";
-      wrapper.appendChild(handle);
-      
-      // Add delete button
-      const btn = document.createElement('button');
-      btn.className = "delete-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity";
-      btn.type = "button";
-      btn.style.cssText = "position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border-radius: 9999px; padding: 4px; border: none; cursor: pointer; line-height: 1;";
-      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-      btn.onclick = () => {
-        wrapper.remove();
-        window.dispatchEvent(new CustomEvent('editor-image-deleted', { detail: { id, url } }));
-        handleInput();
-      };
-      wrapper.appendChild(btn);
+      img.className = "max-w-full rounded-2xl shadow-xl";
     });
     
     return doc.body.innerHTML;
@@ -164,6 +117,19 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
   };
 
   const execCommand = (command: string, value?: string) => {
+    // If the active element is an input or textarea, we should NOT trigger rich text commands
+    // because they might be using a shared toolbar and we don't want to clear or corrupt
+    // their value with HTML commands that only work for contentEditable.
+    const activeEl = document.activeElement;
+    const isInputOrTextarea = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+    if (isInputOrTextarea) {
+      // For inputs/textareas, we only allow certain commands if we implement them,
+      // but standard document.execCommand will likely fail or cause issues.
+      // For now, we just return to prevent clearing or focused editor issues.
+      return;
+    }
+
     // Ensure the editor is focused before applying the command
     if (editorRef.current) {
       editorRef.current.focus();
@@ -206,7 +172,24 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
       container = container.parentNode!;
     }
     
-    // Check if the container is an image or contains an image
+    // Check if we are inside a split layout
+    const splitWrapper = (container as HTMLElement).closest('.split-layout-wrapper') as HTMLElement;
+    if (splitWrapper) {
+      if (side === 'left') {
+        splitWrapper.style.flexDirection = 'row';
+        splitWrapper.className = "split-layout-wrapper my-8 w-full flex flex-col md:flex-row gap-8 items-center group/split relative";
+      } else if (side === 'right') {
+        splitWrapper.style.flexDirection = 'row-reverse';
+        splitWrapper.className = "split-layout-wrapper my-8 w-full flex flex-col md:flex-row-reverse gap-8 items-center group/split relative";
+      } else if (side === 'center') {
+        splitWrapper.style.flexDirection = 'column';
+        splitWrapper.className = "split-layout-wrapper my-8 w-full flex flex-col gap-8 items-center group/split relative";
+      }
+      handleInput();
+      return;
+    }
+
+    // Standard image alignment (not in split layout)
     const images = (container as HTMLElement).querySelectorAll?.('img');
     let targetImg = (container.nodeName === 'IMG' ? container : (images?.length === 1 ? images[0] : null)) as HTMLImageElement;
     
@@ -223,29 +206,34 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
       const wrapper = targetImg.closest('.image-wrapper') as HTMLElement || targetImg;
       
       if (side === 'left') {
-        wrapper.className = "image-wrapper relative inline-block group float-left mr-4 mb-4";
+        wrapper.className = "image-wrapper relative inline-block group float-left mr-12 mb-8";
         wrapper.style.display = 'inline-block';
         wrapper.style.float = 'left';
-        wrapper.style.marginRight = '16px';
+        wrapper.style.marginRight = '3rem';
         wrapper.style.marginLeft = '0';
-        wrapper.style.textAlign = 'left';
+        wrapper.style.marginBottom = '2rem';
+        wrapper.style.textAlign = '';
         wrapper.style.width = 'fit-content';
+        wrapper.style.maxWidth = '45%';
       } else if (side === 'center') {
-        wrapper.className = "image-wrapper relative block group mx-auto mb-4";
+        wrapper.className = "image-wrapper relative block group mx-auto mb-12";
         wrapper.style.display = 'block';
         wrapper.style.float = 'none';
         wrapper.style.marginRight = 'auto';
         wrapper.style.marginLeft = 'auto';
         wrapper.style.textAlign = 'center';
         wrapper.style.width = 'fit-content';
+        wrapper.style.maxWidth = '85%';
       } else {
-        wrapper.className = "image-wrapper relative inline-block group float-right ml-4 mb-4";
+        wrapper.className = "image-wrapper relative inline-block group float-right ml-12 mb-8";
         wrapper.style.display = 'inline-block';
         wrapper.style.float = 'right';
-        wrapper.style.marginLeft = '16px';
+        wrapper.style.marginLeft = '3rem';
         wrapper.style.marginRight = '0';
-        wrapper.style.textAlign = 'right';
+        wrapper.style.marginBottom = '2rem';
+        wrapper.style.textAlign = '';
         wrapper.style.width = 'fit-content';
+        wrapper.style.maxWidth = '45%';
       }
       handleInput();
     }
@@ -255,21 +243,11 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     if (editorRef.current) {
       editorRef.current.focus();
       
-      // Create a wrapper for the image and the delete button
-      // Use data-type="image-wrapper" to identify it for deletion logic
+      // Create a wrapper for the image
       const id = `img-${Date.now()}`;
       const imgHtml = `
-        <div class="image-wrapper relative inline-block group float-left mr-4 mb-4" data-id="${id}" contenteditable="false" style="display: inline-block; position: relative; user-select: none;">
-          <img src="${url}" class="resizable-image max-w-full rounded-lg shadow-md" style="display: block; max-width: 100%; border-radius: 8px; width: 300px; height: auto;" />
-          <div class="resize-handle absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity rounded-tl-md" style="position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; background: #3b82f6; cursor: se-resize; border-top-left-radius: 4px;"></div>
-          <button 
-            class="delete-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity" 
-            onclick="this.parentElement.remove(); window.dispatchEvent(new CustomEvent('editor-image-deleted', { detail: { id: '${id}', url: '${url}' } }));"
-            type="button"
-            style="position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border-radius: 9999px; padding: 4px; border: none; cursor: pointer; line-height: 1;"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
+        <div class="image-wrapper relative inline-block group float-left mr-12 mb-8" data-id="${id}" contenteditable="false" style="position: relative; user-select: none; width: fit-content; max-width: 45%; display: inline-block; float: left; margin-right: 3rem; margin-bottom: 2rem;">
+          <img src="${url}" class="max-w-full rounded-2xl shadow-xl" style="display: block; max-width: 100%; border-radius: 16px; width: 450px; height: auto;" />
         </div><p><br></p>`;
       
       document.execCommand('insertHTML', false, imgHtml);
@@ -277,54 +255,59 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     }
   };
 
-  const [isResizing, setIsResizing] = useState(false);
-  const [resizingTarget, setResizingTarget] = useState<HTMLElement | null>(null);
-  const [startX, setStartX] = useState(0);
-  const [startWidth, setStartWidth] = useState(0);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('resize-handle')) {
-      e.preventDefault();
-      setIsResizing(true);
-      const wrapper = target.parentElement;
-      const img = wrapper?.querySelector('img');
-      if (img) {
-        setResizingTarget(img);
-        setStartX(e.clientX);
-        setStartWidth(img.offsetWidth);
+  const insertSplitLayout = () => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      
+      // Ensure we are at the end of the content or have a clean insertion point
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.collapse(false); // Collapse to end of current selection
       }
+
+      const id = `split-${Date.now()}`;
+      const splitHtml = `
+        <div class="split-layout-wrapper my-8 w-full flex flex-col md:flex-row gap-8 items-center group/split relative" data-id="${id}" style="display: flex; flex-direction: row; gap: 2rem; align-items: center; margin: 2rem 0; width: 100%; position: relative;">
+          <button 
+            type="button" 
+            class="delete-split-btn absolute -top-4 -right-4 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/split:opacity-100 transition-opacity z-50 hover:bg-red-600"
+            onclick="this.closest('.split-layout-wrapper').remove(); window.dispatchEvent(new Event('input'));"
+            contenteditable="false"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          </button>
+          <div class="split-image-container flex-1" style="flex: 1; max-width: 50%;">
+            <div class="image-wrapper relative inline-block group" contenteditable="false" style="position: relative; user-select: none; width: 100%;">
+               <div class="flex items-center justify-center bg-gray-100 rounded-2xl aspect-video border-2 border-dashed border-gray-300 text-gray-400">
+                 Click to upload image
+               </div>
+            </div>
+          </div>
+          <div class="split-text-container flex-1 min-w-0 relative" data-placeholder="Write your story here..." style="flex: 1; min-width: 0; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
+            <p><br></p>
+          </div>
+        </div>
+        <p><br></p>
+      `;
+      document.execCommand('insertHTML', false, splitHtml);
+      
+      // Force immediate focus on the newly inserted text area
+      setTimeout(() => {
+        const newSplit = editorRef.current?.querySelector(`[data-id="${id}"] .split-text-container p`);
+        if (newSplit) {
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.setStart(newSplit, 0);
+          range.collapse(true);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+          (newSplit as HTMLElement).focus();
+        }
+        handleInput();
+      }, 10);
     }
   };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isResizing && resizingTarget) {
-        const deltaX = e.clientX - startX;
-        const newWidth = Math.max(50, startWidth + deltaX);
-        resizingTarget.style.width = `${newWidth}px`;
-        resizingTarget.style.height = 'auto'; // Maintain aspect ratio
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (isResizing) {
-        setIsResizing(false);
-        setResizingTarget(null);
-        handleInput();
-      }
-    };
-
-    if (isResizing) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing, resizingTarget, startX, startWidth]);
 
   const handleImageFile = (file: File) => {
     const reader = new FileReader();
@@ -338,10 +321,50 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
-    document.execCommand('insertText', false, text);
+    
+    // Convert newlines to paragraphs for better structure preservation
+    const html = text
+      .split(/\n\n+/)
+      .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+      .join('');
+    
+    if (html.includes('<p>')) {
+      document.execCommand('insertHTML', false, html);
+    } else {
+      document.execCommand('insertText', false, text);
+    }
+    handleInput();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        let container = range.commonAncestorContainer;
+        if (container.nodeType === 3) {
+          container = container.parentNode!;
+        }
+
+        // If an image is selected (via onMouseDown logic)
+        const selectedImg = range.startContainer.nodeName === 'IMG' 
+          ? range.startContainer 
+          : (range.startContainer.childNodes[range.startOffset] as HTMLElement);
+
+        if (selectedImg && (selectedImg as HTMLElement).tagName === 'IMG') {
+          e.preventDefault();
+          const wrapper = (selectedImg as HTMLElement).closest('.image-wrapper');
+          if (wrapper) {
+            const url = (selectedImg as HTMLImageElement).src;
+            wrapper.remove();
+            window.dispatchEvent(new CustomEvent('editor-image-deleted', { detail: { id, url } }));
+            handleInput();
+          }
+          return;
+        }
+      }
+    }
+
     if (e.key === 'Tab') {
       e.preventDefault();
       
@@ -396,14 +419,27 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
   useEffect(() => {
     const handleToolbarCommand = (e: any) => {
       const { command, value: cmdValue } = e.detail;
+
+      // If this is a single editor component (not one of many in a form)
+      // or if it's the active one
+      const activeEl = document.activeElement;
+      const isActive = activeEl && (activeEl.id === id || editorRef.current?.contains(activeEl));
+      
+      // Special case: if we're calling handleImageFile or insertImage, 
+      // we might have lost focus to the toolbar/dialog, so we should be less strict 
+      // if this is the targeted editor by ID
+      const isTargeted = e.type === `editor-command-${id}`;
+
       if (command === 'insertImage') {
-        insertImage(cmdValue);
+        if (isActive || isTargeted) insertImage(cmdValue);
       } else if (command === 'handleImageFile') {
-        handleImageFile(cmdValue);
+        if (isActive || isTargeted) handleImageFile(cmdValue);
       } else if (command === 'alignImage') {
-        alignImage(cmdValue);
+        if (isActive || isTargeted) alignImage(cmdValue as any);
+      } else if (command === 'insertSplitLayout') {
+        if (isActive || isTargeted) insertSplitLayout();
       } else {
-        execCommand(command, cmdValue);
+        if (isActive || isTargeted) execCommand(command, cmdValue);
       }
     };
 
@@ -453,17 +489,108 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
           onMouseDown={(e) => {
-            handleMouseDown(e);
+            const target = e.target as HTMLElement;
+            
+            // Handle image upload click for split layout placeholders
+            if (target.closest('.split-image-container') && !target.querySelector('img')) {
+              const fileInput = document.createElement('input');
+              fileInput.type = 'file';
+              fileInput.accept = 'image/*';
+              fileInput.onchange = (ev: any) => {
+                const file = ev.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (re) => {
+                    const result = re.target?.result as string;
+                    const container = target.closest('.split-image-container');
+                    if (container) {
+                      const wrapper = container.querySelector('.image-wrapper');
+                      if (wrapper) {
+                        wrapper.innerHTML = `<img src="${result}" class="max-w-full rounded-2xl shadow-xl" style="display: block; max-width: 100%; border-radius: 16px; width: 100%; height: auto;" />`;
+                        handleInput();
+                      }
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }
+              };
+              fileInput.click();
+              return;
+            }
+
             // If we click an image, explicitly select it
             if ((e.target as HTMLElement).tagName === 'IMG') {
+              const target = e.target as HTMLElement;
+
+              // Remove selection class from all images first
+              if (editorRef.current) {
+                editorRef.current.querySelectorAll('img').forEach(img => {
+                  img.style.outline = '';
+                  img.style.boxShadow = '';
+                });
+              }
+              
+              // Add selection style to current image (only for editor)
+              target.style.outline = '4px solid #3b82f633';
+              target.style.boxShadow = '0 0 0 2px #3b82f6';
+
               const range = document.createRange();
               range.selectNode(e.target as Node);
               const sel = window.getSelection();
               sel?.removeAllRanges();
               sel?.addRange(range);
+            } else {
+              // Clear selection styles if clicking elsewhere
+              if (editorRef.current) {
+                editorRef.current.querySelectorAll('img').forEach(img => {
+                  img.style.outline = '';
+                  img.style.boxShadow = '';
+                });
+              }
             }
           }}
-          className="w-full h-full min-h-[inherit] p-3 outline-none empty:before:content-[attr(data-placeholder)] prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4"
+          onDragStart={(e) => {
+            // If dragging an image inside the editor, handle it
+            if ((e.target as HTMLElement).tagName === 'IMG') {
+              const target = e.target as HTMLImageElement;
+              const wrapper = target.closest('.image-wrapper') as HTMLElement;
+              
+              // Store the ID of the image being moved
+              if (wrapper && wrapper.getAttribute('data-id')) {
+                e.dataTransfer.setData('text/plain', `move-image:${wrapper.getAttribute('data-id')}`);
+                e.dataTransfer.effectAllowed = 'move';
+              }
+            }
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+          }}
+          onDrop={(e) => {
+            const data = e.dataTransfer.getData('text/plain');
+            if (data && data.startsWith('move-image:')) {
+              e.preventDefault();
+              const imageId = data.split(':')[1];
+              const wrapper = editorRef.current?.querySelector(`[data-id="${imageId}"]`);
+              
+              if (wrapper && editorRef.current) {
+                // Get the drop position
+                const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+                if (range) {
+                  // Move the existing element to the new position
+                  range.insertNode(wrapper);
+                  
+                  // Clean up selection
+                  const selection = window.getSelection();
+                  selection?.removeAllRanges();
+                  selection?.addRange(range);
+                  
+                  handleInput();
+                }
+              }
+            }
+          }}
+          className="w-full h-full min-h-[inherit] p-3 outline-none empty:before:content-[attr(data-placeholder)] prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_img]:cursor-pointer text-sm sm:text-base leading-relaxed [&_p]:display-flow-root [&_p]:break-words [&_div]:break-words [&_.split-text-container:empty]:before:content-[attr(data-placeholder)] [&_.split-text-container:empty]:before:text-gray-400 [&_.split-text-container:empty]:before:pointer-events-none"
           style={{ minHeight: `${rows * 24}px` }}
           suppressContentEditableWarning
         />

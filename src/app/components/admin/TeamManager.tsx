@@ -5,8 +5,8 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
-import { VisualRichEditor } from './VisualRichEditor';
-import { SharedToolbar } from './SharedToolbar';
+import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
+import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
 import { Plus, Trash2, User, Edit, CheckCircle, X, Users } from 'lucide-react';
 import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { toast } from 'sonner';
@@ -37,7 +37,7 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
   const [isSaving, setIsSaving] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
 
-  const handleCommand = (cmd: string, val?: string) => {
+  const handleCommand = (cmd: string, val: any = '') => {
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -114,8 +114,17 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
     try {
       // Handle Image Upload before saving to database
       let finalImageUrl = editingMember.imageUrl;
+      const originalMember = pagination.data.find(m => m.id === editingMember.id);
+
       if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
         finalImageUrl = await uploadImage(finalImageUrl, 'team');
+        // Delete old image if it was replaced
+        if (originalMember?.imageUrl && originalMember.imageUrl !== finalImageUrl) {
+          await deleteStorageFile(originalMember.imageUrl, 'team');
+        }
+      } else if (!finalImageUrl && originalMember?.imageUrl) {
+        // Image was removed
+        await deleteStorageFile(originalMember.imageUrl, 'team');
       }
 
       const memberData = {

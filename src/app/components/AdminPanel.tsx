@@ -13,19 +13,19 @@ import { ImageDropzone } from '@/app/components/ImageDropzone';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
 import { PDFDropzone } from '@/app/components/PDFDropzone';
 import { toast } from 'sonner';
-import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
-import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
-import { ProjectManager } from '@/app/components/admin/ProjectManager';
-import { FinancialStatementManager } from '@/app/components/admin/FinancialStatementManager';
-import { InternshipTestimonialManager } from '@/app/components/admin/InternshipTestimonialManager';
-import { BlogManager } from '@/app/components/admin/BlogManager';
-import { PublicationsManager } from '@/app/components/admin/PublicationsManager';
-import { NewsManager } from '@/app/components/admin/NewsManager';
-import { HighlightsManager } from '@/app/components/admin/HighlightsManager';
-import { PartnersManager } from '@/app/components/admin/PartnersManager';
-import { TeamManager } from '@/app/components/admin/TeamManager';
-import { ProductionStatusBanner } from '@/app/components/admin/ProductionStatusBanner';
-import { OurWorkTabs } from '@/app/components/admin/OurWorkTabs';
+import { VisualRichEditor } from './admin/VisualRichEditor';
+import { SharedToolbar } from './admin/SharedToolbar';
+import { ProjectManager } from './admin/ProjectManager';
+import { FinancialStatementManager } from './admin/FinancialStatementManager';
+import { InternshipTestimonialManager } from './admin/InternshipTestimonialManager';
+import { BlogManager } from './admin/BlogManager';
+import { PublicationsManager } from './admin/PublicationsManager';
+import { NewsManager } from './admin/NewsManager';
+import { HighlightsManager } from './admin/HighlightsManager';
+import { PartnersManager } from './admin/PartnersManager';
+import { TeamManager } from './admin/TeamManager';
+import { ProductionStatusBanner } from './admin/ProductionStatusBanner';
+import { OurWorkTabs } from './admin/OurWorkTabs';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { RichTextContent } from '@/app/components/RichTextContent';
 import {
@@ -132,7 +132,7 @@ export const AdminPanel: React.FC = () => {
     likes: 0,
   });
 
-  const handleQuickBlogCommand = (cmd: string, val?: string) => {
+  const handleQuickBlogCommand = (cmd: string, val: any = '') => {
     if (quickBlogActiveField) {
       const event = new CustomEvent(`editor-command-${quickBlogActiveField}`, {
         detail: { command: cmd, value: val }
@@ -175,7 +175,7 @@ export const AdminPanel: React.FC = () => {
     reference: '',
   });
 
-  const handleQuickPubCommand = (cmd: string, val?: string) => {
+  const handleQuickPubCommand = (cmd: string, val: any = '') => {
     if (quickPubActiveField) {
       const event = new CustomEvent(`editor-command-${quickPubActiveField}`, {
         detail: { command: cmd, value: val }
@@ -189,7 +189,7 @@ export const AdminPanel: React.FC = () => {
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
   const [newsActiveField, setNewsActiveField] = useState<string | null>(null);
 
-  const handleNewsCommand = (cmd: string, val?: string) => {
+  const handleNewsCommand = (cmd: string, val: any = '') => {
     if (newsActiveField) {
       const event = new CustomEvent(`editor-command-${newsActiveField}`, {
         detail: { command: cmd, value: val }
@@ -204,7 +204,7 @@ export const AdminPanel: React.FC = () => {
   const [showMigrationWarning, setShowMigrationWarning] = useState(false);
   const [highlightActiveField, setHighlightActiveField] = useState<string | null>(null);
 
-  const handleHighlightCommand = (cmd: string, val?: string) => {
+  const handleHighlightCommand = (cmd: string, val: any = '') => {
     if (highlightActiveField) {
       const event = new CustomEvent(`editor-command-${highlightActiveField}`, {
         detail: { command: cmd, value: val }
@@ -218,7 +218,7 @@ export const AdminPanel: React.FC = () => {
   const [isTeamMemberModalOpen, setIsTeamMemberModalOpen] = useState(false);
   const [teamActiveField, setTeamActiveField] = useState<string | null>(null);
 
-  const handleTeamCommand = (cmd: string, val?: string) => {
+  const handleTeamCommand = (cmd: string, val: any = '') => {
     if (teamActiveField) {
       const event = new CustomEvent(`editor-command-${teamActiveField}`, {
         detail: { command: cmd, value: val }
@@ -230,7 +230,7 @@ export const AdminPanel: React.FC = () => {
   // About Section active field for toolbar
   const [aboutActiveField, setAboutActiveField] = useState<string | null>(null);
 
-  const handleAboutCommand = (cmd: string, val?: string) => {
+  const handleAboutCommand = (cmd: string, val: any = '') => {
     if (aboutActiveField) {
       const event = new CustomEvent(`editor-command-${aboutActiveField}`, {
         detail: { command: cmd, value: val }

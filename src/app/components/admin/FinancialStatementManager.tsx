@@ -17,8 +17,8 @@ import {
   deleteFinancialStatement as deleteStatementFromDb,
   getFinancialStatementsPaginated,
 } from '@/services/supabaseService';
-import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
-import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
+import { VisualRichEditor } from './VisualRichEditor';
+import { SharedToolbar } from './SharedToolbar';
 import { PaginationControls } from '@/app/components/admin/PaginationControls';
 import { AdminPageSkeleton } from '@/app/components/admin/SkeletonLoaders';
 import { invalidateFinancialCache } from '@/utils/cacheInvalidation';
@@ -137,8 +137,17 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
     try {
       // Handle PDF Upload before saving to database
       let finalPdfUrl = editingStatement.pdfUrl;
+      const originalStatement = pagination.data.find(s => s.id === editingStatement.id);
+
       if (finalPdfUrl instanceof File) {
         finalPdfUrl = await uploadPDF(finalPdfUrl, 'pdfs');
+        // Delete old PDF if it was replaced
+        if (originalStatement?.pdfUrl && originalStatement.pdfUrl !== finalPdfUrl) {
+          await deleteStorageFile(originalStatement.pdfUrl, 'pdfs');
+        }
+      } else if (!finalPdfUrl && originalStatement?.pdfUrl) {
+        // PDF was removed
+        await deleteStorageFile(originalStatement.pdfUrl, 'pdfs');
       }
 
       const statementData = {
@@ -314,7 +323,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
             </div>
             <div className="pt-2">
               <SharedToolbar 
-                onCommand={(cmd, val) => {
+                onCommand={(cmd: string, val: any = '') => {
                   if (activeField) {
                     const event = new CustomEvent(`editor-command-${activeField}`, { 
                       detail: { command: cmd, value: val } 

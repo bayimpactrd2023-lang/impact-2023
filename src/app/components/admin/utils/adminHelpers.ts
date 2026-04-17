@@ -19,17 +19,17 @@ import {
 } from '@/app/context/ContentContext';
 
 export const AdminValidationRules = {
-  shortTitleMaxChars: 1000,
-  shortTitleMaxWords: 1000,
-  shortTextMaxChars: 2000, // ~300 words for descriptions
-  shortTextMaxWords: 300,
-  nameMaxChars: 80,
-  nameMaxWords: 10,
-  roleMaxChars: 80,
-  roleMaxWords: 12,
-  authorsMaxChars: 200,
-  authorsMaxWords: 35,
-  contentMaxChars: 50000, // ~5000 words max
+  shortTitleMaxChars: 2000,
+  shortTitleMaxWords: 2000,
+  shortTextMaxChars: 10000, // Very long descriptions
+  shortTextMaxWords: 2000,
+  nameMaxChars: 255,
+  nameMaxWords: 50,
+  roleMaxChars: 255,
+  roleMaxWords: 50,
+  authorsMaxChars: 1000,
+  authorsMaxWords: 200,
+  contentMaxChars: 500000, // Very long articles (increased from 100k)
 } as const;
 
 const digitsRegex = /\d/;
@@ -55,6 +55,7 @@ export function stripHtmlAndImages(html: string): string {
   
   // 2. Remove the image wrappers and buttons entirely from the count
   cleanHtml = cleanHtml.replace(/<div class="image-wrapper[^>]*>[\s\S]*?<\/div>/g, '');
+  cleanHtml = cleanHtml.replace(/<button class="delete-split-btn[^>]*>[\s\S]*?<\/button>/g, '');
   
   // 3. Strip all other HTML tags
   const tmp = document.createElement('DIV');

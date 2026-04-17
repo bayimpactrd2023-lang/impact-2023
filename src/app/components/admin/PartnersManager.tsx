@@ -99,8 +99,17 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
     try {
       // Handle Image Upload before saving to database
       let finalLogoUrl = editingPartner.logoUrl;
+      const originalPartner = pagination.data.find(p => p.id === editingPartner.id);
+
       if (typeof finalLogoUrl === 'object' && finalLogoUrl instanceof File) {
         finalLogoUrl = await uploadImage(finalLogoUrl, 'partners');
+        // Delete old logo if it was replaced
+        if (originalPartner?.logoUrl && originalPartner.logoUrl !== finalLogoUrl) {
+          await deleteStorageFile(originalPartner.logoUrl, 'partners');
+        }
+      } else if (!finalLogoUrl && originalPartner?.logoUrl) {
+        // Logo was removed
+        await deleteStorageFile(originalPartner.logoUrl, 'partners');
       }
 
       const partnerData = {

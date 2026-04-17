@@ -24,8 +24,8 @@ import { invalidateProjectsCache } from '@/utils/cacheInvalidation';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
 import { getImageUrl } from '@/utils/r2Upload';
 
-import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
-import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
+import { VisualRichEditor } from './VisualRichEditor';
+import { SharedToolbar } from './SharedToolbar';
 import { 
   AdminValidationRules,
   mergeValidationResults,
@@ -49,7 +49,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
   const [isSaving, setIsSaving] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
 
-  const handleCommand = (cmd: string, val?: string) => {
+  const handleCommand = (cmd: string, val: any = '') => {
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -179,11 +179,22 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
     try {
       // Handle Image Uploads before saving to database
       let finalImageUrl = editingProject.imageUrl;
+      const originalProject = pagination.data.find(p => p.id === editingProject.id);
+      
       if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
         finalImageUrl = await uploadImage(finalImageUrl, 'projects');
+        // Delete old cover image if it was replaced
+        if (originalProject?.imageUrl && originalProject.imageUrl !== finalImageUrl) {
+          await deleteStorageFile(originalProject.imageUrl, 'projects');
+        }
+      } else if (!finalImageUrl && originalProject?.imageUrl) {
+        // Cover image was removed
+        await deleteStorageFile(originalProject.imageUrl, 'projects');
       }
 
       let finalImages = editingProject.images || [];
+      const originalImages = originalProject?.images || [];
+
       if (editingProject.images && editingProject.images.some(img => typeof img === 'object')) {
         const filesToUpload = editingProject.images.filter(img => typeof img === 'object') as File[];
         const uploadedUrls = await uploadImages(filesToUpload, 'projects');
@@ -194,6 +205,14 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
           }
           return img as string;
         });
+      }
+
+      // Cleanup gallery images that were removed from the array
+      const currentGalleryUrls = finalImages.filter(img => typeof img === 'string') as string[];
+      for (const oldImg of originalImages) {
+        if (!currentGalleryUrls.includes(oldImg)) {
+          await deleteStorageFile(oldImg, 'projects');
+        }
       }
 
       const projectData = {

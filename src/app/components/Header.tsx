@@ -186,7 +186,8 @@ export const Header: React.FC = () => {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleNavigation(`/blog?post=${post.id}`);
+                                    // Use state instead of URL parameters to keep URL as /blog
+                                    navigate('/blog', { state: { postId: post.id }, replace: true });
                                     setBlogDropdownOpen(false);
                                   }}
                                   className="w-full text-left px-5 py-3 hover:bg-blue-50 group transition-all border-b border-gray-50/50 last:border-0"
@@ -309,7 +310,8 @@ export const Header: React.FC = () => {
                             <button
                               key={post.id}
                               onClick={() => {
-                                handleNavigation(`/blog?post=${post.id}`);
+                                // Use state instead of URL parameters to keep URL as /blog
+                                navigate('/blog', { state: { postId: post.id }, replace: true });
                                 setMobileMenuOpen(false);
                                 setMobileBlogDropdownOpen(false);
                               }}

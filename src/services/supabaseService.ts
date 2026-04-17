@@ -778,7 +778,17 @@ export const updateBlogPost = async (id: string, postData: Partial<{
   try {
     const { data, error } = await supabase
       .from('blog_posts')
-      .update({ ...postData, updated_at: new Date().toISOString() })
+      .update({ 
+        title: postData.title,
+        content: postData.content,
+        author: postData.author,
+        author_role: postData.author_role,
+        date: postData.date,
+        image_url: postData.image_url,
+        images: postData.images,
+        likes: postData.likes,
+        updated_at: new Date().toISOString() 
+      })
       .eq('id', id)
       .select()
       .single();

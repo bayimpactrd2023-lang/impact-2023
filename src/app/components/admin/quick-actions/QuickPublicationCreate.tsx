@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 import { X, CheckCircle, BookOpen } from 'lucide-react';
 import { PublicationForm } from '@/app/context/ContentContext';
 import { createPublication } from '@/services/supabaseService';
-import { VisualRichEditor } from '@/app/components/admin/VisualRichEditor';
-import { SharedToolbar } from '@/app/components/admin/SharedToolbar';
+import { VisualRichEditor } from '../VisualRichEditor';
+import { SharedToolbar } from '../SharedToolbar';
 import { uploadPDF } from '@/utils/storageUpload';
 
 import {
@@ -50,7 +50,7 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
 
-  const handleCommand = (cmd: string, val?: string) => {
+  const handleCommand = (cmd: string, val: any = '') => {
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 

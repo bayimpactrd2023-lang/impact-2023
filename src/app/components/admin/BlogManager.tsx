@@ -39,7 +39,6 @@ import {
   stripHtmlAndImages
 } from '@/app/components/admin/utils/adminHelpers';
 import { uploadImage, uploadImages, deleteStorageFile } from '@/utils/storageUpload';
-import { RichTextContent } from '@/app/components/RichTextContent';
 
 interface BlogManagerProps {
   refreshContent?: () => Promise<void>;
@@ -66,7 +65,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     return () => window.removeEventListener('editor-image-deleted', handleImageDeleted);
   }, []);
 
-  const handleCommand = (cmd: string, val?: string) => {
+  const handleCommand = (cmd: string, val: any = '') => {
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -110,11 +109,13 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
       likes: 0,
     };
     setEditingPost(newPost);
+    setActiveField('modal-blog-content'); // Set default active field
     setIsModalOpen(true);
   };
 
   const handleEdit = (post: BlogPost) => {
     setEditingPost({ ...post });
+    setActiveField('modal-blog-content'); // Set default active field
     setIsModalOpen(true);
   };
 
@@ -128,22 +129,37 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     if (!confirmed) return;
 
     try {
-      // Only delete from database and storage if it's not a temp ID
-      if (!id.startsWith('temp-') && !id.match(/^\\d{13}$/)) {
-        // Find the post to get its image URLs for storage cleanup
-        const postToDelete = pagination.data.find(p => p.id === id);
-        if (postToDelete) {
-          // Delete main image
-          if (postToDelete.imageUrl) {
-            await deleteStorageFile(postToDelete.imageUrl, 'blog');
-          }
-          // Delete gallery images
-          if (postToDelete.images && postToDelete.images.length > 0) {
-            for (const imgUrl of postToDelete.images) {
-              await deleteStorageFile(imgUrl, 'blog');
-            }
+      // Find the post to get its image URLs for storage cleanup
+      // Check both local pagination data and database if needed
+      const postToDelete = pagination.data.find(p => p.id === id);
+      
+      if (postToDelete) {
+        // 1. Delete main cover image
+        if (postToDelete.imageUrl) {
+          await deleteStorageFile(postToDelete.imageUrl, 'blog');
+        }
+        
+        // 2. Delete gallery images
+        if (postToDelete.images && postToDelete.images.length > 0) {
+          for (const imgUrl of postToDelete.images) {
+            await deleteStorageFile(imgUrl, 'blog');
           }
         }
+
+        // 3. Extract and delete inline images from content
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(postToDelete.content, 'text/html');
+        const inlineImages = doc.querySelectorAll('img');
+        for (const img of Array.from(inlineImages)) {
+          const src = img.getAttribute('src');
+          if (src && src.startsWith('http')) {
+            await deleteStorageFile(src, 'blog');
+          }
+        }
+      }
+
+      // 4. Delete from database
+      if (!id.startsWith('temp-') && !id.match(/^\d{13}$/)) {
         await deleteBlogPost(id);
       }
       
@@ -182,18 +198,6 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
           // Upload to R2
           const url = await uploadImage(file, 'blog');
           img.setAttribute('src', url);
-          
-          // Clean up the wrapper for production HTML
-          const wrapper = img.closest('.image-wrapper');
-          if (wrapper) {
-            const deleteBtn = wrapper.querySelector('.delete-image-btn');
-            if (deleteBtn) deleteBtn.remove();
-            
-            const resizeHandle = wrapper.querySelector('.resize-handle');
-            if (resizeHandle) resizeHandle.remove();
-            
-            wrapper.removeAttribute('contenteditable');
-          }
         } catch (error) {
           console.error('Error uploading inline image:', error);
         }
@@ -226,6 +230,25 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     
     setIsSaving(true);
     try {
+      // Find original post to get original image URLs for cleanup
+      let originalImageUrl: string | null = null;
+      let originalImages: string[] = [];
+      
+      if (editingPost.id && !editingPost.id.startsWith('temp-') && !editingPost.id.match(/^\d{13}$/)) {
+        const originalPost = pagination.data.find(p => p.id === editingPost.id);
+        if (originalPost) {
+          originalImageUrl = originalPost.imageUrl || null;
+          originalImages = originalPost.images || [];
+          
+          if (!hasChanges(originalPost, editingPost)) {
+            toast.info('No changes detected.');
+            setIsModalOpen(false);
+            setEditingPost(null);
+            return;
+          }
+        }
+      }
+
       // Clean up deleted images from cloud
       if (deletedUrls.length > 0) {
         for (const url of deletedUrls) {
@@ -245,6 +268,13 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
       let finalImageUrl = editingPost.imageUrl;
       if (typeof finalImageUrl === 'object' && finalImageUrl instanceof File) {
         finalImageUrl = await uploadImage(finalImageUrl, 'blog');
+        // Delete old cover image if it was replaced
+        if (originalImageUrl && originalImageUrl !== finalImageUrl) {
+          await deleteStorageFile(originalImageUrl, 'blog');
+        }
+      } else if (!finalImageUrl && originalImageUrl) {
+        // Cover image was removed
+        await deleteStorageFile(originalImageUrl, 'blog');
       }
 
       let finalImages = editingPost.images || [];
@@ -258,6 +288,14 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
           }
           return img as string;
         });
+      }
+      
+      // Cleanup gallery images that were removed from the array
+      const currentGalleryUrls = finalImages.filter(img => typeof img === 'string') as string[];
+      for (const oldImg of originalImages) {
+        if (!currentGalleryUrls.includes(oldImg)) {
+          await deleteStorageFile(oldImg, 'blog');
+        }
       }
 
       const postData = {
@@ -273,15 +311,6 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
       
       // Check if updating existing or creating new
       if (editingPost.id && !editingPost.id.startsWith('temp-') && !editingPost.id.match(/^\d{13}$/)) {
-        // Find original post to check for changes
-        const originalPost = pagination.data.find(p => p.id === editingPost.id);
-        if (originalPost && !hasChanges(originalPost, editingPost)) {
-          toast.info('No changes detected.');
-          setIsModalOpen(false);
-          setEditingPost(null);
-          return;
-        }
-
         // Update existing
         await updateBlogPost(editingPost.id, postData);
         toast.success('Blog post updated!');
@@ -416,8 +445,8 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                       )}
                     </div>
                     
-                    <div className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
-                      <RichTextContent text={post.content} className="text-sm text-gray-500" />
+                    <div className="text-sm text-gray-500 line-clamp-2 leading-relaxed h-10 overflow-hidden">
+                      {stripHtmlAndImages(post.content)}
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
