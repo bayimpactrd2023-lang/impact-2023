@@ -2,7 +2,6 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import { useContent } from '@/app/context/ContentContext';
 import { Highlight } from '@/app/context/ContentContext';
-import * as Icons from 'lucide-react';
 import { ArrowRight } from 'lucide-react';
 import { HighlightDetailModal } from '@/app/components/HighlightDetailModal';
 import { PublicationDetailModal } from '@/app/components/PublicationDetailModal';
@@ -50,11 +49,6 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
     setIsPublicationModalOpen(true);
   }, []);
 
-  const getIcon = React.useCallback((iconName: string) => {
-    const Icon = (Icons as any)[iconName] || Icons.Star;
-    return Icon;
-  }, []);
-
   return (
     <>
       <section className="py-12 sm:py-14 md:py-16 lg:py-20 relative overflow-hidden"
@@ -100,8 +94,6 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Render Highlights First */}
             {featuredHighlights.map((highlight, index) => {
-              const Icon = getIcon(highlight.iconName);
-              
               return (
                 <motion.div
                   key={highlight.id}
@@ -113,19 +105,13 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
                   onClick={() => handleHighlightClick(highlight)}
                 >
                   {/* Highlight Image */}
-                  <div className="relative flex items-center justify-center bg-[#f8fafc] rounded-2xl overflow-hidden shrink-0 group/img">
-                    {highlight.imageUrl ? (
-                      <ImageWithFallback
-                        src={highlight.imageUrl}
-                        alt={highlight.title}
-                        className="w-full h-auto max-h-[400px] object-contain transition-transform duration-700 group-hover/img:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1887FC] via-[#3b82f6] to-[#60a5fa]">
-                        <Icon className="w-16 h-16 text-white" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  <div className="relative aspect-video flex items-center justify-center bg-[#f8fafc] rounded-t-2xl sm:rounded-t-3xl overflow-hidden shrink-0 group/img">
+                    <ImageWithFallback
+                      src={highlight.imageUrl || '/images/logos/placeholder.png'}
+                      alt={highlight.title}
+                      className={`w-full h-full transition-transform duration-700 group-hover/img:scale-105 ${!highlight.imageUrl ? 'p-8 object-contain' : 'object-cover'}`}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                     <div className="absolute top-4 right-4 px-3 py-1 bg-[#1887FC] text-white text-xs font-bold rounded-full shadow-lg z-20">
                       Highlight
                     </div>
@@ -164,19 +150,19 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
                 onClick={() => handlePublicationClick(publication)}
               >
                 {/* Publication Image */}
-                <div className="relative flex items-center justify-center bg-[#f8fafc] rounded-2xl overflow-hidden shrink-0 group/img">
+                <div className="relative aspect-video flex items-center justify-center bg-[#f8fafc] rounded-t-2xl sm:rounded-t-3xl overflow-hidden shrink-0 group/img">
                   {publication.imageUrl ? (
                     <ImageWithFallback
                       src={publication.imageUrl}
                       alt={publication.title}
-                      className="w-full h-auto max-h-[400px] object-contain transition-transform duration-700 group-hover/img:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105"
                     />
                   ) : (
-                    <div className="w-full h-full min-h-[250px] flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-                      <BookOpen className="w-24 h-24 text-[#1887FC]" />
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+                      <BookOpen className="w-16 h-16 text-[#1887FC] opacity-40 group-hover/img:scale-110 transition-transform duration-500" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                   <div className="absolute top-4 right-4 px-3 py-1 bg-[#1887FC] text-white text-xs font-bold rounded-full shadow-lg z-20">
                     Publication
                   </div>

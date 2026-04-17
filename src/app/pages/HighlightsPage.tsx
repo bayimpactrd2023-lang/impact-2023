@@ -223,24 +223,12 @@ export const HighlightsPage: React.FC = () => {
                               <div
                                 className={`relative flex items-center justify-center bg-[#f8fafc] rounded-2xl overflow-hidden group/img ${isImageOnRight ? "md:col-start-2" : ""}`}
                               >
-                                {highlight.imageUrl ? (
-                                  <>
-                                    <ImageWithFallback
-                                      src={highlight.imageUrl}
-                                      alt={highlight.title}
-                                      className="w-full h-auto max-h-[500px] object-contain transition-all duration-700 group-hover/img:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-all duration-500" />
-                                  </>
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-blue-50/50 p-16">
-                                    <img 
-                                      src="/images/logos/placeholder.png" 
-                                      alt="Placeholder" 
-                                      className="w-1/2 h-1/2 object-contain opacity-40"
-                                    />
-                                  </div>
-                                )}
+                                <ImageWithFallback
+                                  src={highlight.imageUrl || '/images/logos/placeholder.png'}
+                                  alt={highlight.title}
+                                  className={`w-full h-auto max-h-[500px] transition-all duration-700 group-hover/img:scale-105 ${!highlight.imageUrl ? 'p-16 object-contain' : 'object-cover'}`}
+                                />
+                                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-all duration-500" />
 
                                 {/* Date Badge */}
                                 <div className="absolute top-4 right-4 backdrop-blur-md bg-white/90 px-4 py-2 rounded-full shadow-lg border border-white/50">

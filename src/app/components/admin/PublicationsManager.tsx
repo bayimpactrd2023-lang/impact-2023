@@ -316,7 +316,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                 >
                   {/* Featured Badge */}
                   {pub.featured && (
-                    <div className="absolute top-4 left-16 z-20">
+                    <div className="absolute top-4 left-4 z-20">
                       <div className="bg-blue-600/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-blue-500/30 border border-blue-400/30">
                         <Star className="w-3 h-3 fill-current" />
                         Featured
