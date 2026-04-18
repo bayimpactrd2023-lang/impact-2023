@@ -35,12 +35,12 @@ export const Footer: FC = () => {
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#1887FC] flex-shrink-0" />
                 <a
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=info@impactrd.ph"
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=main@impactrd.org"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-[#60a5fa] transition-colors"
                 >
-                  info@impactrd.ph
+                  main@impactrd.org
                 </a>
               </div>
             </div>
