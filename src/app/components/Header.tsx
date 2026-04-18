@@ -133,18 +133,18 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <motion.div 
-            className="flex items-center gap-3 cursor-pointer relative" 
+            className="flex items-center gap-3 cursor-pointer relative -mx-30" 
             onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
             {/* Gradient glow behind logo */}
             <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/10 to-[#3b82f6]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            <img src="/images/logos/impact.png" alt="IMPACT R&D Logo" className="h-14 md:h-16 w-auto drop-shadow-lg relative z-10" />
+            <img src="/images/logos/impact.png" alt="IMPACT R&D Logo" className="h-20 md:h-24 w-auto drop-shadow-lg relative z-10" />
           </motion.div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden md:flex items-center space-x-1 ml-auto -mr-40">
             {navItems.map((item) => {
               if (item.key === 'blog') {
                 return (
@@ -158,7 +158,7 @@ export const Header: React.FC = () => {
                         e.stopPropagation();
                         setBlogDropdownOpen(!blogDropdownOpen);
                       }}
-                      className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 flex items-center gap-1 ${getNavButtonClass(item.path)}`}
+                      className={`px-4 py-2 text-base font-semibold rounded-lg transition-all duration-300 flex items-center gap-1 ${getNavButtonClass(item.path)}`}
                     >
                       {item.label}
                       <ChevronDown size={14} className={`transition-transform duration-300 ${blogDropdownOpen ? 'rotate-180' : ''}`} />
@@ -234,7 +234,7 @@ export const Header: React.FC = () => {
                 <button
                   key={item.key}
                   onClick={() => handleNavigation(item.path)}
-                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${getNavButtonClass(item.path)}`}
+                  className={`px-4 py-2 text-base font-semibold rounded-lg transition-all duration-300 ${getNavButtonClass(item.path)}`}
                 >
                   {item.label}
                 </button>
@@ -243,7 +243,7 @@ export const Header: React.FC = () => {
             {/* Contact Us Button */}
             <button
               onClick={() => handleNavigation('/contact')}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${getNavButtonClass('/contact')}`}
+              className={`px-4 py-2 text-base font-semibold rounded-lg transition-all duration-300 ${getNavButtonClass('/contact')}`}
             >
               Contact Us
             </button>

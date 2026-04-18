@@ -1,10 +1,8 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Quote, Calendar, GraduationCap, ChevronDown, ChevronUp, Image as ImageIcon, ChevronLeft, ChevronRight, X, BookOpen, Target, FileText, Eye, ArrowRight } from 'lucide-react';
+import { Quote, Calendar, GraduationCap, ChevronDown, ChevronUp, Image as ImageIcon, BookOpen, Target, FileText, Eye, ArrowRight, X } from 'lucide-react';
 import { useContent, InternshipTestimonial, FinancialStatement, Project } from '@/app/context/ContentContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogPortal } from '@/app/components/ui/dialog';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
-import useEmblaCarousel from 'embla-carousel-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
@@ -31,10 +29,9 @@ export const ResearchStudentSupportPage: React.FC = () => {
 
   // Image carousel modal
   const [selectedTestimonial, setSelectedTestimonial] = useState<InternshipTestimonial | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const [showOnlyOneImage, setShowOnlyOneImage] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [activeGalleryImages, setActiveGalleryImages] = useState<string[]>([]);
 
   // Financial Statements pagination and modal state
   const [financialPage, setFinancialPage] = useState(1);
@@ -46,8 +43,9 @@ export const ResearchStudentSupportPage: React.FC = () => {
   // Thesis Project modal state
   const [selectedThesisProject, setSelectedThesisProject] = useState<Project | null>(null);
   const [isThesisModalOpen, setIsThesisModalOpen] = useState(false);
-  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [isThesisGalleryOpen, setIsThesisGalleryOpen] = useState(false);
+  const [thesisGalleryIndex, setThesisGalleryIndex] = useState(0);
+  const [activeThesisGalleryImages, setActiveThesisGalleryImages] = useState<string[]>([]);
 
   const handleThesisProjectClick = (project: Project) => {
     setSelectedThesisProject(project);
@@ -89,35 +87,6 @@ export const ResearchStudentSupportPage: React.FC = () => {
     setIsPDFViewerOpen(false);
   };
   
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
-
-  React.useEffect(() => {
-    if (!emblaApi) return;
-    onSelect();
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', onSelect);
-  }, [emblaApi, onSelect]);
-
-  // Effect to scroll to the selected slide when modal opens
-  React.useEffect(() => {
-    if (emblaApi && isModalOpen) {
-      emblaApi.scrollTo(selectedIndex, false);
-    }
-  }, [emblaApi, isModalOpen, selectedIndex]);
-
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
-
   // Fetch data when component mounts
   useEffect(() => {
     const loadPageData = async () => {
@@ -175,27 +144,25 @@ export const ResearchStudentSupportPage: React.FC = () => {
 
   const handleImageClick = (testimonial: InternshipTestimonial, imageUrl?: string, isFromGallery: boolean = false) => {
     setSelectedTestimonial(testimonial);
-    setShowOnlyOneImage(!isFromGallery);
     
-    // Determine which image to show first
-    if (testimonial.images && testimonial.images.length > 0) {
-      const clickedImage = imageUrl || testimonial.images[0];
+    const clickedImage = imageUrl || (testimonial.images && testimonial.images[0]) || '';
+    
+    if (isFromGallery && testimonial.images && testimonial.images.length > 0) {
+      setActiveGalleryImages(testimonial.images);
       const idx = testimonial.images.indexOf(clickedImage);
-      if (idx !== -1) {
-        setSelectedIndex(idx);
-      } else {
-        setSelectedIndex(0);
-      }
+      setGalleryIndex(idx !== -1 ? idx : 0);
     } else {
-      setSelectedIndex(0);
+      setActiveGalleryImages([clickedImage]);
+      setGalleryIndex(0);
     }
     
-    setIsModalOpen(true);
+    setIsGalleryOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setIsGalleryOpen(false);
     setSelectedTestimonial(null);
+    setActiveGalleryImages([]);
   };
 
   return (
@@ -707,117 +674,16 @@ export const ResearchStudentSupportPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Image Carousel Modal */}
-      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-        {selectedTestimonial && (() => {
-          const imagesToShow = selectedTestimonial.images && selectedTestimonial.images.length > 0
-            ? selectedTestimonial.images
-            : [];
-          const hasMultipleImages = imagesToShow.length > 1;
-
-          return (
-            <>
-              {/* Custom Blurred Overlay */}
-              <DialogPortal>
-                <DialogPrimitive.Overlay asChild>
-                  <div className="fixed inset-0 z-50 bg-black">
-                    {/* Blurred Background Image - Full Coverage */}
-                    {imagesToShow.length > 0 && (
-                      <div className="absolute inset-0 overflow-hidden">
-                        <ImageWithFallback
-                          src={imagesToShow[selectedIndex] || imagesToShow[0]}
-                          alt=""
-                          className="w-full h-full object-cover blur-2xl scale-110"
-                        />
-                        {/* Dark overlay for better contrast */}
-                        <div className="absolute inset-0 bg-black/40" />
-                      </div>
-                    )}
-                  </div>
-                </DialogPrimitive.Overlay>
-
-                <DialogPrimitive.Content
-                  className="fixed inset-0 z-50 flex items-center justify-center outline-none"
-                >
-                  <div className="relative w-full h-full">
-                    {/* Accessibility - Hidden title and description */}
-                    <DialogTitle className="sr-only">
-                      {selectedTestimonial ? `${selectedTestimonial.name} - Photos` : 'Photos'}
-                    </DialogTitle>
-                    <DialogDescription className="sr-only">
-                      {selectedTestimonial
-                        ? `View photos from ${selectedTestimonial.name}`
-                        : 'View photos'}
-                    </DialogDescription>
-
-                    {/* Conditional rendering: Carousel for gallery mode, single image otherwise */}
-                    {(!showOnlyOneImage && imagesToShow.length > 1) ? (
-                      <>
-                        {/* Carousel */}
-                        <div className="relative overflow-hidden h-full" ref={emblaRef}>
-                          <div className="flex h-full">
-                            {imagesToShow.map((imageUrl, index) => (
-                              <div key={index} className="flex-[0_0_100%] min-w-0 h-full">
-                                <div className="relative w-full h-full flex items-center justify-center p-8">
-                                  <ImageWithFallback
-                                    src={imageUrl}
-                                    alt={`${selectedTestimonial.name} - Photo ${index + 1}`}
-                                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Navigation Buttons */}
-                        {hasMultipleImages && (
-                          <>
-                            <button
-                              onClick={scrollPrev}
-                              className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-white/10 hover:bg-white/20 text-white rounded-full p-4 transition-colors backdrop-blur-sm shadow-lg"
-                            >
-                              <ChevronLeft className="w-7 h-7" />
-                            </button>
-                            <button
-                              onClick={scrollNext}
-                              className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-white/10 hover:bg-white/20 text-white rounded-full p-4 transition-colors backdrop-blur-sm shadow-lg"
-                            >
-                              <ChevronRight className="w-7 h-7" />
-                            </button>
-                          </>
-                        )}
-
-                        {/* Image Counter - Small and subtle */}
-                        {hasMultipleImages && (
-                          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white/10 text-white px-3 py-1.5 rounded-full text-xs backdrop-blur-sm font-medium">
-                            {imagesToShow.length} photos
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      // Single Image Mode
-                      <div className="relative h-full flex items-center justify-center p-8">
-                        <ImageWithFallback
-                          src={imagesToShow[selectedIndex] || imagesToShow[0]}
-                          alt={`${selectedTestimonial.name} - Photo`}
-                          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                        />
-                      </div>
-                    )}
-
-                    {/* Close Button */}
-                    <DialogPrimitive.Close className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white hover:scale-110 opacity-70 transition-all duration-200 hover:opacity-100 z-50">
-                      <X className="text-gray-700 w-5 h-5" />
-                      <span className="sr-only">Close</span>
-                    </DialogPrimitive.Close>
-                  </div>
-                </DialogPrimitive.Content>
-              </DialogPortal>
-            </>
-          );
-        })()}
-      </Dialog>
+      {/* Gallery Modal for Testimonials */}
+      {selectedTestimonial && (
+        <GalleryModal
+          images={activeGalleryImages}
+          isOpen={isGalleryOpen}
+          onClose={handleCloseModal}
+          title={selectedTestimonial.name}
+          initialIndex={galleryIndex}
+        />
+      )}
 
       {/* Financial Statement Modal */}
       <FinancialStatementModal
@@ -856,7 +722,18 @@ export const ResearchStudentSupportPage: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
+                {/* Clickable cover image area */}
+                <div 
+                  className="absolute inset-0 cursor-pointer" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const cover = selectedThesisProject.imageUrl || "/images/logos/placeholder.png";
+                    setActiveThesisGalleryImages([cover]);
+                    setThesisGalleryIndex(0);
+                    setIsThesisGalleryOpen(true);
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 pointer-events-none">
                   <div className="max-w-3xl">
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -942,8 +819,9 @@ export const ResearchStudentSupportPage: React.FC = () => {
                             <button
                               key={idx}
                               onClick={() => {
-                                setGalleryIndex(idx);
-                                setIsGalleryOpen(true);
+                                setActiveThesisGalleryImages(selectedThesisProject.images || []);
+                                setThesisGalleryIndex(idx);
+                                setIsThesisGalleryOpen(true);
                               }}
                               className="relative aspect-square rounded-xl overflow-hidden group"
                             >
@@ -1023,16 +901,19 @@ export const ResearchStudentSupportPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Gallery Modal */}
+      {/* Gallery Modal for Thesis Projects */}
       {selectedThesisProject && (
         <GalleryModal
-          images={selectedThesisProject.images && selectedThesisProject.images.length > 0 
-            ? selectedThesisProject.images 
+          images={activeThesisGalleryImages.length > 0 
+            ? activeThesisGalleryImages 
             : (selectedThesisProject.imageUrl ? [selectedThesisProject.imageUrl] : [])}
-          isOpen={isGalleryOpen}
-          onClose={() => setIsGalleryOpen(false)}
+          isOpen={isThesisGalleryOpen}
+          onClose={() => {
+            setIsThesisGalleryOpen(false);
+            setActiveThesisGalleryImages([]);
+          }}
           title={selectedThesisProject.title}
-          initialIndex={galleryIndex}
+          initialIndex={thesisGalleryIndex}
         />
       )}
     </div>

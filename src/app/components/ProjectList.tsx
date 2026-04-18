@@ -1,11 +1,8 @@
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { Project } from "@/app/context/ContentContext";
 import {
   ChevronDown,
   ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  X,
 } from "lucide-react";
 import { PageHeaderTheme } from "@/app/components/PageHeaderTheme";
 import { motion } from "motion/react";
@@ -16,14 +13,6 @@ import { PaginationControls } from "@/app/components/admin/PaginationControls";
 import { ServerPaginationResult } from "@/hooks/useServerPagination";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { GalleryModal } from "./GalleryModal";
-import {
-  Dialog,
-  DialogPortal,
-  DialogTitle,
-  DialogDescription,
-} from "@/app/components/ui/dialog";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import useEmblaCarousel from "embla-carousel-react";
 import { RichTextContent } from "./RichTextContent";
 
 interface ProjectListProps {
@@ -56,21 +45,15 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProject, setSelectedProject] =
     useState<Project | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string>(''); // Track which image was clicked
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [activeGalleryImages, setActiveGalleryImages] = useState<string[]>([]);
 
-  const [showOnlyOneImage, setShowOnlyOneImage] = useState(false);
-
-  // Mouse drag-to-scroll refs for gallery
   const galleryRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  // Mouse drag handlers for gallery
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!galleryRef.current) return;
     setIsDragging(true);
@@ -94,35 +77,12 @@ export const ProjectList: React.FC<ProjectListProps> = ({
     setIsDragging(false);
   };
 
-  // Production-ready scroll-to-top using native browser API
   const scrollRef = useScrollToTop([pagination?.currentPage || currentPage]);
-
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
-
-  React.useEffect(() => {
-    if (!emblaApi) return;
-    onSelect();
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', onSelect);
-  }, [emblaApi, onSelect]);
-
-  // Effect to scroll to the selected slide when modal opens
-  React.useEffect(() => {
-    if (emblaApi && isModalOpen) {
-      emblaApi.scrollTo(selectedIndex, false); // false = no animation on initial load
-    }
-  }, [emblaApi, isModalOpen, selectedIndex]);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Use server-side pagination if provided, otherwise use client-side
   const totalPages = pagination ? pagination.totalPages : Math.ceil(
     projects.length / ITEMS_PER_PAGE,
   );
@@ -142,45 +102,33 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   const handleImageClick = (
     project: Project,
     e: React.MouseEvent,
-    imageUrl?: string, // Optional parameter to specify which image was clicked
-    isFromGallery: boolean = false // Flag to show all images or just one
+    imageUrl?: string,
+    isFromGallery: boolean = false
   ) => {
     e.stopPropagation();
     setSelectedProject(project);
-    setShowOnlyOneImage(!isFromGallery);
     
-    // Determine the image to show first
     const clickedImage = imageUrl || project.imageUrl || '';
-    setSelectedImageUrl(clickedImage);
     
-    // Find index of clicked image in gallery
-    if (project.images && project.images.length > 0) {
+    if (isFromGallery && project.images && project.images.length > 0) {
+      // Show full gallery when clicking from gallery section
+      setActiveGalleryImages(project.images);
       const idx = project.images.indexOf(clickedImage);
-      if (idx !== -1) {
-        setSelectedIndex(idx);
-      } else {
-        setSelectedIndex(0);
-      }
+      setGalleryIndex(idx !== -1 ? idx : 0);
     } else {
-      setSelectedIndex(0);
+      // Show ONLY the clicked image (cover or single image)
+      setActiveGalleryImages([clickedImage]);
+      setGalleryIndex(0);
     }
     
-    setIsModalOpen(true);
+    setIsGalleryOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setIsGalleryOpen(false);
     setSelectedProject(null);
-    setSelectedImageUrl(''); // Reset the image URL
+    setActiveGalleryImages([]);
   };
-
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
@@ -518,143 +466,16 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         </div>
       </div>
 
-      {/* Image Carousel Modal */}
-      <Dialog
-        open={isModalOpen}
-        onOpenChange={handleCloseModal}
-      >
-        {selectedProject && (() => {
-          // Use the selected image URL (either cover or gallery image)
-          const displayImage = selectedImageUrl || selectedProject.imageUrl;
-          
-          // For gallery mode, use the current slide's image for the background
-          const backgroundImage = selectedProject.images && selectedProject.images.length > 0
-            ? selectedProject.images[selectedIndex]
-            : displayImage;
-
-          return (
-            <>
-              {/* Custom Blurred Overlay */}
-              <DialogPortal>
-                <DialogPrimitive.Overlay asChild>
-                  <div className="fixed inset-0 z-50 bg-black">
-                    {/* Blurred Background Image - Full Coverage */}
-                    {backgroundImage && (
-                      <div className="absolute inset-0 overflow-hidden">
-                        <ImageWithFallback
-                          src={backgroundImage}
-                          alt=""
-                          className="w-full h-full object-cover blur-2xl scale-110"
-                        />
-                        {/* Dark overlay for better contrast */}
-                        <div className="absolute inset-0 bg-black/40" />
-                      </div>
-                    )}
-                  </div>
-                </DialogPrimitive.Overlay>
-
-                <DialogPrimitive.Content
-                  className="fixed inset-0 z-50 flex items-center justify-center outline-none"
-                >
-                  <div className="relative w-full h-full">
-                    {/* Accessibility - Hidden title and description */}
-                    <DialogTitle className="sr-only">
-                      {selectedProject.title}
-                    </DialogTitle>
-                    <DialogDescription className="sr-only">
-                      View image from {selectedProject.title}
-                    </DialogDescription>
-
-                    {/* Conditional rendering: Carousel for gallery mode, single image otherwise */}
-                    {(!showOnlyOneImage && selectedProject.images && selectedProject.images.length > 1) ? (
-                      // Gallery Carousel Mode
-                      <div className="relative h-full flex items-center justify-center p-8">
-                        {/* Embla Carousel */}
-                        <div className="overflow-hidden w-full max-w-6xl" ref={emblaRef}>
-                          <div className="flex">
-                            {selectedProject.images.map((img, idx) => (
-                              <div key={idx} className="flex-[0_0_100%] min-w-0 flex items-center justify-center">
-                                <ImageWithFallback
-                                  src={img || "/images/logos/placeholder.png"}
-                                  alt={`${selectedProject.title} - Image ${idx + 1}`}
-                                  className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-all duration-300 cursor-pointer"
-                                  onClick={() => {
-                                    setGalleryIndex(idx);
-                                    setIsGalleryOpen(true);
-                                  }}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Navigation Arrows */}
-                        <button
-                          onClick={scrollPrev}
-                          className="absolute left-4 sm:left-8 p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-50"
-                          aria-label="Previous image"
-                        >
-                          <ChevronLeft className="w-6 h-6 text-gray-700" />
-                        </button>
-                        <button
-                          onClick={scrollNext}
-                          className="absolute right-4 sm:right-20 p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-50"
-                          aria-label="Next image"
-                        >
-                          <ChevronRight className="w-6 h-6 text-gray-700" />
-                        </button>
-
-                        {/* Image Counter */}
-                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
-                          <span className="text-sm font-semibold text-gray-700">
-                            {selectedIndex + 1} / {selectedProject.images.length}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      // Single Image Mode (for cover image or single image projects)
-                      displayImage ? (
-                        <div className="relative h-full flex items-center justify-center p-8">
-                          <ImageWithFallback
-                            src={displayImage}
-                            alt={selectedProject.title}
-                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-all duration-300 cursor-pointer"
-                            onClick={() => {
-                              // If it's a cover image, check if we have gallery images
-                              const idx = selectedProject.images?.indexOf(selectedImageUrl) ?? 0;
-                              setGalleryIndex(idx >= 0 ? idx : 0);
-                              setIsGalleryOpen(true);
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="relative h-full flex items-center justify-center">
-                          <p className="text-white/70 text-lg">No image available</p>
-                        </div>
-                      )
-                    )}
-
-                    {/* Close Button */}
-                    <DialogPrimitive.Close className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white hover:scale-110 opacity-70 transition-all duration-200 hover:opacity-100 z-50">
-                      <X className="text-gray-700 w-5 h-5" />
-                      <span className="sr-only">Close</span>
-                    </DialogPrimitive.Close>
-                  </div>
-                </DialogPrimitive.Content>
-              </DialogPortal>
-              <GalleryModal
-                images={selectedProject.images && selectedProject.images.length > 0 
-                  ? selectedProject.images 
-                  : (selectedProject.imageUrl ? [selectedProject.imageUrl] : ["/images/logos/placeholder.png"])}
-                isOpen={isGalleryOpen}
-                onClose={() => setIsGalleryOpen(false)}
-                title={selectedProject.title}
-                initialIndex={galleryIndex}
-              />
-            </>
-          );
-        })()}
-      </Dialog>
+      {/* Gallery Modal */}
+      {selectedProject && (
+        <GalleryModal
+          images={activeGalleryImages.length > 0 ? activeGalleryImages : ["/images/logos/placeholder.png"]}
+          isOpen={isGalleryOpen}
+          onClose={handleCloseModal}
+          title={selectedProject.title}
+          initialIndex={galleryIndex}
+        />
+      )}
     </div>
   );
 };
