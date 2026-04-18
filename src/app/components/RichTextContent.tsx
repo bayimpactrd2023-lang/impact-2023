@@ -340,7 +340,7 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
       <div 
         ref={containerRef}
         className={`prose prose-sm sm:prose-base max-w-none ${className} [&_a]:text-[#1887FC] [&_a]:underline [&_a:hover]:text-[#0d6fd8]
-          [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:my-12 [&_img]:max-w-full [&_img]:w-full sm:[&_img]:w-auto
+          [&_img]:max-sm:hidden [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:my-12 [&_img]:max-w-full [&_img]:w-full sm:[&_img]:w-auto
           [&_img.float-left]:float-none [&_img.float-left]:mx-auto [&_img.float-left]:mb-10 sm:[&_img.float-left]:float-left sm:[&_img.float-left]:mr-12 sm:[&_img.float-left]:max-w-[45%] sm:[&_img.float-left]:!w-[45%] sm:[&_img.float-left]:clear-left sm:[&_img.float-left]:-mt-2
           [&_img.float-right]:float-none [&_img.float-right]:mx-auto [&_img.float-right]:mb-10 sm:[&_img.float-right]:float-right sm:[&_img.float-right]:ml-12 sm:[&_img.float-right]:max-w-[45%] sm:[&_img.float-right]:!w-[45%] sm:[&_img.float-right]:clear-right sm:[&_img.float-right]:-mt-2
           [&_.image-wrapper.float-left]:float-none [&_.image-wrapper.float-left]:mx-auto [&_.image-wrapper.float-left]:mb-10 sm:[&_.image-wrapper.float-left]:float-left sm:[&_.image-wrapper.float-left]:mr-12 sm:[&_.image-wrapper.float-left]:max-w-[45%] sm:[&_.image-wrapper.float-left]:clear-left sm:[&_.image-wrapper.float-left]:-mt-25
@@ -365,9 +365,9 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
           [&_ol:has(~_img.float-right)]:sm:w-[48%] [&_ol:has(~_img.float-right)]:sm:float-left
           [&_img.float-left~ol]:sm:w-[48%] [&_img.float-left~ol]:sm:float-right
           [&_img.float-right~ol]:sm:w-[48%] [&_img.float-right~ol]:sm:float-left
-          [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:transition-all [&_img]:duration-300
+          [&_img]:max-sm:hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:transition-all [&_img]:duration-300
           [&_img:not(.float-left):not(.float-right)]:block [&_img:not(.float-left):not(.float-right)]:mx-auto [&_img:not(.float-left):not(.float-right)]:my-10
-          [&_.image-wrapper]:max-w-full sm:[&_.image-wrapper]:max-w-[45%] [&_.image-wrapper]:w-full sm:[&_.image-wrapper]:w-[45%] [&_.image-wrapper]:mx-auto sm:[&_.image-wrapper]:float-left sm:[&_.image-wrapper]:mr-[5%] sm:[&_.image-wrapper]:clear-left
+          [&_.image-wrapper]:max-sm:hidden [&_.image-wrapper]:max-w-full sm:[&_.image-wrapper]:max-w-[45%] [&_.image-wrapper]:w-full sm:[&_.image-wrapper]:w-[45%] [&_.image-wrapper]:mx-auto sm:[&_.image-wrapper]:float-left sm:[&_.image-wrapper]:mr-[5%] sm:[&_.image-wrapper]:clear-left
           [&_.image-wrapper.float-left]:mr-12 [&_.image-wrapper.float-left]:mb-8 [&_.image-wrapper.float-left]:float-left [&_.image-wrapper.float-left]:clear-left [&_.image-wrapper.float-left]:mx-0
           [&_.image-wrapper.float-right]:ml-12 [&_.image-wrapper.float-right]:mb-8 [&_.image-wrapper.float-right]:float-right [&_.image-wrapper.float-right]:clear-right [&_.image-wrapper.float-right]:mx-0
           [&_.image-wrapper.mx-auto]:block [&_.image-wrapper.mx-auto]:mx-auto [&_.image-wrapper.mx-auto]:mb-12 [&_.image-wrapper.mx-auto]:max-w-[85%]

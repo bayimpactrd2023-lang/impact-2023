@@ -51,6 +51,12 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
   const [activeField, setActiveField] = useState<string | null>(null);
 
   const handleCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -183,7 +189,10 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
               <Input
                 id="pub-title"
                 value={draft.title}
-                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  setDraft(prev => ({ ...prev, title: newTitle }));
+                }}
                 placeholder="Enter publication title"
                 className="text-base sm:text-lg font-semibold"
               />
@@ -194,7 +203,10 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
               <Input
                 id="pub-authors"
                 value={draft.authors}
-                onChange={(e) => setDraft({ ...draft, authors: e.target.value })}
+                onChange={(e) => {
+                  const newAuthors = e.target.value;
+                  setDraft(prev => ({ ...prev, authors: newAuthors }));
+                }}
                 placeholder="Author names"
               />
             </div>
@@ -206,7 +218,10 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
                   id="pub-date"
                   type="date"
                   value={draft.publishedDate}
-                  onChange={(e) => setDraft({ ...draft, publishedDate: e.target.value })}
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    setDraft(prev => ({ ...prev, publishedDate: newDate }));
+                  }}
                 />
               </div>
 
@@ -215,7 +230,10 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
                 <Input
                   id="pub-link"
                   value={draft.link}
-                  onChange={(e) => setDraft({ ...draft, link: e.target.value })}
+                  onChange={(e) => {
+                    const newLink = e.target.value;
+                    setDraft(prev => ({ ...prev, link: newLink }));
+                  }}
                   placeholder="https://..."
                 />
               </div>
@@ -225,7 +243,7 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
               id="pub-excerpt"
               label="Excerpt"
               value={draft.excerpt || ''}
-              onChange={(val: string) => setDraft({ ...draft, excerpt: val })}
+              onChange={(val: string) => setDraft(prev => ({ ...prev, excerpt: val }))}
               placeholder="Brief excerpt or summary"
               rows={2}
               showToolbar={false}
@@ -240,7 +258,7 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
               id="pub-content"
               label="Content"
               value={draft.content || ''}
-              onChange={(val: string) => setDraft({ ...draft, content: val })}
+              onChange={(val: string) => setDraft(prev => ({ ...prev, content: val }))}
               placeholder="Full publication content..."
               rows={6}
               required
@@ -256,7 +274,7 @@ export const QuickPublicationCreate: React.FC<QuickPublicationCreateProps> = ({
               <Label>PDF Document</Label>
               <PDFDropzone
                 value={draft.pdfUrl}
-                onChange={(file: string | File) => setDraft({ ...draft, pdfUrl: file })}
+                onChange={(file: string | File) => setDraft(prev => ({ ...prev, pdfUrl: file }))}
                 label="Drop PDF file here or click to browse"
               />
             </div>

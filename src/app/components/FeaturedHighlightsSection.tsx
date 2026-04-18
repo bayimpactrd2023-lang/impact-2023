@@ -2,11 +2,9 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import { useContent } from '@/app/context/ContentContext';
 import { Highlight } from '@/app/context/ContentContext';
-import { ArrowRight } from 'lucide-react';
 import { HighlightDetailModal } from '@/app/components/HighlightDetailModal';
 import { PublicationDetailModal } from '@/app/components/PublicationDetailModal';
 import { RichTextContent } from '@/app/components/RichTextContent';
-import { useNavigate } from 'react-router';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { BookOpen, ExternalLink } from 'lucide-react';
 import { Publication } from '@/app/context/ContentContext';
@@ -17,7 +15,6 @@ import { Publication } from '@/app/context/ContentContext';
  */
 export const FeaturedHighlightsSection: React.FC = React.memo(() => {
   const { content } = useContent();
-  const navigate = useNavigate();
   const [selectedHighlight, setSelectedHighlight] = React.useState<Highlight | null>(null);
   const [selectedPublication, setSelectedPublication] = React.useState<Publication | null>(null);
   const [isHighlightModalOpen, setIsHighlightModalOpen] = React.useState(false);
@@ -190,37 +187,7 @@ export const FeaturedHighlightsSection: React.FC = React.memo(() => {
             ))}
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 mt-12">
-            {/* View All Highlights Button */}
-            {content.highlights.length > 4 && (
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                viewport={{ once: true }}
-                onClick={() => navigate('/highlights')}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-              >
-                <span>View All Highlights</span>
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
-            )}
-
-            {/* View All Publications Button */}
-            {content.publications.length > 3 && (
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                viewport={{ once: true }}
-                onClick={() => navigate('/publications')}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-              >
-                <span>View All Publications</span>
-                <ExternalLink className="w-5 h-5" />
-              </motion.button>
-            )}
-          </div>
+          {/* No "View All" buttons requested for home section */}
         </div>
       </section>
 

@@ -120,6 +120,7 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
             type="button"
             variant="ghost"
             size="sm"
+            onMouseDown={(e) => e.preventDefault()}
             className={cn(
               "h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 font-bold rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0",
               activeFormats.bold ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
@@ -140,6 +141,7 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
                 type="button"
                 variant="ghost"
                 size="sm"
+                onMouseDown={(e) => e.preventDefault()}
                 className={cn(
                   "h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0",
                   activeFormats.blue ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
@@ -177,6 +179,7 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
                 type="button"
                 variant="ghost"
                 size="sm"
+                onMouseDown={(e) => e.preventDefault()}
                 className={cn(
                   "h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0 overflow-hidden",
                   (activeFormats.alignLeft || activeFormats.alignCenter || activeFormats.alignRight || activeFormats.alignJustify) ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""
@@ -261,41 +264,45 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
         <div className="w-[1px] h-4 bg-gray-300 mx-0.5 hidden sm:block" />
 
         {/* Image Upload & Actions */}
-        <div className="flex items-center gap-0.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200"
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = 'image/*';
-              input.onchange = (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file && onImageUpload) {
-                  onImageUpload(file);
-                }
-              };
-              input.click();
-            }}
-            title="Upload Image"
-          >
-            <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
-            <span className="text-[11px] sm:text-xs">Image</span>
-          </Button>
+        {onImageUpload && (
+          <div className="flex items-center gap-0.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200"
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file && onImageUpload) {
+                    onImageUpload(file);
+                  }
+                };
+                input.click();
+              }}
+              title="Upload Image"
+            >
+              <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
+              <span className="text-[11px] sm:text-xs">Image</span>
+            </Button>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 sm:px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-            onClick={() => onCommand('deleteSelectedImage')}
-            title="Delete Selected Image"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              className="h-8 px-2 sm:px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+              onClick={() => onCommand('deleteSelectedImage')}
+              title="Delete Selected Image"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         <div className="sm:hidden w-full h-[1px] bg-gray-200 my-0.5" />
 
@@ -308,6 +315,7 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
                 type="button"
                 variant="ghost"
                 size="sm"
+                onMouseDown={(e) => e.preventDefault()}
                 className={cn(
                   "h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0",
                   (activeFormats.bullet || activeFormats.number) ? "bg-blue-100 text-[#1887FC] shadow-sm scale-95" : ""

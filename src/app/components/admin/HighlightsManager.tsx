@@ -46,6 +46,12 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
   const [activeField, setActiveField] = useState<string | null>(null);
 
   const handleCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -573,9 +579,10 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                   <Input
                     id="highlight-title"
                     value={editingHighlight.title}
-                    onChange={(e) =>
-                      setEditingHighlight({ ...editingHighlight, title: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newTitle = e.target.value;
+                      setEditingHighlight(prev => prev ? { ...prev, title: newTitle } : null);
+                    }}
                     placeholder="Enter highlight title"
                     className="text-lg font-semibold"
                   />
@@ -587,7 +594,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                     label="Description"
                     value={editingHighlight.description}
                     onChange={(val) =>
-                      setEditingHighlight({ ...editingHighlight, description: val })
+                      setEditingHighlight(prev => prev ? { ...prev, description: val } : null)
                     }
                     rows={4}
                     placeholder="Enter highlight description"
@@ -619,7 +626,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                         return;
                       }
                       
-                      setEditingHighlight({ ...editingHighlight, publishedDate: selectedDate });
+                      setEditingHighlight(prev => prev ? { ...prev, publishedDate: selectedDate } : null);
                     }}
                     min="2000-01-01"
                     max={new Date().toISOString().split('T')[0]}
@@ -634,7 +641,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                   <ImageDropzone
                     value={editingHighlight.imageUrl || ''}
                     onChange={(url) =>
-                      setEditingHighlight({ ...editingHighlight, imageUrl: url })
+                      setEditingHighlight(prev => prev ? { ...prev, imageUrl: url } : null)
                     }
                     label="Cover Image"
                   />
@@ -651,10 +658,7 @@ export const HighlightsManager: React.FC<HighlightsManagerProps> = ({ highlights
                   <MultiImageDropzone
                     images={editingHighlight.images || []}
                     onChange={(images) => {
-                      setEditingHighlight({
-                        ...editingHighlight,
-                        images
-                      });
+                      setEditingHighlight(prev => prev ? { ...prev, images } : null);
                     }}
                     label="Highlight Images"
                   />

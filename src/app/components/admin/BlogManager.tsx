@@ -66,6 +66,12 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
   }, []);
 
   const handleCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input (like title), don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -517,9 +523,10 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                   <Input
                     id="modal-blog-title"
                     value={editingPost.title || ""}
-                    onChange={(e) =>
-                      setEditingPost({ ...editingPost, title: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newTitle = e.target.value;
+                      setEditingPost(prev => prev ? { ...prev, title: newTitle } : null);
+                    }}
                     placeholder="Enter a compelling title for your story..."
                     className="text-xs sm:text-lg font-semibold"
                   />
@@ -531,7 +538,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     label="Content"
                     value={editingPost.content}
                     onChange={(value: string) =>
-                      setEditingPost({ ...editingPost, content: value })
+                      setEditingPost(prev => prev ? { ...prev, content: value } : null)
                     }
                     rows={12}
                     required
@@ -564,9 +571,10 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     <Input
                       id="modal-blog-author"
                       value={editingPost.author}
-                      onChange={(e) =>
-                        setEditingPost({ ...editingPost, author: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newAuthor = e.target.value;
+                        setEditingPost(prev => prev ? { ...prev, author: newAuthor } : null);
+                      }}
                       placeholder="Author name"
                     />
                   </div>
@@ -575,9 +583,10 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     <Input
                       id="modal-blog-role"
                       value={editingPost.authorRole}
-                      onChange={(e) =>
-                        setEditingPost({ ...editingPost, authorRole: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newRole = e.target.value;
+                        setEditingPost(prev => prev ? { ...prev, authorRole: newRole } : null);
+                      }}
                       placeholder="Author position"
                     />
                   </div>
@@ -593,9 +602,10 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     value={editingPost.date}
                     min="2000-01-01"
                     max={new Date().toISOString().split('T')[0]}
-                    onChange={(e) =>
-                      setEditingPost({ ...editingPost, date: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      setEditingPost(prev => prev ? { ...prev, date: newDate } : null);
+                    }}
                   />
                 </div>
 
@@ -607,7 +617,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                   <ImageDropzone
                     value={editingPost.imageUrl || ''}
                     onChange={(url) =>
-                      setEditingPost({ ...editingPost, imageUrl: url })
+                      setEditingPost(prev => prev ? { ...prev, imageUrl: url } : null)
                     }
                     label="Cover Image"
                   />

@@ -40,6 +40,12 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
   const [activeField, setActiveField] = useState<string | null>(null);
 
   const handleCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -388,9 +394,10 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
                   <Input
                     id="news-title"
                     value={editingNews.title}
-                    onChange={(e) =>
-                      setEditingNews({ ...editingNews, title: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newTitle = e.target.value;
+                      setEditingNews(prev => prev ? { ...prev, title: newTitle } : null);
+                    }}
                     placeholder="Enter news title"
                     className="text-lg font-semibold"
                   />
@@ -404,9 +411,10 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
                     id="news-date"
                     type="date"
                     value={editingNews.date}
-                    onChange={(e) =>
-                      setEditingNews({ ...editingNews, date: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      setEditingNews(prev => prev ? { ...prev, date: newDate } : null);
+                    }}
                   />
                 </div>
 
@@ -415,7 +423,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
                   label="Content"
                   value={editingNews.content}
                   onChange={(value: string) =>
-                    setEditingNews({ ...editingNews, content: value })
+                    setEditingNews(prev => prev ? { ...prev, content: value } : null)
                   }
                   rows={10}
                   placeholder="Enter news content"
@@ -436,7 +444,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
                   <ImageDropzone
                     value={editingNews.imageUrl || ''}
                     onChange={(url) =>
-                      setEditingNews({ ...editingNews, imageUrl: url })
+                      setEditingNews(prev => prev ? { ...prev, imageUrl: url } : null)
                     }
                     label="Cover Image"
                   />
@@ -450,10 +458,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({ news: _news, onUpdate:
                   <MultiImageDropzone
                     images={editingNews.images || []}
                     onChange={(images) => {
-                      setEditingNews({
-                        ...editingNews,
-                        images
-                      });
+                      setEditingNews(prev => prev ? { ...prev, images } : null);
                     }}
                     label="News Article Images"
                   />

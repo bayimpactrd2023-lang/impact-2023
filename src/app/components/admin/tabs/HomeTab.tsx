@@ -217,6 +217,7 @@ export function HomeTab({ counts, quickActions }: HomeTabProps) {
               <Button
                 key={action.id}
                 variant="outline"
+                onMouseDown={(e) => e.preventDefault()}
                 className={`justify-start h-auto py-4 px-4 hover:border-${action.color.hover} hover:bg-${action.color.bg} transition-colors group`}
                 onClick={action.onClick}
               >

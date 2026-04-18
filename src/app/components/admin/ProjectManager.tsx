@@ -50,6 +50,12 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
   const [activeField, setActiveField] = useState<string | null>(null);
 
   const handleCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -427,9 +433,10 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                   <Input
                     id="project-title"
                     value={editingProject.title}
-                    onChange={(e) =>
-                      setEditingProject({ ...editingProject, title: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newTitle = e.target.value;
+                      setEditingProject(prev => prev ? { ...prev, title: newTitle } : null);
+                    }}
                     placeholder="Enter project title"
                     className="text-base sm:text-lg font-semibold"
                   />
@@ -440,7 +447,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                   label="Project overview"
                   value={editingProject.description}
                   onChange={(val) =>
-                    setEditingProject({ ...editingProject, description: val })
+                    setEditingProject(prev => prev ? { ...prev, description: val } : null)
                   }
                   rows={6}
                   placeholder="Enter project overview"
@@ -458,7 +465,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                   label="Objectives"
                   value={editingProject.objectives || ''}
                   onChange={(val) =>
-                    setEditingProject({ ...editingProject, objectives: val })
+                    setEditingProject(prev => prev ? { ...prev, objectives: val } : null)
                   }
                   rows={4}
                   placeholder="Enter project objectives"
@@ -475,7 +482,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                   label="Methodology and Activities"
                   value={editingProject.methodology || ''}
                   onChange={(val) =>
-                    setEditingProject({ ...editingProject, methodology: val })
+                    setEditingProject(prev => prev ? { ...prev, methodology: val } : null)
                   }
                   rows={4}
                   placeholder="Enter methodology and activities"
@@ -495,9 +502,10 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                     id="project-date"
                     type="date"
                     value={editingProject.date || ''}
-                    onChange={(e) =>
-                      setEditingProject({ ...editingProject, date: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      setEditingProject(prev => prev ? { ...prev, date: newDate } : null);
+                    }}
                   />
                 </div>
 
@@ -512,7 +520,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                       <ImageDropzone
                         value={editingProject.imageUrl}
                         onChange={(url) =>
-                          setEditingProject({ ...editingProject, imageUrl: url })
+                          setEditingProject(prev => prev ? { ...prev, imageUrl: url } : null)
                         }
                         label="Cover Image"
                       />
@@ -529,10 +537,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({ projects: _proje
                       <MultiImageDropzone
                         images={editingProject.images || []}
                         onChange={(images) => {
-                          setEditingProject({
-                            ...editingProject,
-                            images
-                          });
+                          setEditingProject(prev => prev ? { ...prev, images } : null);
                         }}
                         label="Project Images"
                       />

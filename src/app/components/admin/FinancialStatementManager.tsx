@@ -324,6 +324,12 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
             <div className="pt-2">
               <SharedToolbar 
                 onCommand={(cmd: string, val: any = '') => {
+                  // If we're interacting with a standard input, don't broadcast editor commands
+                  const activeEl = document.activeElement;
+                  if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    return;
+                  }
+
                   if (activeField) {
                     const event = new CustomEvent(`editor-command-${activeField}`, { 
                       detail: { command: cmd, value: val } 
@@ -347,9 +353,10 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
                   <Input
                     id="statement-title"
                     value={editingStatement.title}
-                    onChange={(e) =>
-                      setEditingStatement({ ...editingStatement, title: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newTitle = e.target.value;
+                      setEditingStatement(prev => prev ? { ...prev, title: newTitle } : null);
+                    }}
                     placeholder="e.g., Annual Report 2023"
                   />
                 </div>
@@ -360,7 +367,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
                   </Label>
                   <Select
                     value={editingStatement.year}
-                    onValueChange={(value) => setEditingStatement({ ...editingStatement, year: value })}
+                    onValueChange={(value) => setEditingStatement(prev => prev ? { ...prev, year: value } : null)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a year">{editingStatement.year}</SelectValue>
@@ -378,7 +385,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
                   label="Description (Optional)"
                   value={editingStatement.description || ''}
                   onChange={(val) =>
-                    setEditingStatement({ ...editingStatement, description: val })
+                    setEditingStatement(prev => prev ? { ...prev, description: val } : null)
                   }
                   placeholder="Enter a brief description of this financial statement"
                   rows={3}
@@ -400,7 +407,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
                   <PDFDropzone
                     value={editingStatement.pdfUrl}
                     onChange={(value) =>
-                      setEditingStatement({ ...editingStatement, pdfUrl: value })
+                      setEditingStatement(prev => prev ? { ...prev, pdfUrl: value } : null)
                     }
                   />
                 </div>
@@ -412,7 +419,7 @@ export const FinancialStatementManager: React.FC<FinancialStatementManagerProps>
                   <Select
                     value={editingStatement.pdfAccessType || 'download'}
                     onValueChange={(value: 'view' | 'download') =>
-                      setEditingStatement({ ...editingStatement, pdfAccessType: value })
+                      setEditingStatement(prev => prev ? { ...prev, pdfAccessType: value } : null)
                     }
                   >
                     <SelectTrigger className="w-full">

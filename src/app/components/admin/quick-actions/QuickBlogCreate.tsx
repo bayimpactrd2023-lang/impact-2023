@@ -48,6 +48,12 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
   const [activeField, setActiveField] = useState<string | null>(null);
 
   const handleCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -181,7 +187,10 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
               <Input
                 id="blog-title"
                 value={draft.title}
-                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  setDraft(prev => ({ ...prev, title: newTitle }));
+                }}
                 placeholder="Enter blog title"
               />
             </div>
@@ -191,7 +200,10 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
               <Input
                 id="blog-author"
                 value={draft.author}
-                onChange={(e) => setDraft({ ...draft, author: e.target.value })}
+                onChange={(e) => {
+                  const newAuthor = e.target.value;
+                  setDraft(prev => ({ ...prev, author: newAuthor }));
+                }}
                 placeholder="Author name"
               />
             </div>
@@ -201,7 +213,10 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
               <Input
                 id="blog-role"
                 value={draft.authorRole}
-                onChange={(e) => setDraft({ ...draft, authorRole: e.target.value })}
+                onChange={(e) => {
+                  const newRole = e.target.value;
+                  setDraft(prev => ({ ...prev, authorRole: newRole }));
+                }}
                 placeholder="Administrator"
               />
             </div>
@@ -212,7 +227,10 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
                 id="blog-date"
                 type="date"
                 value={draft.date}
-                onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setDraft(prev => ({ ...prev, date: newDate }));
+                }}
               />
             </div>
 
@@ -220,7 +238,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
               id="blog-content"
               label="Content *"
               value={draft.content}
-              onChange={(value: string) => setDraft({ ...draft, content: value })}
+              onChange={(value: string) => setDraft(prev => ({ ...prev, content: value }))}
               rows={6}
               placeholder="Write your blog content..."
               required
@@ -236,7 +254,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
               <Label>Featured Image</Label>
               <ImageDropzone
                 value={draft.imageUrl || ''}
-                onChange={(url) => setDraft({ ...draft, imageUrl: url })}
+                onChange={(url) => setDraft(prev => ({ ...prev, imageUrl: url }))}
               />
             </div>
 
@@ -244,7 +262,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
               <Label>Gallery Images</Label>
               <MultiImageDropzone
                 images={draft.images || []}
-                onChange={(images) => setDraft({ ...draft, images })}
+                onChange={(images) => setDraft(prev => ({ ...prev, images }))}
               />
             </div>
           </div>

@@ -38,6 +38,12 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
   const [activeField, setActiveField] = useState<string | null>(null);
 
   const handleCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -328,9 +334,10 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
                   <Input
                     id="member-name"
                     value={editingMember.name}
-                    onChange={(e) =>
-                      setEditingMember({ ...editingMember, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      setEditingMember(prev => prev ? { ...prev, name: newName } : null);
+                    }}
                     placeholder="Enter member name"
                     className="text-lg font-semibold"
                   />
@@ -343,9 +350,10 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
                   <Input
                     id="member-role"
                     value={editingMember.role}
-                    onChange={(e) =>
-                      setEditingMember({ ...editingMember, role: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      setEditingMember(prev => prev ? { ...prev, role: newRole } : null);
+                    }}
                     placeholder="e.g., Executive Director"
                   />
                 </div>
@@ -355,7 +363,7 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
                   label="Biography"
                   value={editingMember.description || ''}
                   onChange={(val) =>
-                    setEditingMember({ ...editingMember, description: val })
+                    setEditingMember(prev => prev ? { ...prev, description: val } : null)
                   }
                   rows={4}
                   placeholder="Enter member biography"
@@ -375,7 +383,7 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teamMembers: _teamMemb
                   <ImageDropzone
                     value={editingMember.imageUrl || ''}
                     onChange={(url) =>
-                      setEditingMember({ ...editingMember, imageUrl: url })
+                      setEditingMember(prev => prev ? { ...prev, imageUrl: url } : null)
                     }
                     label="Member Photo"
                   />

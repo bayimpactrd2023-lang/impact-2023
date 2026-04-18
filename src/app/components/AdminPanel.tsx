@@ -133,6 +133,12 @@ export const AdminPanel: React.FC = () => {
   });
 
   const handleQuickBlogCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (quickBlogActiveField) {
       const event = new CustomEvent(`editor-command-${quickBlogActiveField}`, {
         detail: { command: cmd, value: val }
@@ -176,6 +182,12 @@ export const AdminPanel: React.FC = () => {
   });
 
   const handleQuickPubCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (quickPubActiveField) {
       const event = new CustomEvent(`editor-command-${quickPubActiveField}`, {
         detail: { command: cmd, value: val }
@@ -190,6 +202,12 @@ export const AdminPanel: React.FC = () => {
   const [newsActiveField, setNewsActiveField] = useState<string | null>(null);
 
   const handleNewsCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (newsActiveField) {
       const event = new CustomEvent(`editor-command-${newsActiveField}`, {
         detail: { command: cmd, value: val }
@@ -205,6 +223,12 @@ export const AdminPanel: React.FC = () => {
   const [highlightActiveField, setHighlightActiveField] = useState<string | null>(null);
 
   const handleHighlightCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (highlightActiveField) {
       const event = new CustomEvent(`editor-command-${highlightActiveField}`, {
         detail: { command: cmd, value: val }
@@ -219,6 +243,12 @@ export const AdminPanel: React.FC = () => {
   const [teamActiveField, setTeamActiveField] = useState<string | null>(null);
 
   const handleTeamCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (teamActiveField) {
       const event = new CustomEvent(`editor-command-${teamActiveField}`, {
         detail: { command: cmd, value: val }
@@ -231,6 +261,12 @@ export const AdminPanel: React.FC = () => {
   const [aboutActiveField, setAboutActiveField] = useState<string | null>(null);
 
   const handleAboutCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (aboutActiveField) {
       const event = new CustomEvent(`editor-command-${aboutActiveField}`, {
         detail: { command: cmd, value: val }
@@ -1389,9 +1425,9 @@ export const AdminPanel: React.FC = () => {
                         id="news-title"
                         value={editingNews.title}
                         onChange={(e) => { 
-                          const u = { ...editingNews, title: e.target.value }; 
-                          setEditingNews(u); 
-                          updateNewsItem((editingNews as NewsItemForm).id, 'title', e.target.value); 
+                          const newTitle = e.target.value;
+                          setEditingNews(prev => prev ? { ...prev, title: newTitle } : null); 
+                          updateNewsItem((editingNews as NewsItemForm).id, 'title', newTitle); 
                         }}
                         placeholder="Enter news title..."
                         className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
@@ -1410,9 +1446,9 @@ export const AdminPanel: React.FC = () => {
                         min="2000-01-01"
                         max={new Date().toISOString().split('T')[0]}
                         onChange={(e) => { 
-                          const u = { ...editingNews, date: e.target.value }; 
-                          setEditingNews(u); 
-                          updateNewsItem((editingNews as NewsItemForm).id, 'date', e.target.value); 
+                          const newDate = e.target.value;
+                          setEditingNews(prev => prev ? { ...prev, date: newDate } : null); 
+                          updateNewsItem((editingNews as NewsItemForm).id, 'date', newDate); 
                         }}
                         className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                       />
@@ -1424,8 +1460,7 @@ export const AdminPanel: React.FC = () => {
                       label="Abstract/Description"
                       value={editingNews.content}
                       onChange={(value: string) => { 
-                        const u = { ...editingNews, content: value }; 
-                        setEditingNews(u); 
+                        setEditingNews(prev => prev ? { ...prev, content: value } : null); 
                         updateNewsItem((editingNews as NewsItemForm).id, 'content', value); 
                       }}
                       rows={8}
@@ -1446,8 +1481,7 @@ export const AdminPanel: React.FC = () => {
                       <ImageDropzone
                         value={typeof (editingNews as NewsItemForm).imageUrl === 'string' ? ((editingNews as NewsItemForm).imageUrl as string) : ''}
                         onChange={(url) => {
-                          const u = { ...editingNews, imageUrl: url };
-                          setEditingNews(u);
+                          setEditingNews(prev => prev ? { ...prev, imageUrl: url } : null);
                           if (typeof url === 'string') {
                             updateNewsItem((editingNews as NewsItemForm).id, 'imageUrl', url);
                           }
@@ -1463,8 +1497,7 @@ export const AdminPanel: React.FC = () => {
                       <MultiImageDropzone
                         images={(editingNews as NewsItemForm).images || []}
                         onChange={(images) => { 
-                          const u = { ...editingNews, images }; 
-                          setEditingNews(u); 
+                          setEditingNews(prev => prev ? { ...prev, images } : null); 
                           updateNewsItemImages((editingNews as NewsItemForm).id, images); 
                         }}
                         label="News Article Images"
@@ -1808,7 +1841,10 @@ export const AdminPanel: React.FC = () => {
                 <Input
                   id="qb-title"
                   value={draft.title}
-                  onChange={(e) => setDraft(p => ({ ...p, title: e.target.value }))}
+                  onChange={(e) => {
+                    const newTitle = e.target.value;
+                    setDraft(prev => ({ ...prev, title: newTitle }));
+                  }}
                   placeholder="Enter a compelling title for your story..."
                   className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                   autoFocus
@@ -1820,7 +1856,7 @@ export const AdminPanel: React.FC = () => {
                 id="quick-blog-content"
                 label="Content"
                 value={draft.content}
-                onChange={(value: string) => setDraft({ ...draft, content: value })}
+                onChange={(value: string) => setDraft(prev => ({ ...prev, content: value }))}
                 rows={12}
                 required
                 placeholder="What's on your mind? Start writing here..."
@@ -1837,18 +1873,44 @@ export const AdminPanel: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="qb-author" className="text-sm font-semibold">Author</Label>
-                  <Input id="qb-author" value={draft.author} onChange={(e) => setDraft(p => ({ ...p, author: e.target.value }))} placeholder="Author name" />
+                  <Input 
+                    id="qb-author" 
+                    value={draft.author} 
+                    onChange={(e) => {
+                      const newAuthor = e.target.value;
+                      setDraft(prev => ({ ...prev, author: newAuthor }));
+                    }} 
+                    placeholder="Author name" 
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="qb-role" className="text-sm font-semibold">Author Role</Label>
-                  <Input id="qb-role" value={draft.authorRole} onChange={(e) => setDraft(p => ({ ...p, authorRole: e.target.value }))} placeholder="e.g. Researcher" />
+                  <Input 
+                    id="qb-role" 
+                    value={draft.authorRole} 
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      setDraft(prev => ({ ...prev, authorRole: newRole }));
+                    }} 
+                    placeholder="e.g. Researcher" 
+                  />
                 </div>
               </div>
 
               {/* Date */}
               <div className="space-y-1.5">
                 <Label htmlFor="qb-date" className="text-sm font-semibold">Publish Date</Label>
-                <Input id="qb-date" type="date" value={draft.date} min="2000-01-01" max={new Date().toISOString().split('T')[0]} onChange={(e) => setDraft(p => ({ ...p, date: e.target.value }))} />
+                <Input 
+                  id="qb-date" 
+                  type="date" 
+                  value={draft.date} 
+                  min="2000-01-01" 
+                  max={new Date().toISOString().split('T')[0]} 
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    setDraft(prev => ({ ...prev, date: newDate }));
+                  }} 
+                />
               </div>
 
               {/* Cover Image */}
@@ -1857,7 +1919,7 @@ export const AdminPanel: React.FC = () => {
                 <p className="text-xs text-gray-500 mb-2">Upload a cover image for this blog post</p>
                 <ImageDropzone
                   value={draft.imageUrl || ''}
-                  onChange={(url) => setDraft(p => ({ ...p, imageUrl: url }))}
+                  onChange={(url) => setDraft(prev => ({ ...prev, imageUrl: url }))}
                   label="Cover Image"
                 />
               </div>
@@ -1916,7 +1978,10 @@ export const AdminPanel: React.FC = () => {
                 <Input
                   id="qp-title"
                   value={publicationDraft.title}
-                  onChange={(e) => setPublicationDraft(p => ({ ...p, title: e.target.value }))}
+                  onChange={(e) => {
+                    const newTitle = e.target.value;
+                    setPublicationDraft(prev => ({ ...prev, title: newTitle }));
+                  }}
                   placeholder="Enter publication title"
                   className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                   autoFocus
@@ -1931,7 +1996,10 @@ export const AdminPanel: React.FC = () => {
                 <Input
                   id="qp-authors"
                   value={publicationDraft.authors}
-                  onChange={(e) => setPublicationDraft(p => ({ ...p, authors: e.target.value }))}
+                  onChange={(e) => {
+                    const newAuthors = e.target.value;
+                    setPublicationDraft(prev => ({ ...prev, authors: newAuthors }));
+                  }}
                   placeholder="e.g., John Doe, Jane Smith"
                   className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                 />
@@ -1942,7 +2010,7 @@ export const AdminPanel: React.FC = () => {
                 id="qp-content"
                 label="Abstract/Description"
                 value={publicationDraft.content || ''}
-                onChange={(value: string) => setPublicationDraft(p => ({ ...p, content: value }))}
+                onChange={(value: string) => setPublicationDraft(prev => ({ ...prev, content: value }))}
                 rows={6}
                 placeholder="Enter publication abstract or description"
                 showToolbar={false}
@@ -1961,7 +2029,10 @@ export const AdminPanel: React.FC = () => {
                 <Input
                   id="qp-link"
                   value={publicationDraft.link}
-                  onChange={(e) => setPublicationDraft(p => ({ ...p, link: e.target.value }))}
+                  onChange={(e) => {
+                    const newLink = e.target.value;
+                    setPublicationDraft(prev => ({ ...prev, link: newLink }));
+                  }}
                   placeholder="https://..."
                   className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                 />
@@ -1974,7 +2045,7 @@ export const AdminPanel: React.FC = () => {
                 </Label>
                 <PDFDropzone
                   value={publicationDraft.pdfUrl || ''}
-                  onChange={(value) => setPublicationDraft(p => ({ ...p, pdfUrl: value }))}
+                  onChange={(value) => setPublicationDraft(prev => ({ ...prev, pdfUrl: value }))}
                   label="Drop PDF file here or click to browse"
                 />
               </div>
@@ -1988,7 +2059,10 @@ export const AdminPanel: React.FC = () => {
                   value={publicationDraft.publishedDate} 
                   min="2000-01-01" 
                   max={new Date().toISOString().split('T')[0]} 
-                  onChange={(e) => setPublicationDraft(p => ({ ...p, publishedDate: e.target.value }))}
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    setPublicationDraft(prev => ({ ...prev, publishedDate: newDate }));
+                  }}
                   className="focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
                 />
               </div>
@@ -2053,9 +2127,9 @@ export const AdminPanel: React.FC = () => {
                         id="highlight-title"
                         value={editingHighlight.title}
                         onChange={(e) => { 
-                          const u = { ...editingHighlight, title: e.target.value }; 
-                          setEditingHighlight(u); 
-                          updateHighlight(editingHighlight.id, 'title', e.target.value); 
+                          const newTitle = e.target.value;
+                          setEditingHighlight(prev => prev ? { ...prev, title: newTitle } : null); 
+                          updateHighlight(editingHighlight.id, 'title', newTitle); 
                         }}
                         placeholder="Enter highlight title..."
                         className="text-base font-medium focus:ring-2 focus:ring-[#1887FC] focus:border-[#1887FC]"
@@ -2068,8 +2142,7 @@ export const AdminPanel: React.FC = () => {
                       label="Description *"
                       value={editingHighlight.description}
                       onChange={(value: string) => { 
-                        const u = { ...editingHighlight, description: value }; 
-                        setEditingHighlight(u); 
+                        setEditingHighlight(prev => prev ? { ...prev, description: value } : null); 
                         updateHighlight(editingHighlight.id, 'description', value); 
                       }}
                       rows={4}

@@ -296,9 +296,10 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
                   <Input
                     id="partner-name"
                     value={editingPartner.name}
-                    onChange={(e) =>
-                      setEditingPartner({ ...editingPartner, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      setEditingPartner(prev => prev ? { ...prev, name: newName } : null);
+                    }}
                     placeholder="Enter partner name"
                     className="text-lg font-semibold"
                   />
@@ -310,7 +311,7 @@ export const PartnersManager: React.FC<PartnersManagerProps> = ({ partners: _par
                   <ImageDropzone
                     value={editingPartner.logoUrl || ''}
                     onChange={(url) =>
-                      setEditingPartner({ ...editingPartner, logoUrl: url })
+                      setEditingPartner(prev => prev ? { ...prev, logoUrl: url } : null)
                     }
                     label="Partner Logo"
                   />

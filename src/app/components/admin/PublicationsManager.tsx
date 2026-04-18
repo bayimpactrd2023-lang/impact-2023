@@ -47,6 +47,12 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
   const [activeField, setActiveField] = useState<string | null>(null);
 
   const handleCommand = (cmd: string, val: any = '') => {
+    // If we're interacting with a standard input, don't broadcast editor commands
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (activeField) {
       const event = new CustomEvent(`editor-command-${activeField}`, { 
         detail: { command: cmd, value: val } 
@@ -467,9 +473,10 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                     <Input
                       id="pub-title"
                       value={editingPublication.title}
-                      onChange={(e) =>
-                        setEditingPublication({ ...editingPublication, title: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newTitle = e.target.value;
+                        setEditingPublication(prev => prev ? { ...prev, title: newTitle } : null);
+                      }}
                       placeholder="Enter publication title"
                       className="text-base sm:text-lg font-semibold"
                     />
@@ -482,9 +489,10 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                     <Input
                       id="pub-authors"
                       value={editingPublication.authors}
-                      onChange={(e) =>
-                        setEditingPublication({ ...editingPublication, authors: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newAuthors = e.target.value;
+                        setEditingPublication(prev => prev ? { ...prev, authors: newAuthors } : null);
+                      }}
                       placeholder="e.g., John Doe, Jane Smith"
                     />
                   </div>
@@ -495,7 +503,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                   label="Project Description"
                   value={editingPublication.content || ''}
                   onChange={(value: string) =>
-                    setEditingPublication({ ...editingPublication, content: value })
+                    setEditingPublication(prev => prev ? { ...prev, content: value } : null)
                   }
                   rows={4}
                   placeholder="Enter publication abstract or description"
@@ -513,9 +521,10 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                     <Input
                       id="pub-link"
                       value={editingPublication.link || ''}
-                      onChange={(e) =>
-                        setEditingPublication({ ...editingPublication, link: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newLink = e.target.value;
+                        setEditingPublication(prev => prev ? { ...prev, link: newLink } : null);
+                      }}
                       placeholder="https://..."
                     />
                   </div>
@@ -528,9 +537,10 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                       id="pub-date"
                       type="date"
                       value={editingPublication.publishedDate || ''}
-                      onChange={(e) =>
-                        setEditingPublication({ ...editingPublication, publishedDate: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        setEditingPublication(prev => prev ? { ...prev, publishedDate: newDate } : null);
+                      }}
                     />
                   </div>
                 </div>
@@ -543,7 +553,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                   <PDFDropzone
                     value={editingPublication.pdfUrl}
                     onChange={(value) =>
-                      setEditingPublication({ ...editingPublication, pdfUrl: value })
+                      setEditingPublication(prev => prev ? { ...prev, pdfUrl: value } : null)
                     }
                     label="Drop PDF file here"
                   />
@@ -555,7 +565,7 @@ export const PublicationsManager: React.FC<PublicationsManagerProps> = ({ public
                     <Select
                       value={editingPublication.pdfAccessType || 'download'}
                       onValueChange={(value: 'view' | 'download') =>
-                        setEditingPublication({ ...editingPublication, pdfAccessType: value })
+                        setEditingPublication(prev => prev ? { ...prev, pdfAccessType: value } : null)
                       }
                     >
                       <SelectTrigger className="w-full">

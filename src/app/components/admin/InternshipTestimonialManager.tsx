@@ -395,6 +395,12 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
             <div className="pt-2">
               <SharedToolbar 
                 onCommand={(cmd: string, val: any = '') => {
+                  // If we're interacting with a standard input, don't broadcast editor commands
+                  const activeEl = document.activeElement;
+                  if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    return;
+                  }
+
                   if (activeField) {
                     const event = new CustomEvent(`editor-command-${activeField}`, { 
                       detail: { command: cmd, value: val } 
@@ -418,9 +424,10 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   <Input
                     id="testimonial-name"
                     value={editingTestimonial.name}
-                    onChange={(e) =>
-                      setEditingTestimonial({ ...editingTestimonial, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      setEditingTestimonial(prev => prev ? { ...prev, name: newName } : null);
+                    }}
                     placeholder="Enter intern's name"
                   />
                 </div>
@@ -433,9 +440,10 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                     <Input
                       id="testimonial-degree"
                       value={editingTestimonial.degree}
-                      onChange={(e) =>
-                        setEditingTestimonial({ ...editingTestimonial, degree: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newDegree = e.target.value;
+                        setEditingTestimonial(prev => prev ? { ...prev, degree: newDegree } : null);
+                      }}
                       placeholder="e.g., Bachelor of Science in Agriculture"
                     />
                   </div>
@@ -447,9 +455,10 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                     <Input
                       id="testimonial-institution"
                       value={editingTestimonial.institution}
-                      onChange={(e) =>
-                        setEditingTestimonial({ ...editingTestimonial, institution: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newInstitution = e.target.value;
+                        setEditingTestimonial(prev => prev ? { ...prev, institution: newInstitution } : null);
+                      }}
                       placeholder="e.g., University of the Philippines"
                     />
                   </div>
@@ -460,7 +469,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   label="Quote/Short Testimonial"
                   value={editingTestimonial.quote}
                   onChange={(value: string) =>
-                    setEditingTestimonial({ ...editingTestimonial, quote: value })
+                    setEditingTestimonial(prev => prev ? { ...prev, quote: value } : null)
                   }
                   rows={3}
                   placeholder="Enter a short quote or testimonial..."
@@ -478,7 +487,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   label="Full Testimonial"
                   value={editingTestimonial.fullText || ''}
                   onChange={(value: string) =>
-                    setEditingTestimonial({ ...editingTestimonial, fullText: value })
+                    setEditingTestimonial(prev => prev ? { ...prev, fullText: value } : null)
                   }
                   rows={6}
                   placeholder="Enter the full testimonial text..."
@@ -498,9 +507,10 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                     <Input
                       id="testimonial-year"
                       value={editingTestimonial.year}
-                      onChange={(e) =>
-                        setEditingTestimonial({ ...editingTestimonial, year: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newYear = e.target.value;
+                        setEditingTestimonial(prev => prev ? { ...prev, year: newYear } : null);
+                      }}
                       placeholder="e.g., 2024"
                     />
                   </div>
@@ -511,9 +521,10 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                       id="testimonial-date"
                       type="date"
                       value={editingTestimonial.publishedDate}
-                      onChange={(e) =>
-                        setEditingTestimonial({ ...editingTestimonial, publishedDate: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        setEditingTestimonial(prev => prev ? { ...prev, publishedDate: newDate } : null);
+                      }}
                     />
                   </div>
                 </div>
@@ -526,10 +537,7 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                   <MultiImageDropzone
                     images={editingTestimonial.images || []}
                     onChange={(images) => {
-                      setEditingTestimonial({
-                        ...editingTestimonial,
-                        images
-                      });
+                      setEditingTestimonial(prev => prev ? { ...prev, images } : null);
                     }}
                     label="Testimonial Images"
                   />
