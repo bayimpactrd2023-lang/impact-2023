@@ -37,7 +37,12 @@ const ITEMS_PER_PAGE = 5;
 
 // Check if rich text is enabled for this category
 const isRichTextEnabled = (category?: string) => 
-  category === 'locally_funded' || category === 'internationally_funded';
+  category === 'locally_funded' || 
+  category === 'internationally_funded' || 
+  category === 'rd_projects' || 
+  category === 'community_transformation' || 
+  category === 'technology_spinoffs' || 
+  category === 'thesis_support';
 
 export const ProjectList: React.FC<ProjectListProps> = ({
   projects,

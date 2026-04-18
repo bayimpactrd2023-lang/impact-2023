@@ -346,25 +346,27 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
           [&_.image-wrapper.float-left]:float-none [&_.image-wrapper.float-left]:mx-auto [&_.image-wrapper.float-left]:mb-10 sm:[&_.image-wrapper.float-left]:float-left sm:[&_.image-wrapper.float-left]:mr-12 sm:[&_.image-wrapper.float-left]:max-w-[45%] sm:[&_.image-wrapper.float-left]:clear-left sm:[&_.image-wrapper.float-left]:-mt-25
           [&_.image-wrapper.float-right]:float-none [&_.image-wrapper.float-right]:mx-auto [&_.image-wrapper.float-right]:mb-10 sm:[&_.image-wrapper.float-right]:float-right sm:[&_.image-wrapper.float-right]:ml-12 sm:[&_.image-wrapper.float-right]:max-w-[45%] sm:[&_.image-wrapper.float-right]:clear-right sm:[&_.image-wrapper.float-right]:-mt-2
           [&_p]:mb-10 last:[&_p]:mb-0 [&_p]:text-gray-700 [&_p]:leading-[1.9] [&_p]:whitespace-pre-wrap [&_p]:break-words [&_p]:display-flow-root [&_p]:mt-0
-          [&_p:has(~_img.float-left)]:sm:w-[48%] [&_p:has(~_img.float-left)]:sm:float-right
-          [&_p:has(~_img.float-right)]:sm:w-[48%] [&_p:has(~_img.float-right)]:sm:float-left
-          [&_img.float-left~p]:sm:w-[48%] [&_img.float-left~p]:sm:float-right
-          [&_img.float-right~p]:sm:w-[48%] [&_img.float-right~p]:sm:float-left
+          [&_p:has(~_img.float-left)]:sm:w-[52%] [&_p:has(~_img.float-left)]:sm:float-right [&_p:has(~_img.float-left)]:sm:min-w-[50%]
+          [&_p:has(~_img.float-right)]:sm:w-[52%] [&_p:has(~_img.float-right)]:sm:float-left [&_p:has(~_img.float-right)]:sm:min-w-[50%]
+          [&_img.float-left~p]:sm:w-[52%] [&_img.float-left~p]:sm:float-right [&_img.float-left~p]:sm:min-w-[50%]
+          [&_img.float-right~p]:sm:w-[52%] [&_img.float-right~p]:sm:float-left [&_img.float-right~p]:sm:min-w-[50%]
           [&_h1]:text-4xl [&_h1]:sm:text-5xl [&_h1]:font-black [&_h1]:mt-16 [&_h1]:mb-12 [&_h1]:clear-both [&_h1]:tracking-tight [&_h1]:break-words [&_h1]:w-full
           [&_h2]:text-3xl [&_h2]:sm:text-4xl [&_h2]:font-extrabold [&_h2]:mt-14 [&_h2]:mb-10 [&_h2]:clear-both [&_h2]:tracking-tight [&_h2]:break-words [&_h2]:w-full
           [&_h3]:text-2xl [&_h3]:sm:text-3xl [&_h3]:font-bold [&_h3]:mt-12 [&_h3]:mb-8 [&_h3]:clear-both [&_h3]:break-words [&_h3]:w-full
-          [&_b]:clear-both [&_b]:block [&_b]:mt-10 [&_b]:mb-6 [&_b]:text-2xl [&_b]:font-black [&_b]:text-left [&_b]:w-full
-          [&_strong]:clear-both [&_strong]:block [&_strong]:mt-10 [&_strong]:mb-6 [&_strong]:text-2xl [&_strong]:font-black [&_strong]:text-left [&_strong]:w-full
+          [&_b:not(span_b)]:clear-both [&_b:not(span_b)]:block [&_b:not(span_b)]:mt-10 [&_b:not(span_b)]:mb-6 [&_b:not(span_b)]:text-2xl [&_b:not(span_b)]:font-black [&_b:not(span_b)]:text-left [&_b:not(span_b)]:w-full
+          [&_strong:not(span_strong)]:clear-both [&_strong:not(span_strong)]:block [&_strong:not(span_strong)]:mt-10 [&_strong:not(span_strong)]:mb-6 [&_strong:not(span_strong)]:text-2xl [&_strong:not(span_strong)]:font-black [&_strong:not(span_strong)]:text-left [&_strong:not(span_strong)]:w-full
+          [&_span_b]:font-bold [&_span_b]:text-inherit [&_span_b]:inline [&_span_b]:m-0 [&_span_b]:p-0
+          [&_span_strong]:font-bold [&_span_strong]:text-inherit [&_span_strong]:inline [&_span_strong]:m-0 [&_span_strong]:p-0
           [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-10 [&_ul]:space-y-4 [&_ul]:clear-both [&_ul]:break-words [&_ul]:display-flow-root
-          [&_ul:has(~_img.float-left)]:sm:w-[48%] [&_ul:has(~_img.float-left)]:sm:float-right
-          [&_ul:has(~_img.float-right)]:sm:w-[48%] [&_ul:has(~_img.float-right)]:sm:float-left
-          [&_img.float-left~ul]:sm:w-[48%] [&_img.float-left~ul]:sm:float-right
-          [&_img.float-right~ul]:sm:w-[48%] [&_img.float-right~ul]:sm:float-left
+          [&_ul:has(~_img.float-left)]:sm:w-[52%] [&_ul:has(~_img.float-left)]:sm:float-right [&_ul:has(~_img.float-left)]:sm:min-w-[50%]
+          [&_ul:has(~_img.float-right)]:sm:w-[52%] [&_ul:has(~_img.float-right)]:sm:float-left [&_ul:has(~_img.float-right)]:sm:min-w-[50%]
+          [&_img.float-left~ul]:sm:w-[52%] [&_img.float-left~ul]:sm:float-right [&_img.float-left~ul]:sm:min-w-[50%]
+          [&_img.float-right~ul]:sm:w-[52%] [&_img.float-right~ul]:sm:float-left [&_img.float-right~ul]:sm:min-w-[50%]
           [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-10 [&_ol]:space-y-4 [&_ol]:clear-both [&_ol]:break-words [&_ol]:display-flow-root
-          [&_ol:has(~_img.float-left)]:sm:w-[48%] [&_ol:has(~_img.float-left)]:sm:float-right
-          [&_ol:has(~_img.float-right)]:sm:w-[48%] [&_ol:has(~_img.float-right)]:sm:float-left
-          [&_img.float-left~ol]:sm:w-[48%] [&_img.float-left~ol]:sm:float-right
-          [&_img.float-right~ol]:sm:w-[48%] [&_img.float-right~ol]:sm:float-left
+          [&_ol:has(~_img.float-left)]:sm:w-[52%] [&_ol:has(~_img.float-left)]:sm:float-right [&_ol:has(~_img.float-left)]:sm:min-w-[50%]
+          [&_ol:has(~_img.float-right)]:sm:w-[52%] [&_ol:has(~_img.float-right)]:sm:float-left [&_ol:has(~_img.float-right)]:sm:min-w-[50%]
+          [&_img.float-left~ol]:sm:w-[52%] [&_img.float-left~ol]:sm:float-right [&_img.float-left~ol]:sm:min-w-[50%]
+          [&_img.float-right~ol]:sm:w-[52%] [&_img.float-right~ol]:sm:float-left [&_img.float-right~ol]:sm:min-w-[50%]
           [&_img]:max-sm:hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:transition-all [&_img]:duration-300
           [&_img:not(.float-left):not(.float-right)]:block [&_img:not(.float-left):not(.float-right)]:mx-auto [&_img:not(.float-left):not(.float-right)]:my-10
           [&_.image-wrapper]:max-sm:hidden [&_.image-wrapper]:max-w-full sm:[&_.image-wrapper]:max-w-[45%] [&_.image-wrapper]:w-full sm:[&_.image-wrapper]:w-[45%] [&_.image-wrapper]:mx-auto sm:[&_.image-wrapper]:float-left sm:[&_.image-wrapper]:mr-[5%] sm:[&_.image-wrapper]:clear-left

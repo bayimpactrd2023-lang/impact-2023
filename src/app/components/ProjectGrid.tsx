@@ -8,6 +8,7 @@ import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { Pagination } from '@/app/components/Pagination';
 import { GalleryModal } from './GalleryModal';
+import { RichTextContent } from './RichTextContent';
 import { Dialog, DialogPortal, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 
@@ -186,7 +187,9 @@ export const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, title, subti
                         {project.date ? new Date(project.date).toLocaleDateString() : 'Ongoing'}
                       </div>
                       <h3 className="text-xl font-bold text-[#1887FC] mb-2">{project.title}</h3>
-                      <p className="text-gray-600 line-clamp-3 text-justify">{project.description}</p>
+                      <div className="text-gray-600 line-clamp-3 text-justify">
+                        <RichTextContent text={project.description} />
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
