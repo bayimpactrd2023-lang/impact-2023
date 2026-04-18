@@ -353,8 +353,8 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
           [&_h1]:text-4xl [&_h1]:sm:text-5xl [&_h1]:font-black [&_h1]:mt-16 [&_h1]:mb-12 [&_h1]:clear-both [&_h1]:tracking-tight [&_h1]:break-words [&_h1]:w-full
           [&_h2]:text-3xl [&_h2]:sm:text-4xl [&_h2]:font-extrabold [&_h2]:mt-14 [&_h2]:mb-10 [&_h2]:clear-both [&_h2]:tracking-tight [&_h2]:break-words [&_h2]:w-full
           [&_h3]:text-2xl [&_h3]:sm:text-3xl [&_h3]:font-bold [&_h3]:mt-12 [&_h3]:mb-8 [&_h3]:clear-both [&_h3]:break-words [&_h3]:w-full
-          [&_b]:clear-both [&_b]:block [&_b]:mt-10 [&_b]:mb-8 [&_b]:text-2xl [&_b]:font-black [&_b]:w-full
-          [&_strong]:clear-both [&_strong]:block [&_strong]:mt-10 [&_strong]:mb-8 [&_strong]:text-2xl [&_strong]:font-black [&_strong]:w-full
+          [&_b]:clear-both [&_b]:block [&_b]:mt-10 [&_b]:mb-6 [&_b]:text-2xl [&_b]:font-black [&_b]:text-left [&_b]:w-full
+          [&_strong]:clear-both [&_strong]:block [&_strong]:mt-10 [&_strong]:mb-6 [&_strong]:text-2xl [&_strong]:font-black [&_strong]:text-left [&_strong]:w-full
           [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-10 [&_ul]:space-y-4 [&_ul]:clear-both [&_ul]:break-words [&_ul]:display-flow-root
           [&_ul:has(~_img.float-left)]:sm:w-[48%] [&_ul:has(~_img.float-left)]:sm:float-right
           [&_ul:has(~_img.float-right)]:sm:w-[48%] [&_ul:has(~_img.float-right)]:sm:float-left
