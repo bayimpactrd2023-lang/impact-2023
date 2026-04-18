@@ -12,7 +12,9 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify
+  AlignJustify,
+  Hash,
+  Plus
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,12 +35,33 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
   className,
   onImageUpload
 }) => {
+  const isRoman = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return false;
+    let container = selection.getRangeAt(0).commonAncestorContainer;
+    if (container.nodeType === 3) container = container.parentNode!;
+    const ol = (container as HTMLElement).closest('ol');
+    return ol?.style.listStyleType === 'upper-roman';
+  };
+
+  const isAlpha = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return false;
+    let container = selection.getRangeAt(0).commonAncestorContainer;
+    if (container.nodeType === 3) container = container.parentNode!;
+    const ol = (container as HTMLElement).closest('ol');
+    return ol?.style.listStyleType === 'lower-alpha';
+  };
+
   const [isSticky, setIsSticky] = useState(false);
+
   const [activeFormats, setActiveFormats] = useState<{
     bold: boolean;
     blue: boolean;
     bullet: boolean;
     number: boolean;
+    roman: boolean;
+    alpha: boolean;
     alignLeft: boolean;
     alignCenter: boolean;
     alignRight: boolean;
@@ -48,6 +71,8 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
     blue: false,
     bullet: false,
     number: false,
+    roman: false,
+    alpha: false,
     alignLeft: false,
     alignCenter: false,
     alignRight: false,
@@ -61,7 +86,9 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
         bold: document.queryCommandState('bold'),
         blue: document.queryCommandValue('foreColor') === 'rgb(24, 135, 252)' || document.queryCommandValue('foreColor') === '#1887fc',
         bullet: document.queryCommandState('insertUnorderedList'),
-        number: document.queryCommandState('insertOrderedList'),
+        number: document.queryCommandState('insertOrderedList') && !isRoman() && !isAlpha(),
+        roman: isRoman(),
+        alpha: isAlpha(),
         alignLeft: document.queryCommandState('justifyLeft'),
         alignCenter: document.queryCommandState('justifyCenter'),
         alignRight: document.queryCommandState('justifyRight'),
@@ -263,46 +290,49 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
 
         <div className="w-[1px] h-4 bg-gray-300 mx-0.5 hidden sm:block" />
 
-        {/* Image Upload & Actions */}
-        {onImageUpload && (
-          <div className="flex items-center gap-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onMouseDown={(e) => e.preventDefault()}
-              className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200"
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file && onImageUpload) {
-                    onImageUpload(file);
-                  }
-                };
-                input.click();
-              }}
-              title="Upload Image"
-            >
-              <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
-              <span className="text-[11px] sm:text-xs">Image</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onMouseDown={(e) => e.preventDefault()}
-              className="h-8 px-2 sm:px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-              onClick={() => onCommand('deleteSelectedImage')}
-              title="Delete Selected Image"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
+          {/* Image Management Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onMouseDown={(e) => e.preventDefault()}
+                className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0"
+              >
+                <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
+                <span className="text-[11px] sm:text-xs">Image</span>
+                <ChevronDown className="w-3 h-3 ml-1 sm:ml-1.5 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="rounded-xl border-gray-200 shadow-lg min-w-[150px]">
+              <DropdownMenuItem 
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file && onImageUpload) {
+                      onImageUpload(file);
+                    }
+                  };
+                  input.click();
+                }}
+                className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
+              >
+                <Plus className="w-4 h-4 text-blue-500" />
+                <span>Add Image</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onCommand('deleteSelectedImage')}
+                className="flex items-center gap-2 cursor-pointer focus:bg-red-50 py-2 text-red-600"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete Selected</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
         <div className="sm:hidden w-full h-[1px] bg-gray-200 my-0.5" />
 
@@ -345,7 +375,27 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
                 )}
               >
                 <ListOrdered className="w-4 h-4" />
-                <span>Numbered List</span>
+                <span>Numbered List (1, 2, 3)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onCommand('roman')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50",
+                  activeFormats.roman ? "bg-blue-50 font-semibold" : ""
+                )}
+              >
+                <Hash className="w-4 h-4" />
+                <span>Roman Numerals (I, II, III)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onCommand('alpha')} 
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer focus:bg-blue-50",
+                  activeFormats.alpha ? "bg-blue-50 font-semibold" : ""
+                )}
+              >
+                <Type className="w-4 h-4" />
+                <span>Alphabetical List (a, b, c)</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

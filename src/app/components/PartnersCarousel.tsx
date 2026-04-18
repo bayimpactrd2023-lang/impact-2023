@@ -177,19 +177,19 @@ const PartnerCard: React.FC<PartnerCardProps> = React.memo(({ partner, index }) 
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
       viewport={{ once: true, margin: "-30px" }}
       whileHover={{ y: -4, scale: 1.02 }}
-      className="bg-white rounded-[2rem] p-4 sm:p-6 flex flex-col items-center justify-center min-h-[180px] sm:min-h-[200px] h-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer select-none mx-auto w-full max-w-[280px]"
+      className="bg-white rounded-[2rem] p-4 sm:p-6 flex flex-col items-center justify-center h-[200px] sm:h-[220px] md:h-[240px] w-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer select-none mx-auto max-w-[280px]"
     >
-      <div className="w-full flex-1 flex flex-col items-center justify-center">
-        <div className="w-full aspect-video flex items-center justify-center relative mb-4">
+      <div className="w-full h-full flex flex-col items-center justify-center">
+        <div className="w-full h-[60%] flex items-center justify-center relative mb-4">
           <ImageWithFallback
             src={partner.logoUrl}
             alt={partner.name}
-            className="max-w-[85%] max-h-[100px] sm:max-h-[110px] object-contain transition-all duration-500 group-hover:scale-105 relative z-10"
+            className="max-w-[85%] max-h-full object-contain transition-all duration-500 group-hover:scale-105 relative z-10"
             title={partner.name}
           />
         </div>
         
-        <div className="w-full text-center">
+        <div className="w-full h-[30%] flex items-center justify-center text-center">
           <p className="text-[11px] sm:text-xs md:text-sm text-gray-500 font-medium line-clamp-2 leading-tight px-2">
             {partner.name}
           </p>

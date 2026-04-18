@@ -147,6 +147,28 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
       document.execCommand('insertUnorderedList', false);
     } else if (command === 'number') {
       document.execCommand('insertOrderedList', false);
+    } else if (command === 'roman') {
+      document.execCommand('insertOrderedList', false);
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let container = selection.getRangeAt(0).commonAncestorContainer;
+        if (container.nodeType === 3) container = container.parentNode!;
+        const ol = (container as HTMLElement).closest('ol');
+        if (ol) {
+          ol.style.listStyleType = 'upper-roman';
+        }
+      }
+    } else if (command === 'alpha') {
+      document.execCommand('insertOrderedList', false);
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let container = selection.getRangeAt(0).commonAncestorContainer;
+        if (container.nodeType === 3) container = container.parentNode!;
+        const ol = (container as HTMLElement).closest('ol');
+        if (ol) {
+          ol.style.listStyleType = 'lower-alpha';
+        }
+      }
     } else if (command === 'justifyLeft') {
       // Use standard alignment
       document.execCommand('justifyLeft', false);

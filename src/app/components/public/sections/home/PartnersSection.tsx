@@ -64,7 +64,7 @@ export function PartnersSection() {
                 y: -5,
                 transition: { duration: 0.2 }
               }}
-              className="group relative flex flex-col items-center justify-center p-4 sm:p-6 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer overflow-hidden min-h-[160px] sm:min-h-[180px] w-full max-w-[280px] mx-auto"
+              className="group relative flex flex-col items-center justify-center p-4 sm:p-6 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer overflow-hidden h-[180px] sm:h-[200px] md:h-[220px] w-full max-w-[280px] mx-auto"
             >
               {/* Subtle top accent line */}
               <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-blue-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
@@ -72,17 +72,17 @@ export function PartnersSection() {
               {/* Subtle background pattern/glow on hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 to-blue-50/0 group-hover:from-blue-50/40 group-hover:to-transparent transition-all duration-500 opacity-0 group-hover:opacity-100" />
               
-              <div className="relative w-full flex-1 flex items-center justify-center mb-4 p-2 sm:p-4 shrink-0">
+              <div className="relative w-full h-[65%] flex items-center justify-center mb-4 p-2 sm:p-4 shrink-0">
                 <ImageWithFallback
                   src={partner.logoUrl}
                   alt={partner.name}
-                  className="max-w-full max-h-16 sm:max-h-20 md:max-h-24 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 ease-in-out transform group-hover:scale-105"
+                  className="max-w-[90%] max-h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 ease-in-out transform group-hover:scale-105"
                   title={partner.name}
                   loading="lazy"
                 />
               </div>
 
-              <div className="relative w-full pt-2 border-t border-gray-50 group-hover:border-blue-50 transition-colors duration-300">
+              <div className="relative w-full h-[25%] flex items-center justify-center pt-2 border-t border-gray-50 group-hover:border-blue-50 transition-colors duration-300">
                 <h3 className="text-[11px] sm:text-xs md:text-sm font-semibold text-gray-600 group-hover:text-blue-600 transition-colors duration-300 text-center line-clamp-2 leading-tight px-1">
                   {partner.name}
                 </h3>
