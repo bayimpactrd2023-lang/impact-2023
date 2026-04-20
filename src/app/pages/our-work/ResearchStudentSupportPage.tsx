@@ -1,25 +1,35 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Quote, Calendar, GraduationCap, ChevronDown, ChevronUp, Image as ImageIcon, BookOpen, Target, FileText, Eye, ArrowRight, X } from 'lucide-react';
+import { Quote, Calendar, GraduationCap, ChevronDown, ChevronUp, Image as ImageIcon, BookOpen, Target, FileText, Eye } from 'lucide-react';
 import { useContent, InternshipTestimonial, FinancialStatement, Project } from '@/app/context/ContentContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { Pagination } from '@/app/components/Pagination';
 import { PageSkeletonLoader } from '@/app/components/PageSkeletonLoader';
+import { ProjectList } from '@/app/components/ProjectList';
 import { RichTextContent } from '@/app/components/RichTextContent';
 import { GalleryModal } from '@/app/components/GalleryModal';
+import { useServerPagination } from '@/hooks/useServerPagination';
+import { getProjectsPaginated } from '@/services/optimizedSupabaseService';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/card';
 import { FinancialStatementModal } from '@/app/components/FinancialStatementModal';
 import { PDFViewerModal } from '@/app/components/PDFViewerModal';
 
-const ITEMS_PER_PAGE = 3;
 const FINANCIAL_ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 5;
 
 export const ResearchStudentSupportPage: React.FC = () => {
-  const { content, loadingStates, fetchInternshipTestimonials, fetchFinancialStatements, fetchStudentSupportProjects } = useContent();
+  const { content, loadingStates, fetchInternshipTestimonials, fetchFinancialStatements } = useContent();
   const [pageLoading, setPageLoading] = useState(true);
+
+  // Use server-side pagination for thesis projects
+  const thesisPagination = useServerPagination<Project>({
+    fetchFunction: (page, itemsPerPage) => 
+      getProjectsPaginated('thesis_support', page, itemsPerPage),
+    itemsPerPage: 6,
+  });
 
   // State for pagination per year: { [year]: currentPage }
   const [yearPages, setYearPages] = useState<{ [key: string]: number }>({});
@@ -40,27 +50,10 @@ export const ResearchStudentSupportPage: React.FC = () => {
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
   const [pdfToView, setPdfToView] = useState<{ url: string; title: string; year: string } | null>(null);
 
-  // Thesis Project modal state
-  const [selectedThesisProject, setSelectedThesisProject] = useState<Project | null>(null);
-  const [isThesisModalOpen, setIsThesisModalOpen] = useState(false);
-  const [isThesisGalleryOpen, setIsThesisGalleryOpen] = useState(false);
-  const [thesisGalleryIndex, setThesisGalleryIndex] = useState(0);
-  const [activeThesisGalleryImages, setActiveThesisGalleryImages] = useState<string[]>([]);
-
-  const handleThesisProjectClick = (project: Project) => {
-    setSelectedThesisProject(project);
-    setIsThesisModalOpen(true);
-  };
-
-  const closeThesisModal = () => {
-    setSelectedThesisProject(null);
-    setIsThesisModalOpen(false);
-  };
-
-  const totalFinancialPages = Math.ceil(content.financialStatements.length / FINANCIAL_ITEMS_PER_PAGE);
+  const totalFinancialPages = Math.ceil(content.financialStatements.length / 4);
   const currentFinancialStatements = useMemo(() => {
-    const start = (financialPage - 1) * FINANCIAL_ITEMS_PER_PAGE;
-    return content.financialStatements.slice(start, start + FINANCIAL_ITEMS_PER_PAGE);
+    const start = (financialPage - 1) * 4;
+    return content.financialStatements.slice(start, start + 4);
   }, [content.financialStatements, financialPage]);
 
   const handleFinancialPageChange = (page: number) => {
@@ -95,7 +88,6 @@ export const ResearchStudentSupportPage: React.FC = () => {
         await Promise.all([
           fetchInternshipTestimonials(),
           fetchFinancialStatements(),
-          fetchStudentSupportProjects(),
         ]);
       } catch (error) {
         console.error('[ResearchStudentSupportPage] Error fetching data:', error);
@@ -142,12 +134,13 @@ export const ResearchStudentSupportPage: React.FC = () => {
     setYearPages(prev => ({ ...prev, [year]: page }));
   };
 
-  const handleImageClick = (testimonial: InternshipTestimonial, imageUrl?: string, isFromGallery: boolean = false) => {
+  const handleImageClick = (testimonial: InternshipTestimonial, imageUrl?: string) => {
     setSelectedTestimonial(testimonial);
     
     const clickedImage = imageUrl || (testimonial.images && testimonial.images[0]) || '';
     
-    if (isFromGallery && testimonial.images && testimonial.images.length > 0) {
+    // Always show the full gallery of images for the testimonial
+    if (testimonial.images && testimonial.images.length > 0) {
       setActiveGalleryImages(testimonial.images);
       const idx = testimonial.images.indexOf(clickedImage);
       setGalleryIndex(idx !== -1 ? idx : 0);
@@ -290,11 +283,11 @@ export const ResearchStudentSupportPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
               viewport={{ once: true }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1887FC] to-blue-600 shadow-lg shadow-blue-500/30 mb-4"
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1887FC] to-blue-600 shadow-lg shadow-blue-200 mb-6"
             >
               <BookOpen className="w-8 h-8 text-white" />
             </motion.div>
@@ -305,7 +298,7 @@ export const ResearchStudentSupportPage: React.FC = () => {
               viewport={{ once: true }}
               className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
             >
-              Thesis Support Projects
+              Thesis Support
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -314,80 +307,15 @@ export const ResearchStudentSupportPage: React.FC = () => {
               viewport={{ once: true }}
               className="text-lg text-gray-600 max-w-2xl mx-auto"
             >
-              Explore the research projects we are supporting through our thesis funding program
+              Discover the academic research and innovative studies conducted by students with our technical and financial guidance.
             </motion.p>
           </div>
 
-          {content.studentSupportProjects.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#1887FC]/10 to-blue-100 mb-4">
-                <BookOpen className="w-8 h-8 text-[#1887FC]" strokeWidth={2} />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Projects Yet</h3>
-              <p className="text-gray-600 text-sm max-w-md mx-auto">
-                Thesis support projects will be displayed here once they are added.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {content.studentSupportProjects.map((project) => {
-                return (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    viewport={{ once: true }}
-                    className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100/50 cursor-pointer group"
-                  onClick={() => handleThesisProjectClick(project)}
-                >
-                  <div className="flex flex-col md:flex-row gap-4 p-6">
-                    {/* Image */}
-                    <div className="md:w-64 flex-shrink-0">
-                      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl w-full aspect-video md:aspect-square">
-                        <ImageWithFallback
-                          src={project.imageUrl || "/images/logos/placeholder.png"}
-                          alt={project.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                      </div>
-                    </div>
-
-                      {/* Content */}
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-[#1887FC] transition-colors leading-tight">
-                              {project.title}
-                            </h3>
-                            <ArrowRight className="w-6 h-6 text-[#1887FC] opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                          </div>
-                          {project.description && (
-                            <div className="text-gray-600 mt-3 line-clamp-3 whitespace-pre-line text-sm sm:text-base">
-                              <RichTextContent text={project.description} />
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center justify-between mt-4">
-                          {project.date && (
-                            <div className="flex items-center gap-2 text-sm text-[#1887FC]">
-                              <Calendar className="w-4 h-4" />
-                              <span className="font-medium">{new Date(project.date).getFullYear()}</span>
-                            </div>
-                          )}
-                          <span className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-xl font-semibold shadow-lg group-hover:shadow-xl transition-all duration-200">
-                            Read Full Article
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
+          <ProjectList 
+            projects={thesisPagination.data}
+            pagination={thesisPagination}
+            variant="simple"
+          />
         </div>
       </div>
 
@@ -593,10 +521,10 @@ export const ResearchStudentSupportPage: React.FC = () => {
                           >
                             {/* Quote */}
                             <div className="flex items-start gap-3 sm:gap-4 mb-4">
-                              <Quote className="w-5 h-5 sm:w-6 sm:h-6 text-[#1887FC] flex-shrink-0 mt-1" />
-                              <p className="text-base sm:text-lg md:text-xl font-medium text-gray-900 italic">
-                                {testimonial.quote}
-                              </p>
+                              <Quote className="w-6 h-6 sm:w-8 sm:h-8 text-[#1887FC] flex-shrink-0 mt-1" />
+                              <div className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 italic leading-relaxed">
+                                <RichTextContent text={testimonial.quote} />
+                              </div>
                             </div>
 
                             {/* Author Info */}
@@ -634,7 +562,7 @@ export const ResearchStudentSupportPage: React.FC = () => {
                                   {testimonial.images.map((image, imgIndex) => (
                                     <button
                                       key={imgIndex}
-                                      onClick={() => handleImageClick(testimonial, image, true)}
+                                      onClick={() => handleImageClick(testimonial, image)}
                                       className="relative group overflow-hidden rounded-lg border border-blue-200 hover:border-[#1887FC] transition-all aspect-square"
                                     >
                                       <ImageWithFallback
@@ -660,7 +588,7 @@ export const ResearchStudentSupportPage: React.FC = () => {
                             currentPage={currentPage}
                             totalPages={totalPages}
                             onPageChange={(page) => handleYearPageChange(year, page)}
-                            itemsPerPage={ITEMS_PER_PAGE}
+                            itemsPerPage={5}
                             totalItems={yearTestimonials.length}
                           />
                         )}
@@ -704,218 +632,6 @@ export const ResearchStudentSupportPage: React.FC = () => {
         title={pdfToView?.title || ''}
         year={pdfToView?.year}
       />
-
-      {/* Thesis Project Detail Modal */}
-      <Dialog open={isThesisModalOpen} onOpenChange={closeThesisModal}>
-        <DialogContent className="w-[95%] sm:w-[90%] md:max-w-4xl max-h-[90vh] overflow-hidden bg-white border-none shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] rounded-3xl p-0">
-          <DialogHeader className="sr-only">
-            <DialogTitle>{selectedThesisProject?.title || 'Thesis Project'}</DialogTitle>
-            <DialogDescription>Thesis project details</DialogDescription>
-          </DialogHeader>
-          {selectedThesisProject && (
-            <div className="overflow-y-auto scrollbar-hide max-h-[90vh]">
-              {/* Hero Section */}
-              <div className="relative h-64 sm:h-96 overflow-hidden">
-                <ImageWithFallback
-                  src={selectedThesisProject.imageUrl || "/images/logos/placeholder.png"}
-                  alt={selectedThesisProject.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                {/* Clickable cover image area */}
-                <div 
-                  className="absolute inset-0 cursor-pointer" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const cover = selectedThesisProject.imageUrl || "/images/logos/placeholder.png";
-                    setActiveThesisGalleryImages([cover]);
-                    setThesisGalleryIndex(0);
-                    setIsThesisGalleryOpen(true);
-                  }}
-                />
-                <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 pointer-events-none">
-                  <div className="max-w-3xl">
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-3 mb-4"
-                    >
-                      <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/30 text-white text-xs font-bold uppercase tracking-wider">
-                        Thesis Support Project
-                      </div>
-                      {selectedThesisProject.date && (
-                        <div className="px-4 py-1.5 bg-[#1887FC]/80 backdrop-blur-md rounded-full text-white text-xs font-bold">
-                          FY {new Date(selectedThesisProject.date).getFullYear()}
-                        </div>
-                      )}
-                    </motion.div>
-                    <motion.h2 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="text-2xl sm:text-4xl font-bold text-white leading-tight" 
-                      style={{ textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}
-                    >
-                      {selectedThesisProject.title}
-                    </motion.h2>
-                  </div>
-                </div>
-                
-                {/* Close button for mobile inside hero */}
-                <button
-                  onClick={closeThesisModal}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors sm:hidden"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Content Grid */}
-              <div className="p-6 sm:p-10">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                  {/* Main Content */}
-                  <div className="lg:col-span-2 space-y-8">
-                    {/* Project Overview */}
-                    {selectedThesisProject.description && (
-                      <section>
-                        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-[#1887FC]/10 flex items-center justify-center">
-                            <BookOpen className="w-4 h-4 text-[#1887FC]" />
-                          </div>
-                          Project Overview
-                        </h3>
-                        <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 text-gray-700 leading-relaxed text-justify">
-                          <RichTextContent text={selectedThesisProject.description} />
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Context */}
-                    {selectedThesisProject.context && (
-                      <section>
-                        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-blue-100/50 flex items-center justify-center">
-                            <Target className="w-4 h-4 text-blue-600" />
-                          </div>
-                          Research Context
-                        </h3>
-                        <div className="text-gray-700 leading-relaxed text-justify">
-                          <RichTextContent text={selectedThesisProject.context} />
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Gallery Section */}
-                    {selectedThesisProject.images && selectedThesisProject.images.length > 0 && (
-                      <section>
-                        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-purple-100/50 flex items-center justify-center">
-                            <ImageIcon className="w-4 h-4 text-purple-600" />
-                          </div>
-                          Project Gallery
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {selectedThesisProject.images.map((img, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                setActiveThesisGalleryImages(selectedThesisProject.images || []);
-                                setThesisGalleryIndex(idx);
-                                setIsThesisGalleryOpen(true);
-                              }}
-                              className="relative aspect-square rounded-xl overflow-hidden group"
-                            >
-                              <ImageWithFallback
-                                src={img}
-                                alt={`Gallery ${idx + 1}`}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                            </button>
-                          ))}
-                        </div>
-                      </section>
-                    )}
-                  </div>
-
-                  {/* Sidebar Info */}
-                  <div className="space-y-6">
-                    {/* Objectives */}
-                    {selectedThesisProject.objectives && (
-                      <div className="bg-[#1887FC]/5 rounded-2xl p-6 border border-[#1887FC]/10">
-                        <h4 className="text-sm font-bold text-[#1887FC] uppercase tracking-wider mb-4">Objectives</h4>
-                        <div className="text-sm text-gray-700 leading-relaxed">
-                          <RichTextContent text={selectedThesisProject.objectives} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Methodology */}
-                    {selectedThesisProject.methodology && (
-                      <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100">
-                        <h4 className="text-sm font-bold text-amber-700 uppercase tracking-wider mb-4">Methodology</h4>
-                        <div className="text-sm text-gray-700 leading-relaxed">
-                          <RichTextContent text={selectedThesisProject.methodology} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Quick Info */}
-                    <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                      <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Quick Information</h4>
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                            <Calendar className="w-4 h-4 text-gray-500" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-gray-500 uppercase font-bold">Project Year</p>
-                            <p className="text-sm font-bold text-gray-900">
-                              {selectedThesisProject.date ? new Date(selectedThesisProject.date).getFullYear() : 'N/A'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                            <GraduationCap className="w-4 h-4 text-gray-500" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-gray-500 uppercase font-bold">Category</p>
-                            <p className="text-sm font-bold text-gray-900">Thesis Support</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={closeThesisModal}
-                      className="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-colors shadow-lg"
-                    >
-                      Close Article
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Gallery Modal for Thesis Projects */}
-      {selectedThesisProject && (
-        <GalleryModal
-          images={activeThesisGalleryImages.length > 0 
-            ? activeThesisGalleryImages 
-            : (selectedThesisProject.imageUrl ? [selectedThesisProject.imageUrl] : [])}
-          isOpen={isThesisGalleryOpen}
-          onClose={() => {
-            setIsThesisGalleryOpen(false);
-            setActiveThesisGalleryImages([]);
-          }}
-          title={selectedThesisProject.title}
-          initialIndex={thesisGalleryIndex}
-        />
-      )}
     </div>
   );
 };

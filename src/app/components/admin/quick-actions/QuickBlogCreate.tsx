@@ -176,7 +176,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
             </div>
           </div>
           <div className="pt-2">
-            <SharedToolbar onCommand={handleCommand} />
+            <SharedToolbar onCommand={handleCommand} showImageUpload={true} />
           </div>
         </DialogHeader>
 
@@ -248,6 +248,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
                   setActiveField('blog-content');
                 }
               }}
+              showImageUpload={true}
             />
 
             <div>

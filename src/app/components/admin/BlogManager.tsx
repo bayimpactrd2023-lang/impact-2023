@@ -507,6 +507,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
               <SharedToolbar 
                 onCommand={handleCommand} 
                 onImageUpload={handleImageUpload}
+                showImageUpload={true}
               />
             </div>
           </DialogHeader>
@@ -550,6 +551,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                       }
                     }}
                     onImageUpload={handleImageUpload}
+                    showImageUpload={true}
                   />
                   <div className="flex justify-end mt-1 px-1">
                     <span className={cn(

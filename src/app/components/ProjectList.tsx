@@ -17,9 +17,10 @@ import { RichTextContent } from "./RichTextContent";
 
 interface ProjectListProps {
   projects: Project[];
-  title: string;
+  title?: string;
   subtitle?: string;
   pagination?: ServerPaginationResult<Project>; // Optional pagination prop
+  variant?: 'full' | 'simple'; // Add variant prop
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -38,6 +39,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   title,
   subtitle,
   pagination,
+  variant = 'full',
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(
     null,
@@ -131,117 +133,121 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className={variant === 'full' ? "min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50" : ""}>
       {/* Scroll anchor point */}
-      <div ref={scrollRef} className="absolute top-0 left-0" />
+      {variant === 'full' && <div ref={scrollRef} className="absolute top-0 left-0" />}
       
-      <PageHeaderTheme
-        theme="transparent"
-        scrollThreshold={700}
-      />
+      {variant === 'full' && (
+        <PageHeaderTheme
+          theme="transparent"
+          scrollThreshold={700}
+        />
+      )}
 
       {/* Hero Section - Match Home Page Style */}
-      <SectionTheme theme="transparent">
-        <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
-          {/* High-Quality Background Image with Overlay */}
-          <div className="absolute inset-0">
-            {/* Agricultural Research Image */}
-            <ImageWithFallback
-              src="https://images.unsplash.com/photo-1656488497988-ca149c86dade?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=2000"
-              alt="Agricultural Research"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+      {variant === 'full' && title && (
+        <SectionTheme theme="transparent">
+          <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
+            {/* High-Quality Background Image with Overlay */}
+            <div className="absolute inset-0">
+              {/* Agricultural Research Image */}
+              <ImageWithFallback
+                src="https://images.unsplash.com/photo-1656488497988-ca149c86dade?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=2000"
+                alt="Agricultural Research"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
 
-            {/* Modern Gradient Overlay - Instagram-style */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
+              {/* Modern Gradient Overlay - Instagram-style */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
 
-            {/* Animated Gradient Accent */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(circle at 30% 50%, rgba(24,135,252,0.3) 0%, transparent 50%),
-                  radial-gradient(circle at 70% 50%, rgba(59,130,246,0.2) 0%, transparent 50%)
-                `,
-                animation:
-                  "gradientShift 10s ease-in-out infinite alternate",
-              }}
-            />
-
-            {/* Floating Particles */}
-            {[...Array(10)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 bg-white/20 rounded-full"
+              {/* Animated Gradient Accent */}
+              <div
+                className="absolute inset-0"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  bottom: 0,
-                }}
-                animate={{
-                  y: [0, -500],
-                  x: [0, (Math.random() - 0.5) * 150],
-                  opacity: [0, 1, 1, 0],
-                }}
-                transition={{
-                  duration: 12 + Math.random() * 8,
-                  repeat: Infinity,
-                  delay: Math.random() * 5,
-                  ease: "linear",
+                  background: `
+                    radial-gradient(circle at 30% 50%, rgba(24,135,252,0.3) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 50%, rgba(59,130,246,0.2) 0%, transparent 50%)
+                  `,
+                  animation:
+                    "gradientShift 10s ease-in-out infinite alternate",
                 }}
               />
-            ))}
 
-            {/* Futuristic Grid Overlay */}
-            <div
-              className="absolute inset-0 opacity-5"
-              style={{
-                backgroundImage: `
-                  linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-                `,
-                backgroundSize: "50px 50px",
-              }}
-            />
-          </div>
+              {/* Floating Particles */}
+              {[...Array(10)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-2 h-2 bg-white/20 rounded-full"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    bottom: 0,
+                  }}
+                  animate={{
+                    y: [0, -500],
+                    x: [0, (Math.random() - 0.5) * 150],
+                    opacity: [0, 1, 1, 0],
+                  }}
+                  transition={{
+                    duration: 12 + Math.random() * 8,
+                    repeat: Infinity,
+                    delay: Math.random() * 5,
+                    ease: "linear",
+                  }}
+                />
+              ))}
 
-          {/* Content */}
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                delay: 0.2,
-                duration: 0.8,
-                ease: "easeOut",
-              }}
-              className="text-3xl sm:text-5xl font-bold text-white mb-2"
-              style={{
-                textShadow:
-                  "0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)",
-              }}
-            >
-              {title}
-            </motion.h1>
-            {subtitle && (
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.8 }}
-                className="text-base sm:text-xl text-white/90 max-w-3xl mx-auto"
+              {/* Futuristic Grid Overlay */}
+              <div
+                className="absolute inset-0 opacity-5"
                 style={{
-                  textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                  backgroundImage: `
+                    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+                  `,
+                  backgroundSize: "50px 50px",
+                }}
+              />
+            </div>
+
+            {/* Content */}
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: 0.2,
+                  duration: 0.8,
+                  ease: "easeOut",
+                }}
+                className="text-3xl sm:text-5xl font-bold text-white mb-2"
+                style={{
+                  textShadow:
+                    "0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)",
                 }}
               >
-                {subtitle}
-              </motion.p>
-            )}
-          </div>
-        </section>
-      </SectionTheme>
+                {title}
+              </motion.h1>
+              {subtitle && (
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.8 }}
+                  className="text-base sm:text-xl text-white/90 max-w-3xl mx-auto"
+                  style={{
+                    textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  {subtitle}
+                </motion.p>
+              )}
+            </div>
+          </section>
+        </SectionTheme>
+      )}
 
       {/* Content Section */}
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={variant === 'full' ? "py-12" : "py-0"}>
+        <div className={variant === 'full' ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" : ""}>
           {/* Keyed container for React re-mounting */}
           <div key={pagination?.currentPage || currentPage}>
             <div className="space-y-6">

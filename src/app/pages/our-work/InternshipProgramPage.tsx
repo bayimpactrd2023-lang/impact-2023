@@ -83,12 +83,13 @@ export const InternshipProgramPage: React.FC = () => {
     setYearPages(prev => ({ ...prev, [year]: page }));
   };
 
-  const handleImageClick = (testimonial: InternshipTestimonial, imageUrl?: string, isFromGallery: boolean = false) => {
+  const handleImageClick = (testimonial: InternshipTestimonial, imageUrl?: string) => {
     setSelectedTestimonial(testimonial);
     
     const clickedImage = imageUrl || (testimonial.images && testimonial.images[0]) || '';
     
-    if (isFromGallery && testimonial.images && testimonial.images.length > 0) {
+    // Always show the full gallery of images for the testimonial
+    if (testimonial.images && testimonial.images.length > 0) {
       setActiveGalleryImages(testimonial.images);
       const idx = testimonial.images.indexOf(clickedImage);
       setGalleryIndex(idx !== -1 ? idx : 0);
@@ -336,7 +337,7 @@ export const InternshipProgramPage: React.FC = () => {
                                   {testimonial.images.map((image, imgIndex) => (
                                     <button
                                       key={imgIndex}
-                                      onClick={() => handleImageClick(testimonial, image, true)}
+                                      onClick={() => handleImageClick(testimonial, image)}
                                       className="relative group overflow-hidden rounded-lg border-2 border-blue-200 hover:border-[#1887FC] transition-all aspect-square"
                                     >
                                       <ImageWithFallback

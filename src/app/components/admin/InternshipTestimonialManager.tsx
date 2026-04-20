@@ -9,6 +9,7 @@ import { Card } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Plus, Trash2, Edit, CheckCircle, X, MessageSquare, User, Quote } from 'lucide-react';
 import { MultiImageDropzone } from '@/app/components/MultiImageDropzone';
+import { RichTextContent } from '@/app/components/RichTextContent';
 import { toast } from 'sonner';
 import { useDeleteConfirmation } from '@/features/admin/hooks/useDeleteConfirmation';
 import { useServerPagination } from '@/hooks/useServerPagination';
@@ -336,9 +337,9 @@ export const InternshipTestimonialManager: React.FC<InternshipTestimonialManager
                       {testimonial.institution || 'No institution'}
                     </p>
                     <div className="relative pt-2">
-                      <p className="text-xs text-gray-500 line-clamp-3 italic leading-relaxed">
-                        "{testimonial.quote}"
-                      </p>
+                      <div className="text-xs text-gray-500 line-clamp-3 italic leading-relaxed">
+                        <RichTextContent text={testimonial.quote} />
+                      </div>
                     </div>
                   </div>
 

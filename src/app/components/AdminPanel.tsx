@@ -152,14 +152,13 @@ export const AdminPanel: React.FC = () => {
       toast.error('Please click on the content area first to insert an image');
       return;
     }
-    try {
-      const url = await uploadImage(file, 'blog');
-      handleQuickBlogCommand('insertImage', url);
-      toast.success('Image uploaded and inserted!');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
-    }
+    
+    // Instead of immediate upload, send the file to the editor for local preview (base64)
+    // This matches the logic in BlogManager.tsx and avoids immediate R2 401 errors
+    const event = new CustomEvent(`editor-command-${quickBlogActiveField}`, { 
+      detail: { command: 'handleImageFile', value: file } 
+    });
+    window.dispatchEvent(event);
   };
 
   // ── Quick Create Publication modal ────────────────────────────────────────
@@ -443,6 +442,31 @@ export const AdminPanel: React.FC = () => {
     
     setIsSavingQuickBlog(true);
     try {
+      // Process content images (upload base64 to cloud)
+      const processContentImages = async (content: string): Promise<string> => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(content, 'text/html');
+        const images = doc.querySelectorAll('img');
+        
+        for (const img of Array.from(images)) {
+          const src = img.getAttribute('src');
+          if (src && src.startsWith('data:image/')) {
+            try {
+              const res = await fetch(src);
+              const blob = await res.blob();
+              const file = new File([blob], `blog-content-${Date.now()}.png`, { type: 'image/png' });
+              const url = await uploadImage(file, 'blog');
+              img.setAttribute('src', url);
+            } catch (error) {
+              console.error('Error uploading inline image:', error);
+            }
+          }
+        }
+        return doc.body.innerHTML;
+      };
+
+      const finalContent = await processContentImages(draft.content);
+
       // Handle Image Uploads before saving to database
       let finalImageUrl = draft.imageUrl;
       if (typeof finalImageUrl === 'object' && (finalImageUrl as any) instanceof File) {
@@ -465,7 +489,7 @@ export const AdminPanel: React.FC = () => {
       // Save to database
       const blogData = {
         title: draft.title,
-        content: draft.content,
+        content: finalContent,
         author: draft.author,
         author_role: draft.authorRole,
         date: draft.date,
@@ -1822,6 +1846,7 @@ export const AdminPanel: React.FC = () => {
               <SharedToolbar 
                 onCommand={handleQuickBlogCommand} 
                 onImageUpload={handleQuickBlogImageUpload}
+                showImageUpload={true}
               />
             </div>
           </DialogHeader>
@@ -1867,6 +1892,7 @@ export const AdminPanel: React.FC = () => {
                   }
                 }}
                 onImageUpload={handleQuickBlogImageUpload}
+                showImageUpload={true}
               />
 
               {/* Author + Role */}

@@ -61,14 +61,14 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
             <DialogDescription className="sr-only">Viewing images from {title}</DialogDescription>
 
             {/* Carousel Container */}
-            <div className="overflow-hidden w-full flex items-center justify-center py-10" ref={emblaRef}>
-              <div className="flex w-full items-center">
+            <div className="overflow-hidden w-full h-full flex items-center justify-center" ref={emblaRef}>
+              <div className="flex w-full h-full items-center">
                 {images.map((img, idx) => (
-                  <div key={idx} className="flex-[0_0_100%] min-w-0 flex items-center justify-center p-8">
+                  <div key={idx} className="flex-[0_0_100%] min-w-0 h-full flex items-center justify-center p-4">
                     <img
                       src={img}
                       alt={`${title} - Image ${idx + 1}`}
-                      className="max-w-[80vw] sm:max-w-[65vw] h-auto max-h-[55vh] object-contain shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] rounded-md transition-all duration-300"
+                      className="max-w-[95vw] sm:max-w-[90vw] h-auto max-h-[85vh] object-contain shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] rounded-md transition-all duration-300"
                     />
                   </div>
                 ))}

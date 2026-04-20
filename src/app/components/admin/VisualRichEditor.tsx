@@ -14,6 +14,7 @@ interface VisualRichEditorProps {
   showToolbar?: boolean;
   onCommand?: (command: string, value?: string) => void;
   onImageUpload?: (file: File) => void;
+  showImageUpload?: boolean;
 }
 
 export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
@@ -26,7 +27,8 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
   required = false,
   showToolbar = true,
   onCommand,
-  onImageUpload
+  onImageUpload,
+  showImageUpload = false
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -492,6 +494,7 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
           <SharedToolbar 
             onCommand={execCommand} 
             onImageUpload={onImageUpload}
+            showImageUpload={showImageUpload}
           />
         )}
       </div>

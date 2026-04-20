@@ -28,12 +28,14 @@ interface SharedToolbarProps {
   onCommand: (command: string, value?: string) => void;
   className?: string;
   onImageUpload?: (file: File) => void;
+  showImageUpload?: boolean;
 }
 
 export const SharedToolbar: React.FC<SharedToolbarProps> = ({ 
   onCommand, 
   className,
-  onImageUpload
+  onImageUpload,
+  showImageUpload = false
 }) => {
   const isRoman = () => {
     const selection = window.getSelection();
@@ -291,48 +293,50 @@ export const SharedToolbar: React.FC<SharedToolbarProps> = ({
         <div className="w-[1px] h-4 bg-gray-300 mx-0.5 hidden sm:block" />
 
           {/* Image Management Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onMouseDown={(e) => e.preventDefault()}
-                className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0"
-              >
-                <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
-                <span className="text-[11px] sm:text-xs">Image</span>
-                <ChevronDown className="w-3 h-3 ml-1 sm:ml-1.5 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="rounded-xl border-gray-200 shadow-lg min-w-[150px]">
-              <DropdownMenuItem 
-                onClick={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'image/*';
-                  input.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file && onImageUpload) {
-                      onImageUpload(file);
-                    }
-                  };
-                  input.click();
-                }}
-                className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
-              >
-                <Plus className="w-4 h-4 text-blue-500" />
-                <span>Add Image</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onCommand('deleteSelectedImage')}
-                className="flex items-center gap-2 cursor-pointer focus:bg-red-50 py-2 text-red-600"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Delete Selected</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {showImageUpload && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="h-8 px-2 sm:px-3 text-gray-600 hover:text-[#1887FC] hover:bg-blue-50 rounded-lg transition-all duration-200 flex-1 sm:flex-none shrink-0"
+                >
+                  <ImageIcon className="w-4 h-4 mr-1 sm:mr-1.5" />
+                  <span className="text-[11px] sm:text-xs">Image</span>
+                  <ChevronDown className="w-3 h-3 ml-1 sm:ml-1.5 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="rounded-xl border-gray-200 shadow-lg min-w-[150px]">
+                <DropdownMenuItem 
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file && onImageUpload) {
+                        onImageUpload(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                  className="flex items-center gap-2 cursor-pointer focus:bg-blue-50 py-2"
+                >
+                  <Plus className="w-4 h-4 text-blue-500" />
+                  <span>Add Image</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onCommand('deleteSelectedImage')}
+                  className="flex items-center gap-2 cursor-pointer focus:bg-red-50 py-2 text-red-600"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete Selected</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
         <div className="sm:hidden w-full h-[1px] bg-gray-200 my-0.5" />
 
