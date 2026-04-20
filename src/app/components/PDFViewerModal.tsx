@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,49 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   const [pageWidth, setPageWidth] = useState<number>(0);
   const [basePageWidth, setBasePageWidth] = useState<number>(0);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+
+  // Dragging logic
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only drag if zoomed in or if we want to allow dragging always
+    // If you want to only allow dragging when scrollbars are present:
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const hasScrollableContent = container.scrollHeight > container.clientHeight || container.scrollWidth > container.clientWidth;
+    if (!hasScrollableContent) return;
+
+    setIsDragging(true);
+    setStartX(e.pageX - container.offsetLeft);
+    setStartY(e.pageY - container.offsetTop);
+    setScrollLeft(container.scrollLeft);
+    setScrollTop(container.scrollTop);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !containerRef.current) return;
+    e.preventDefault();
+    const container = containerRef.current;
+    const x = e.pageX - container.offsetLeft;
+    const y = e.pageY - container.offsetTop;
+    const walkX = (x - startX) * 1.5; // Scroll speed multiplier
+    const walkY = (y - startY) * 1.5;
+    container.scrollLeft = scrollLeft - walkX;
+    container.scrollTop = scrollTop - walkY;
+  };
 
   // Zoom controls
   const handleZoomIn = () => {
@@ -229,14 +272,19 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
         {/* PDF Viewer Container - Scrollable with Full Pages */}
         <div 
-          className="absolute inset-0 overflow-auto bg-gradient-to-b from-gray-800 to-gray-900"
+          ref={containerRef}
+          className={`absolute inset-0 overflow-auto bg-gradient-to-b from-gray-800 to-gray-900 ${isDragging ? 'cursor-grabbing select-none' : (zoomLevel > 1 ? 'cursor-grab' : 'cursor-default')}`}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
           onContextMenu={handleContextMenu}
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: '#4B5563 #1F2937'
           }}
         >
-          <div className="flex flex-col items-center justify-start py-6 md:py-8 w-full min-h-full">
+          <div className={`flex flex-col items-center justify-start py-6 md:py-8 ${pageWidth > containerRef.current?.clientWidth ? 'w-fit' : 'w-full'} min-h-full`}>
             {pageWidth > 0 && (
               <Document
                 file={displayUrl}
