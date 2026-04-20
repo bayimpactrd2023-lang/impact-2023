@@ -133,18 +133,18 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <motion.div 
-            className="flex items-center gap-3 cursor-pointer relative -mx-30" 
+            className="flex items-center gap-3 cursor-pointer relative" 
             onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
             {/* Gradient glow behind logo */}
             <div className="absolute inset-0 bg-gradient-to-r from-[#1887FC]/10 to-[#3b82f6]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            <img src="/images/logos/impact.png" alt="IMPACT R&D Logo" className="h-20 md:h-24 w-auto drop-shadow-lg relative z-10" />
+            <img src="/images/logos/impact.png" alt="IMPACT R&D Logo" className="h-16 sm:h-20 md:h-24 w-auto drop-shadow-lg relative z-10 transition-all" />
           </motion.div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1 ml-auto -mr-40">
+          <nav className="hidden lg:flex items-center space-x-1">
             {navItems.map((item) => {
               if (item.key === 'blog') {
                 return (
@@ -252,7 +252,7 @@ export const Header: React.FC = () => {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`md:hidden p-2 rounded-md transition-colors ${
+            className={`lg:hidden p-2 rounded-md transition-colors ${
               theme === 'dark' ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-900'
             }`}
           >
@@ -268,9 +268,9 @@ export const Header: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className="md:hidden backdrop-blur-xl border-t max-h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide shadow-2xl"
+          className="lg:hidden backdrop-blur-xl border-t max-h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide shadow-2xl"
           style={{ 
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 50%, rgba(255,255,255,0.98) 100%)',
+            background: theme === 'dark' ? 'rgba(38, 38, 38, 0.95)' : 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 50%, rgba(255,255,255,0.98) 100%)',
             borderImage: 'linear-gradient(90deg, rgba(24,135,252,0.1), rgba(59,130,246,0.2), rgba(24,135,252,0.1)) 1',
           }}
         >
@@ -292,7 +292,7 @@ export const Header: React.FC = () => {
                       className={`flex w-full items-center justify-between px-4 py-3 text-base font-semibold rounded-xl transition-all duration-300 ${
                         isActive 
                           ? 'bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white shadow-lg' 
-                          : 'text-gray-700 hover:bg-blue-50/80 hover:text-[#1887FC]'
+                          : theme === 'dark' ? 'text-white/90 hover:bg-white/10' : 'text-gray-700 hover:bg-blue-50/80 hover:text-[#1887FC]'
                       }`}
                     >
                       <span>{item.label}</span>
@@ -317,7 +317,7 @@ export const Header: React.FC = () => {
                               }}
                               className="w-full text-left px-4 py-3 hover:bg-blue-50 group transition-all rounded-xl border-l-2 border-transparent hover:border-[#1887FC]"
                             >
-                              <p className="text-sm font-bold text-gray-800 group-hover:text-[#1887FC] transition-colors line-clamp-1">
+                              <p className={`text-sm font-bold transition-colors line-clamp-1 ${theme === 'dark' ? 'text-white/90 group-hover:text-[#1887FC]' : 'text-gray-800 group-hover:text-[#1887FC]'}`}>
                                 {post.title}
                               </p>
                               {post.date && (
@@ -360,7 +360,7 @@ export const Header: React.FC = () => {
                   className={`block w-full text-left px-4 py-3 text-base font-semibold rounded-xl transition-all duration-300 ${
                     isActive 
                       ? 'bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white shadow-lg' 
-                      : 'text-gray-700 hover:bg-blue-50/80 hover:text-[#1887FC]'
+                      : theme === 'dark' ? 'text-white/90 hover:bg-white/10' : 'text-gray-700 hover:bg-blue-50/80 hover:text-[#1887FC]'
                   }`}
                 >
                   {item.label}
@@ -376,7 +376,7 @@ export const Header: React.FC = () => {
               className={`block w-full text-left px-4 py-3 text-base font-semibold rounded-xl transition-all duration-300 ${
                 location.pathname === '/contact'
                   ? 'bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white shadow-lg' 
-                  : 'text-gray-700 hover:bg-blue-50/80 hover:text-[#1887FC]'
+                  : theme === 'dark' ? 'text-white/90 hover:bg-white/10' : 'text-gray-700 hover:bg-blue-50/80 hover:text-[#1887FC]'
               }`}
             >
               Contact Us

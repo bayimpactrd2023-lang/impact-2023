@@ -101,12 +101,12 @@ export const BlogPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-20"
             >
-              <div className="max-w-6xl mx-auto px-4">
+              <div className="max-w-5xl mx-auto">
                 <div className="text-center mb-16">
                   <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1887FC] text-xs sm:text-sm font-bold mb-8 uppercase tracking-wider">
                     {targetPostId ? 'Reading Article' : 'Latest Insight'}
                   </span>
-                  <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-gray-900 mb-12 leading-[1.1] tracking-tight w-full max-w-5xl mx-auto">
+                  <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-12 leading-[1.1] tracking-tight w-full max-w-4xl mx-auto">
                     {selectedPost.title}
                   </h1>
                   <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 text-gray-500 text-base sm:text-lg border-y border-gray-100 py-10 mb-16">
@@ -132,11 +132,11 @@ export const BlogPage: React.FC = () => {
                 </div>
 
                 <div 
-                  className="relative flex items-center justify-center mb-20 group transition-all duration-500 overflow-hidden cursor-pointer w-full"
+                  className="relative flex items-center justify-center mb-16 group transition-all duration-500 overflow-hidden cursor-pointer w-full"
                   onClick={() => selectedPost.imageUrl && openGallery(selectedPost.imageUrl)}
                 >
                   {selectedPost.imageUrl ? (
-                    <div className="relative w-full overflow-hidden rounded-3xl shadow-2xl">
+                    <div className="relative w-full overflow-hidden rounded-2xl shadow-xl">
                       <ImageWithFallback
                         src={selectedPost.imageUrl}
                         alt={selectedPost.title}
@@ -146,7 +146,7 @@ export const BlogPage: React.FC = () => {
                       <div className="absolute inset-0 ring-1 ring-black/5 pointer-events-none" />
                     </div>
                   ) : (
-                    <div className="w-full aspect-[16/9] sm:aspect-[21/9] bg-[#f8fafc] flex items-center justify-center rounded-[2rem] border border-blue-100/30 overflow-hidden relative min-h-[220px] sm:min-h-[280px]">
+                    <div className="w-full aspect-[16/9] sm:aspect-[21/9] bg-[#f8fafc] flex items-center justify-center rounded-2xl border border-blue-100/30 overflow-hidden relative min-h-[220px] sm:min-h-[280px]">
                       {/* Subtle Pattern Background */}
                       <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
                         style={{ 
@@ -179,7 +179,7 @@ export const BlogPage: React.FC = () => {
                 <div className="prose prose-lg sm:prose-xl max-w-none px-0">
                   <RichTextContent 
                     text={selectedPost.content} 
-                    className="text-gray-800 leading-[1.8] text-lg sm:text-2xl text-justify"
+                    className="text-gray-800 leading-[1.8] text-lg sm:text-xl text-left"
                     onImageClick={openGallery}
                   />
                 </div>

@@ -874,4 +874,13 @@
   /* Removed scaleIn animation - performance optimization */
   
   /* Removed slideInLeft animation - performance optimization */
-   }
+  
+  /* Global fix for blue bold text */
+  [style*="color: rgb(24, 135, 252)"][style*="font-weight: bold"],
+  [style*="color: #1887fc"][style*="font-weight: bold"],
+  [style*="color: #1887FC"][style*="font-weight: bold"],
+  span.text-\[#1887FC\].font-bold,
+  span.text-\[#1887FC\].font-semibold {
+    font-weight: normal !important;
+  }
+}

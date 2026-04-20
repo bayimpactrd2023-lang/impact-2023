@@ -48,12 +48,15 @@ const sanitizeHTML = (html: string): string => {
   // Remove extra ** that might be wrapped in <b> tags
   cleaned = cleaned.replace(/<b>\*\*/g, '<b>').replace(/\*\*<\/b>/g, '</b>');
   
-  // Remove empty paragraphs
-  cleaned = cleaned.replace(/<p>\s*(?:<br\s*\/?>|&nbsp;|\s)*\s*<\/p>/gi, '');
-  cleaned = cleaned.replace(/<p>\s*<\/p>/gi, '');
+  // Keep some empty paragraphs for spacing, but clean up messy ones
+  cleaned = cleaned.replace(/<p>\s*(?:<br\s*\/?>)\s*<\/p>/gi, '<p><br></p>');
   
-  // Replace multiple <br> with single <br> if they are adjacent
-  cleaned = cleaned.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
+  // Clean up excessive &nbsp; in paragraphs
+  cleaned = cleaned.replace(/<p>(&nbsp;|\s)+<\/p>/gi, '<p><br></p>');
+  
+  // Replace multiple <br> with single <br> if they are adjacent to prevent excessive gaps
+  // but allow double <br> for intentional spacing
+  cleaned = cleaned.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
   
   // Replace <font color="..."> with <span style="color:..."> for better compatibility
   cleaned = cleaned.replace(
@@ -120,7 +123,7 @@ const parseHighlights = (text: string): React.ReactNode[] => {
       parts.push(...parseUrls(text.slice(lastIndex, match.index)));
     }
     parts.push(
-      <span key={match.index} className="text-[#1887FC] font-semibold">
+      <span key={match.index} className="text-[#1887FC]">
         {match[1]}
       </span>
     );
@@ -341,22 +344,21 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
         ref={containerRef}
         className={`prose prose-sm sm:prose-base max-w-none ${className} [&_a]:text-[#1887FC] [&_a]:underline [&_a:hover]:text-[#0d6fd8]
           [&_img]:max-sm:hidden [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:my-12 [&_img]:max-w-full [&_img]:w-full sm:[&_img]:w-auto
-          [&_img.float-left]:float-none [&_img.float-left]:mx-auto [&_img.float-left]:mb-10 sm:[&_img.float-left]:float-left sm:[&_img.float-left]:mr-12 sm:[&_img.float-left]:max-w-[45%] sm:[&_img.float-left]:!w-[45%] sm:[&_img.float-left]:clear-left sm:[&_img.float-left]:-mt-2
-          [&_img.float-right]:float-none [&_img.float-right]:mx-auto [&_img.float-right]:mb-10 sm:[&_img.float-right]:float-right sm:[&_img.float-right]:ml-12 sm:[&_img.float-right]:max-w-[45%] sm:[&_img.float-right]:!w-[45%] sm:[&_img.float-right]:clear-right sm:[&_img.float-right]:-mt-2
-          [&_.image-wrapper.float-left]:float-none [&_.image-wrapper.float-left]:mx-auto [&_.image-wrapper.float-left]:mb-10 sm:[&_.image-wrapper.float-left]:float-left sm:[&_.image-wrapper.float-left]:mr-12 sm:[&_.image-wrapper.float-left]:max-w-[45%] sm:[&_.image-wrapper.float-left]:clear-left sm:[&_.image-wrapper.float-left]:-mt-25
-          [&_.image-wrapper.float-right]:float-none [&_.image-wrapper.float-right]:mx-auto [&_.image-wrapper.float-right]:mb-10 sm:[&_.image-wrapper.float-right]:float-right sm:[&_.image-wrapper.float-right]:ml-12 sm:[&_.image-wrapper.float-right]:max-w-[45%] sm:[&_.image-wrapper.float-right]:clear-right sm:[&_.image-wrapper.float-right]:-mt-2
-          [&_p]:mb-10 last:[&_p]:mb-0 [&_p]:text-gray-700 [&_p]:leading-[1.9] [&_p]:whitespace-pre-wrap [&_p]:break-words [&_p]:display-flow-root [&_p]:mt-0
+          [&_img.float-left]:float-none [&_img.float-left]:mx-auto [&_img.float-left]:mb-10 sm:[&_img.float-left]:float-left sm:[&_img.float-left]:mr-8 sm:[&_img.float-left]:mb-6 sm:[&_img.float-left]:max-w-[45%] sm:[&_img.float-left]:!w-[45%] sm:[&_img.float-left]:clear-left sm:[&_img.float-left]:-mt-2
+          [&_img.float-right]:float-none [&_img.float-right]:mx-auto [&_img.float-right]:mb-10 sm:[&_img.float-right]:float-right sm:[&_img.float-right]:ml-8 sm:[&_img.float-right]:mb-6 sm:[&_img.float-right]:max-w-[45%] sm:[&_img.float-right]:!w-[45%] sm:[&_img.float-right]:clear-right sm:[&_img.float-right]:-mt-2
+          [&_.image-wrapper.float-left]:float-none [&_.image-wrapper.float-left]:mx-auto [&_.image-wrapper.float-left]:mb-10 sm:[&_.image-wrapper.float-left]:float-left sm:[&_.image-wrapper.float-left]:mr-8 sm:[&_.image-wrapper.float-left]:mb-6 sm:[&_.image-wrapper.float-left]:max-w-[45%] sm:[&_.image-wrapper.float-left]:clear-left sm:[&_.image-wrapper.float-left]:-mt-30
+          [&_.image-wrapper.float-right]:float-none [&_.image-wrapper.float-right]:mx-auto [&_.image-wrapper.float-right]:mb-10 sm:[&_.image-wrapper.float-right]:float-right sm:[&_.image-wrapper.float-right]:ml-8 sm:[&_.image-wrapper.float-right]:mb-6 sm:[&_.image-wrapper.float-right]:max-w-[45%] sm:[&_.image-wrapper.float-right]:clear-right sm:[&_.image-wrapper.float-right]:-mt-2
+          [&_p]:mb-8 last:[&_p]:mb-0 [&_p]:text-gray-700 [&_p]:leading-[1.9] [&_p]:whitespace-pre-wrap [&_p]:break-words [&_p]:display-flow-root [&_p]:mt-0
           [&_p:has(~_img.float-left)]:sm:w-[52%] [&_p:has(~_img.float-left)]:sm:float-right [&_p:has(~_img.float-left)]:sm:min-w-[50%]
           [&_p:has(~_img.float-right)]:sm:w-[52%] [&_p:has(~_img.float-right)]:sm:float-left [&_p:has(~_img.float-right)]:sm:min-w-[50%]
           [&_img.float-left~p]:sm:w-[52%] [&_img.float-left~p]:sm:float-right [&_img.float-left~p]:sm:min-w-[50%]
           [&_img.float-right~p]:sm:w-[52%] [&_img.float-right~p]:sm:float-left [&_img.float-right~p]:sm:min-w-[50%]
-          [&_h1]:text-4xl [&_h1]:sm:text-5xl [&_h1]:font-black [&_h1]:mt-16 [&_h1]:mb-12 [&_h1]:clear-both [&_h1]:tracking-tight [&_h1]:break-words [&_h1]:w-full
-          [&_h2]:text-3xl [&_h2]:sm:text-4xl [&_h2]:font-extrabold [&_h2]:mt-14 [&_h2]:mb-10 [&_h2]:clear-both [&_h2]:tracking-tight [&_h2]:break-words [&_h2]:w-full
-          [&_h3]:text-2xl [&_h3]:sm:text-3xl [&_h3]:font-bold [&_h3]:mt-12 [&_h3]:mb-8 [&_h3]:clear-both [&_h3]:break-words [&_h3]:w-full
-          [&_b:not(span_b)]:clear-both [&_b:not(span_b)]:block [&_b:not(span_b)]:mt-10 [&_b:not(span_b)]:mb-6 [&_b:not(span_b)]:text-2xl [&_b:not(span_b)]:font-black [&_b:not(span_b)]:text-left [&_b:not(span_b)]:w-full
-          [&_strong:not(span_strong)]:clear-both [&_strong:not(span_strong)]:block [&_strong:not(span_strong)]:mt-10 [&_strong:not(span_strong)]:mb-6 [&_strong:not(span_strong)]:text-2xl [&_strong:not(span_strong)]:font-black [&_strong:not(span_strong)]:text-left [&_strong:not(span_strong)]:w-full
-          [&_span_b]:font-bold [&_span_b]:text-inherit [&_span_b]:inline [&_span_b]:m-0 [&_span_b]:p-0
-          [&_span_strong]:font-bold [&_span_strong]:text-inherit [&_span_strong]:inline [&_span_strong]:m-0 [&_span_strong]:p-0
+          [&_h1]:text-4xl [&_h1]:sm:text-5xl [&_h1]:font-black [&_h1]:mt-20 [&_h1]:mb-12 [&_h1]:clear-both [&_h1]:tracking-tight [&_h1]:break-words [&_h1]:w-full
+          [&_h2]:text-3xl [&_h2]:sm:text-4xl [&_h2]:font-extrabold [&_h2]:mt-16 [&_h2]:mb-10 [&_h2]:clear-both [&_h2]:tracking-tight [&_h2]:break-words [&_h2]:w-full
+          [&_h3]:text-2xl [&_h3]:sm:text-3xl [&_h3]:font-bold [&_h3]:mt-14 [&_h3]:mb-8 [&_h3]:clear-both [&_h3]:break-words [&_h3]:w-full
+          [&_h3_span]:text-inherit [&_h3_span]:font-inherit
+          [&_strong]:font-bold
+          [&_b]:font-bold
           [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-10 [&_ul]:space-y-4 [&_ul]:clear-both [&_ul]:break-words [&_ul]:display-flow-root
           [&_ul:has(~_img.float-left)]:sm:w-[52%] [&_ul:has(~_img.float-left)]:sm:float-right [&_ul:has(~_img.float-left)]:sm:min-w-[50%]
           [&_ul:has(~_img.float-right)]:sm:w-[52%] [&_ul:has(~_img.float-right)]:sm:float-left [&_ul:has(~_img.float-right)]:sm:min-w-[50%]
@@ -367,13 +369,13 @@ export const RichTextContent: React.FC<RichTextContentProps> = ({
           [&_ol:has(~_img.float-right)]:sm:w-[52%] [&_ol:has(~_img.float-right)]:sm:float-left [&_ol:has(~_img.float-right)]:sm:min-w-[50%]
           [&_img.float-left~ol]:sm:w-[52%] [&_img.float-left~ol]:sm:float-right [&_img.float-left~ol]:sm:min-w-[50%]
           [&_img.float-right~ol]:sm:w-[52%] [&_img.float-right~ol]:sm:float-left [&_img.float-right~ol]:sm:min-w-[50%]
-          [&_img]:max-sm:hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:transition-all [&_img]:duration-300
+          [&_.image-wrapper]:max-sm:hidden [&_.image-wrapper]:!max-w-[45%] [&_.image-wrapper]:!w-auto [&_.image-wrapper]:mx-auto sm:[&_.image-wrapper]:float-left sm:[&_.image-wrapper]:clear-left
+          [&_.image-wrapper.float-left]:!mr-8 [&_.image-wrapper.float-left]:!mb-6 [&_.image-wrapper.float-left]:float-left [&_.image-wrapper.float-left]:clear-left [&_.image-wrapper.float-left]:!mx-0
+          [&_.image-wrapper.float-right]:!ml-8 [&_.image-wrapper.float-right]:!mb-6 [&_.image-wrapper.float-right]:float-right [&_.image-wrapper.float-right]:clear-right [&_.image-wrapper.float-right]:!mx-0
+          [&_.image-wrapper.mx-auto]:!block [&_.image-wrapper.mx-auto]:!mx-auto [&_.image-wrapper.mx-auto]:!mb-12 [&_.image-wrapper.mx-auto]:!max-w-[85%]
+          [&_img]:max-sm:hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-xl [&_img]:transition-all [&_img]:duration-300 [&_img]:object-contain
           [&_img:not(.float-left):not(.float-right)]:block [&_img:not(.float-left):not(.float-right)]:mx-auto [&_img:not(.float-left):not(.float-right)]:my-10
-          [&_.image-wrapper]:max-sm:hidden [&_.image-wrapper]:max-w-full sm:[&_.image-wrapper]:max-w-[45%] [&_.image-wrapper]:w-full sm:[&_.image-wrapper]:w-[45%] [&_.image-wrapper]:mx-auto sm:[&_.image-wrapper]:float-left sm:[&_.image-wrapper]:mr-[5%] sm:[&_.image-wrapper]:clear-left
-          [&_.image-wrapper.float-left]:mr-12 [&_.image-wrapper.float-left]:mb-8 [&_.image-wrapper.float-left]:float-left [&_.image-wrapper.float-left]:clear-left [&_.image-wrapper.float-left]:mx-0
-          [&_.image-wrapper.float-right]:ml-12 [&_.image-wrapper.float-right]:mb-8 [&_.image-wrapper.float-right]:float-right [&_.image-wrapper.float-right]:clear-right [&_.image-wrapper.float-right]:mx-0
-          [&_.image-wrapper.mx-auto]:block [&_.image-wrapper.mx-auto]:mx-auto [&_.image-wrapper.mx-auto]:mb-12 [&_.image-wrapper.mx-auto]:max-w-[85%]
-          [&_p]:mb-8 [&_p]:leading-[1.8] [&_p]:text-gray-700 [&_p]:text-lg [&_p]:break-words
+          [&_p]:mb-10 [&_p]:leading-[1.9] [&_p]:text-gray-700 [&_p]:text-lg [&_p]:break-words
           [&_p[style*="text-align: center"]]:text-center [&_p[style*="text-align:center"]]:text-center [&_p[style*="text-align: center"]]:sm:float-none [&_p[style*="text-align: center"]]:sm:w-full
           [&_p[style*="text-align: right"]]:text-right [&_p[style*="text-align:right"]]:text-right
           [&_p[style*="text-align: justify"]]:text-justify [&_p[style*="text-align:justify"]]:text-justify
