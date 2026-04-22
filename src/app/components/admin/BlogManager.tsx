@@ -236,6 +236,12 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     
     setIsSaving(true);
     try {
+      // Normalize spacing in content (multiple spaces to single space, excessive line breaks)
+      const normalizedContent = editingPost.content
+        .replace(/[ \t]{2,}/g, ' ')
+        .replace(/(<br\s*\/?>\s*){2,}/gi, '<br>')
+        .replace(/(<p><br><\/p>\s*){2,}/gi, '<p><br></p>');
+
       // Find original post to get original image URLs for cleanup
       let originalImageUrl: string | null = null;
       let originalImages: string[] = [];
@@ -246,7 +252,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
           originalImageUrl = originalPost.imageUrl || null;
           originalImages = originalPost.images || [];
           
-          if (!hasChanges(originalPost, editingPost)) {
+          if (!hasChanges(originalPost, { ...editingPost, content: normalizedContent })) {
             toast.info('No changes detected.');
             setIsModalOpen(false);
             setEditingPost(null);
@@ -268,7 +274,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
       }
 
       // Process content images (upload base64 to cloud)
-      const finalContent = await processContentImages(editingPost.content);
+      const finalContent = await processContentImages(normalizedContent);
 
       // Handle Cover Image Upload
       let finalImageUrl = editingPost.imageUrl;

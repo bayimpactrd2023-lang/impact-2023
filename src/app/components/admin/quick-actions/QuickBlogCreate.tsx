@@ -98,6 +98,12 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
 
     setIsSaving(true);
     try {
+      // Normalize spacing in content (multiple spaces to single space, excessive line breaks)
+      const normalizedContent = draft.content
+        .replace(/[ \t]{2,}/g, ' ')
+        .replace(/(<br\s*\/?>\s*){2,}/gi, '<br>')
+        .replace(/(<p><br><\/p>\s*){2,}/gi, '<p><br></p>');
+
       // Handle Image Uploads before saving to database
       let finalImageUrl = draft.imageUrl;
       if (typeof finalImageUrl === 'object' && (finalImageUrl as any) instanceof File) {
@@ -119,7 +125,7 @@ export const QuickBlogCreate: React.FC<QuickBlogCreateProps> = ({
 
       const blogData = {
         title: draft.title,
-        content: draft.content,
+        content: normalizedContent,
         author: draft.author,
         author_role: draft.authorRole,
         date: draft.date,

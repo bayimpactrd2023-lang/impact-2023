@@ -338,8 +338,11 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
     
+    // Normalize spaces: replace multiple spaces/tabs with single space
+    const normalizedText = text.replace(/[ \t]{2,}/g, ' ');
+    
     // Convert newlines to paragraphs for better structure preservation
-    const html = text
+    const html = normalizedText
       .split(/\n\n+/)
       .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
       .join('');
@@ -347,7 +350,7 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     if (html.includes('<p>')) {
       document.execCommand('insertHTML', false, html);
     } else {
-      document.execCommand('insertText', false, text);
+      document.execCommand('insertText', false, normalizedText);
     }
     handleInput();
   };

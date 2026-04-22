@@ -55,8 +55,14 @@ const sanitizeHTML = (html: string): string => {
   cleaned = cleaned.replace(/<p>(&nbsp;|\s)+<\/p>/gi, '<p><br></p>');
   
   // Replace multiple <br> with single <br> if they are adjacent to prevent excessive gaps
-  // but allow double <br> for intentional spacing
-  cleaned = cleaned.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
+  // Standardize to at most ONE empty line (two <br> tags)
+  cleaned = cleaned.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
+  
+  // Remove consecutive empty paragraphs
+  cleaned = cleaned.replace(/(<p><br><\/p>\s*){2,}/gi, '<p><br></p>');
+  
+  // Replace multiple spaces with a single space
+  cleaned = cleaned.replace(/[ \t]{2,}/g, ' ');
   
   // Replace <font color="..."> with <span style="color:..."> for better compatibility
   cleaned = cleaned.replace(
