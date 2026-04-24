@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router';
-import { Globe, Briefcase, Users, BookOpen } from 'lucide-react';
+import { Globe, Briefcase, Users, BookOpen, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
@@ -40,12 +40,21 @@ export const OurWorkPage: React.FC = () => {
     },
     {
       id: 'thesis-support',
-      title: 'Research, Student, and Financial Support',
-      description: 'Supporting the next generation of researchers through thesis funding, internships, and financial support programs.',
+      title: 'Research and Student Support',
+      description: 'Supporting the next generation of researchers through thesis funding, internships, and mentorship programs.',
       icon: BookOpen,
       path: '/our-work/thesis-support',
       gradient: 'from-amber-600 via-orange-500 to-yellow-600',
       textColor: 'text-orange-600'
+    },
+    {
+      id: 'financial-statements',
+      title: 'Financial Statements',
+      description: 'Transparent financial reporting showing our stewardship of resources for research and community impact.',
+      icon: FileText,
+      path: '/our-work/financial-statements',
+      gradient: 'from-blue-600 via-blue-500 to-indigo-600',
+      textColor: 'text-blue-600'
     }
   ];
 

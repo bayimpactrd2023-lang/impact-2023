@@ -21,7 +21,7 @@ const FINANCIAL_ITEMS_PER_PAGE = 4;
 const ITEMS_PER_PAGE = 5;
 
 export const ResearchStudentSupportPage: React.FC = () => {
-  const { content, loadingStates, fetchInternshipTestimonials, fetchFinancialStatements } = useContent();
+  const { content, loadingStates, fetchInternshipTestimonials } = useContent();
   const [pageLoading, setPageLoading] = useState(true);
 
   // Use server-side pagination for thesis projects
@@ -42,53 +42,13 @@ export const ResearchStudentSupportPage: React.FC = () => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [activeGalleryImages, setActiveGalleryImages] = useState<string[]>([]);
-
-  // Financial Statements pagination and modal state
-  const [financialPage, setFinancialPage] = useState(1);
-  const [selectedStatement, setSelectedStatement] = useState<FinancialStatement | null>(null);
-  const [isFinancialModalOpen, setIsFinancialModalOpen] = useState(false);
-  const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
-  const [pdfToView, setPdfToView] = useState<{ url: string; title: string; year: string } | null>(null);
-
-  const totalFinancialPages = Math.ceil(content.financialStatements.length / 4);
-  const currentFinancialStatements = useMemo(() => {
-    const start = (financialPage - 1) * 4;
-    return content.financialStatements.slice(start, start + 4);
-  }, [content.financialStatements, financialPage]);
-
-  const handleFinancialPageChange = (page: number) => {
-    setFinancialPage(page);
-  };
-
-  const handleFinancialCardClick = (statement: FinancialStatement) => {
-    setSelectedStatement(statement);
-    setIsFinancialModalOpen(true);
-  };
-
-  const closeFinancialModal = () => {
-    setSelectedStatement(null);
-    setIsFinancialModalOpen(false);
-  };
-
-  const openPDFViewer = (url: string, title: string, year: string) => {
-    setPdfToView({ url, title, year });
-    setIsPDFViewerOpen(true);
-  };
-
-  const closePDFViewer = () => {
-    setPdfToView(null);
-    setIsPDFViewerOpen(false);
-  };
   
   // Fetch data when component mounts
   useEffect(() => {
     const loadPageData = async () => {
       setPageLoading(true);
       try {
-        await Promise.all([
-          fetchInternshipTestimonials(),
-          fetchFinancialStatements(),
-        ]);
+        await fetchInternshipTestimonials();
       } catch (error) {
         console.error('[ResearchStudentSupportPage] Error fetching data:', error);
       } finally {
@@ -119,8 +79,8 @@ export const ResearchStudentSupportPage: React.FC = () => {
   }, [sortedYears.length]);
 
   // Show loading state
-  if (pageLoading || loadingStates.internshipTestimonials || loadingStates.financialStatements) {
-    return <PageSkeletonLoader message="Loading Research, Student, and Financial Support..." />;
+  if (pageLoading || loadingStates.internshipTestimonials) {
+    return <PageSkeletonLoader message="Loading Research and Student Support..." />;
   }
 
   const toggleYear = (year: string) => {
@@ -221,7 +181,7 @@ export const ResearchStudentSupportPage: React.FC = () => {
                 textShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)',
               }}
             >
-              Research, Student, and Financial Support
+              Research and Student Support
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -232,7 +192,7 @@ export const ResearchStudentSupportPage: React.FC = () => {
                 textShadow: '0 2px 10px rgba(0,0,0,0.3)',
               }}
             >
-              Comprehensive support including thesis funding, internships, and financial assistance
+              Comprehensive support including thesis funding, internships, and mentorship
             </motion.p>
           </div>
         </section>
@@ -241,7 +201,7 @@ export const ResearchStudentSupportPage: React.FC = () => {
       {/* Support Overview Section */}
       <div className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Thesis Support */}
             <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl shadow-lg p-6 border border-blue-100">
               <div className="w-12 h-12 bg-[#1887FC] rounded-full flex items-center justify-center mb-4">
@@ -261,17 +221,6 @@ export const ResearchStudentSupportPage: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-900 mb-2">Internship Program</h3>
               <p className="text-gray-600">
                 Hands-on research experience working with our team on real-world agricultural projects and studies.
-              </p>
-            </div>
-
-            {/* Financial Statements */}
-            <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl shadow-lg p-6 border border-blue-100">
-              <div className="w-12 h-12 bg-[#1887FC] rounded-full flex items-center justify-center mb-4">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Financial Statements</h3>
-              <p className="text-gray-600">
-                Transparent financial reporting showing our stewardship of resources for research and thesis support.
               </p>
             </div>
           </div>
@@ -316,133 +265,6 @@ export const ResearchStudentSupportPage: React.FC = () => {
             pagination={thesisPagination}
             variant="simple"
           />
-        </div>
-      </div>
-
-      {/* Financial Transparency Section */}
-      <div className="py-16 bg-[#333333]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
-          <div className="text-center mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1887FC] to-blue-600 shadow-lg shadow-blue-500/30 mb-4"
-            >
-              <FileText className="w-8 h-8 text-white" />
-            </motion.div>
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              viewport={{ once: true }}
-              className="text-3xl md:text-4xl font-bold text-white mb-4"
-            >
-              Financial Transparency
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="text-lg text-gray-300 max-w-2xl mx-auto"
-            >
-              We are committed to transparency in our financial operations. Below are our annual financial statements
-              demonstrating our stewardship of resources allocated for research and thesis support.
-            </motion.p>
-          </div>
-
-          {/* Financial Statements Grid - Bigger Cards */}
-          <div key={financialPage}>
-            {content.financialStatements.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#1887FC]/20 to-blue-900/50 mb-4">
-                  <FileText className="w-8 h-8 text-[#1887FC]" strokeWidth={2} />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">No Financial Statements Yet</h3>
-                <p className="text-gray-400 text-sm max-w-md mx-auto">
-                  Financial statements have not been uploaded yet. Check back later for transparency reports!
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="flex flex-wrap justify-center gap-8">
-                  {currentFinancialStatements.map((statement, index) => (
-                    <motion.div
-                      key={statement.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      viewport={{ once: true }}
-                      className="w-full max-w-sm"
-                    >
-                      <Card
-                        className="h-full hover:shadow-2xl transition-all duration-300 border-none shadow-xl cursor-pointer bg-white rounded-[2rem] overflow-hidden group"
-                        onClick={() => handleFinancialCardClick(statement)}
-                      >
-                        <CardHeader className="pb-2 p-8">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-2xl font-black text-gray-900 group-hover:text-[#1887FC] transition-colors leading-tight">
-                                {statement.title}
-                              </CardTitle>
-                              <CardDescription className="text-gray-400 mt-2 text-sm font-semibold uppercase tracking-wider">
-                                Financial Year {statement.year}
-                              </CardDescription>
-                            </div>
-                            <div className="ml-4">
-                              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                                <FileText className="w-7 h-7 text-[#1887FC]" />
-                              </div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="px-8 pb-8 pt-2">
-                          {statement.description && (
-                            <p className="text-gray-500 mb-8 leading-relaxed text-sm font-medium line-clamp-2">
-                              {statement.description}
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between mt-auto">
-                            {statement.pdfUrl && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openPDFViewer(statement.pdfUrl, statement.title, statement.year);
-                                }}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-[#1887FC] hover:bg-blue-600 text-white rounded-full font-bold transition-all text-sm shadow-lg shadow-blue-500/25 active:scale-95"
-                              >
-                                <Eye className="w-4 h-4" />
-                                View PDF
-                              </button>
-                            )}
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
-                                <ChevronDown className="w-4 h-4 text-gray-400 -rotate-90" />
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalFinancialPages > 1 && (
-                  <Pagination
-                    currentPage={financialPage}
-                    totalPages={totalFinancialPages}
-                    onPageChange={handleFinancialPageChange}
-                    itemsPerPage={FINANCIAL_ITEMS_PER_PAGE}
-                    totalItems={content.financialStatements.length}
-                  />
-                )}
-              </>
-            )}
-          </div>
         </div>
       </div>
 
@@ -603,34 +425,12 @@ export const ResearchStudentSupportPage: React.FC = () => {
       </div>
 
       {/* Gallery Modal for Testimonials */}
-      {selectedTestimonial && (
-        <GalleryModal
-          images={activeGalleryImages}
-          isOpen={isGalleryOpen}
-          onClose={handleCloseModal}
-          title={selectedTestimonial.name}
-          initialIndex={galleryIndex}
-        />
-      )}
-
-      {/* Financial Statement Modal */}
-      <FinancialStatementModal
-        statement={selectedStatement}
-        isOpen={isFinancialModalOpen}
-        onClose={closeFinancialModal}
-        onViewPDF={(url, title, year) => {
-          closeFinancialModal();
-          openPDFViewer(url, title, year);
-        }}
-      />
-
-      {/* PDF Viewer Modal */}
-      <PDFViewerModal
-        isOpen={isPDFViewerOpen}
-        onClose={closePDFViewer}
-        pdfUrl={pdfToView?.url || ''}
-        title={pdfToView?.title || ''}
-        year={pdfToView?.year}
+      <GalleryModal
+        isOpen={isGalleryOpen}
+        onClose={handleCloseModal}
+        images={activeGalleryImages}
+        initialIndex={galleryIndex}
+        title={selectedTestimonial?.name ? `${selectedTestimonial.name}'s Success Story` : "Student Success Story"}
       />
     </div>
   );

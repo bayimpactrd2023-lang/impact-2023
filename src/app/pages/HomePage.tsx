@@ -1,5 +1,4 @@
 import React, { Suspense } from 'react';
-import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { useContent } from "@/app/context/ContentContext";
 import { SectionTheme } from "@/app/components/SectionTheme";
@@ -22,7 +21,6 @@ const SectionSkeleton: React.FC = () => (
 
 export const HomePage: React.FC = () => {
   const { loadingStates, fetchNews, fetchHighlights, fetchPublications, fetchPartners, fetchHeroSection } = useContent();
-  const navigate = useNavigate();
   const [pageLoading, setPageLoading] = React.useState(true);
 
   // Fetch data when component mounts
@@ -52,11 +50,6 @@ export const HomePage: React.FC = () => {
     loadPageData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const navigateAndScroll = (path: string) => {
-    navigate(path);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   // Only show full page loader if hero isn't loaded yet
   const isLoading = pageLoading && loadingStates.hero;
@@ -142,18 +135,18 @@ export const HomePage: React.FC = () => {
             className="flex flex-col items-center"
           >
             {/* LOGO + TAGLINE OVERLAP */}
-            <div className="relative flex flex-col items-center">
+            <div className="flex flex-col items-center">
               <motion.img
                 src="/images/logos/impact.png"
                 alt="IMPACT R&D Logo"
-                className="w-full max-w-md sm:max-w-lg lg:max-w-2xl h-auto"
+                className="w-full max-w-lg sm:max-w-xl lg:max-w-2xl h-auto mb-8"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1, ease: "easeOut" }}
                 loading="eager"
                 style={{
                   filter:
-                    "drop-shadow(0 20px 40px rgba(0,0,0,0.15)) drop-shadow(0 0 8px rgba(255,255,255,0.8)) drop-shadow(0 0 16px rgba(255,255,255,0.6)) drop-shadow(0 0 24px rgba(255,255,255,0.4))",
+                    "drop-shadow(0 20px 40px rgba(0,0,0,0.15)) drop-shadow(0 0 8px rgba(255,255,255,0.8))",
                   zIndex: 1,
                 }}
               />
@@ -163,61 +156,29 @@ export const HomePage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.8 }}
                 className="
-                  absolute
-                  bottom-[-2.5rem]
-                  sm:bottom-[-1rem]
-                  text-xl sm:text-2xl md:text-3xl
-                  text-white font-bold
+                  text-2xl sm:text-3xl md:text-4xl
+                  text-white font-extrabold
                   text-center
-                  max-w-3xl px-4
+                  max-w-4xl px-4
+                  mb-10
                 "
                 style={{
                   textShadow:
-                    "0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)",
-                  letterSpacing: "0.02em",
+                    "0 4px 20px rgba(0,0,0,0.6), 0 0 40px rgba(24,135,252,0.4)",
+                  letterSpacing: "-0.01em",
+                  lineHeight: "1.2",
                   zIndex: 2,
                 }}
               >
-                A DOST-certified Science & Technology Foundation
+                “A DOST-certified Science & Technology Foundation”
               </motion.p>
             </div>
 
-            {/* CTA BUTTONS */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-              className="flex flex-wrap gap-4 justify-center mt-14 sm:mt-12 md:mt-10"
-            >
-              <motion.button
-                whileHover={{ scale: 1.08, y: -4 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigateAndScroll("/about")}
-                className="group relative px-8 py-3 bg-gradient-to-r from-[#1887FC] via-[#3b82f6] to-[#60a5fa] text-white rounded-2xl font-bold text-base overflow-hidden shadow-2xl hover:shadow-blue-500/50 transition-all duration-200"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  Learn More →
-                </span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.08, y: -4 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigateAndScroll("/our-work")}
-                className="group relative px-8 py-3 bg-white/95 text-[#1887FC] rounded-2xl font-bold text-base shadow-2xl transition-all duration-200"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  Our Projects →
-                </span>
-              </motion.button>
-            </motion.div>
-
-            {/* Since 2023 Badge - Now below buttons */}
+            {/* Since 2023 Badge - Now below content */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.6, duration: 0.6 }}
-              className="mt-5 sm:mt-5"
             >
               <div className="relative inline-flex items-center justify-center">
                 {/* Animated glow effect */}

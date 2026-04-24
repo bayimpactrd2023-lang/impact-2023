@@ -173,42 +173,67 @@ export const Header: React.FC = () => {
                           onClick={() => setBlogDropdownOpen(false)}
                         />
                         
-                        <div className="absolute top-[calc(100%+12px)] right-0 w-80 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
-                          <div className="relative bg-white/95 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-2xl border border-blue-50/50 py-2 overflow-hidden">
-                            <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recent Posts</span>
+                        <div className="absolute top-[calc(100%+12px)] right-0 w-[400px] z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
+                          {/* Triangle Pointer */}
+                          <div className="absolute top-[-6px] right-[45px] w-3 h-3 bg-white border-t border-l border-blue-100/50 rotate-45 z-[101]" />
+                          
+                          <div className="relative bg-white/98 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl border border-blue-100/50 py-3 overflow-hidden">
+                            <div className="px-6 py-2 border-b border-gray-100/80 mb-2 flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Recent Posts</span>
+                              <button 
+                                onClick={() => {
+                                  handleNavigation('/blog');
+                                  setBlogDropdownOpen(false);
+                                }}
+                                className="text-[10px] font-bold text-[#1887FC] hover:text-[#3b82f6] uppercase tracking-wider transition-colors"
+                              >
+                                View All
+                              </button>
                             </div>
                             
-                            {content.blogPosts.length > 0 ? (
-                              content.blogPosts.slice(0, 4).map((post) => (
-                                <button
-                                  key={post.id}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    // Use state instead of URL parameters to keep URL as /blog
-                                    navigate('/blog', { state: { postId: post.id }, replace: true });
-                                    setBlogDropdownOpen(false);
-                                  }}
-                                  className="w-full text-left px-5 py-3 hover:bg-blue-50 group transition-all border-b border-gray-50/50 last:border-0"
-                                >
-                                  <p className="text-xs font-bold text-gray-800 group-hover:text-[#1887FC] transition-colors line-clamp-2 leading-relaxed mb-1">
-                                    {post.title}
-                                  </p>
-                                  {post.date && (
-                                    <p className="text-[10px] text-gray-400 font-medium">
-                                      {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </p>
-                                  )}
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-5 py-6 text-center">
-                                <p className="text-xs text-gray-400 italic">No blog posts found</p>
-                              </div>
-                            )}
+                            <div className="space-y-1">
+                              {content.blogPosts.length > 0 ? (
+                                content.blogPosts.slice(0, 4).map((post) => (
+                                  <button
+                                    key={post.id}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      navigate('/blog', { state: { postId: post.id }, replace: true });
+                                      setBlogDropdownOpen(false);
+                                    }}
+                                    className="w-full text-left px-6 py-3.5 hover:bg-blue-50/50 group transition-all duration-300 flex flex-col gap-1.5"
+                                  >
+                                    <h4 className="text-[13px] font-bold text-gray-800 group-hover:text-[#1887FC] transition-colors line-clamp-2 leading-[1.4]">
+                                      {post.title}
+                                    </h4>
+                                    <div className="flex items-center gap-3">
+                                      {post.date && (
+                                        <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1.5">
+                                          <span className="w-1 h-1 rounded-full bg-gray-300" />
+                                          {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </span>
+                                      )}
+                                      {post.author && (
+                                        <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1.5">
+                                          <span className="w-1 h-1 rounded-full bg-gray-300" />
+                                          {post.author}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-6 py-8 text-center">
+                                  <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Menu size={18} className="text-gray-300" />
+                                  </div>
+                                  <p className="text-[12px] text-gray-400 font-medium">No blog posts found</p>
+                                </div>
+                              )}
+                            </div>
                             
-                            {content.blogPosts.length > 3 && (
+                            {content.blogPosts.length > 4 && (
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -216,10 +241,10 @@ export const Header: React.FC = () => {
                                   handleNavigation('/blog');
                                   setBlogDropdownOpen(false);
                                 }}
-                                className="w-full text-center py-3 bg-gray-50/50 hover:bg-blue-50 transition-colors mt-auto border-t border-gray-50/50"
+                                className="w-full text-center py-3.5 bg-gray-50/50 hover:bg-blue-50 transition-all mt-2 border-t border-gray-100/80 group"
                               >
-                                <span className="text-[11px] font-black text-[#1887FC] uppercase tracking-wider">
-                                  View All {content.blogPosts.length} Articles
+                                <span className="text-[11px] font-black text-[#1887FC] uppercase tracking-[0.1em] group-hover:gap-2 flex items-center justify-center gap-1 transition-all">
+                                  Explore All {content.blogPosts.length} Articles
                                 </span>
                               </button>
                             )}
@@ -303,47 +328,56 @@ export const Header: React.FC = () => {
                       <motion.div 
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="pl-4 space-y-1 overflow-hidden"
+                        className="mx-2 mt-1 bg-gray-50/50 rounded-2xl overflow-hidden border border-gray-100/50"
                       >
-                        {content.blogPosts.length > 0 ? (
-                          content.blogPosts.slice(0, 4).map((post) => (
+                        <div className="py-1">
+                          {content.blogPosts.length > 0 ? (
+                            content.blogPosts.slice(0, 4).map((post) => (
+                              <button
+                                key={post.id}
+                                onClick={() => {
+                                  navigate('/blog', { state: { postId: post.id }, replace: true });
+                                  setMobileMenuOpen(false);
+                                  setMobileBlogDropdownOpen(false);
+                                }}
+                                className="w-full text-left px-5 py-4 hover:bg-white group transition-all border-b border-gray-100/30 last:border-0"
+                              >
+                                <p className={`text-[13px] font-bold leading-snug transition-colors line-clamp-2 ${theme === 'dark' ? 'text-white/90 group-hover:text-[#1887FC]' : 'text-gray-800 group-hover:text-[#1887FC]'}`}>
+                                  {post.title}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1.5">
+                                  {post.date && (
+                                    <p className="text-[10px] text-gray-400 font-medium">
+                                      {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </p>
+                                  )}
+                                  {post.author && (
+                                    <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1.5">
+                                      <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
+                                      {post.author}
+                                    </p>
+                                  )}
+                                </div>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-5 py-6 text-center">
+                              <p className="text-xs text-gray-400 italic font-medium">No blog posts found</p>
+                            </div>
+                          )}
+                          {content.blogPosts.length > 0 && (
                             <button
-                              key={post.id}
                               onClick={() => {
-                                // Use state instead of URL parameters to keep URL as /blog
-                                navigate('/blog', { state: { postId: post.id }, replace: true });
+                                handleNavigation('/blog');
                                 setMobileMenuOpen(false);
                                 setMobileBlogDropdownOpen(false);
                               }}
-                              className="w-full text-left px-4 py-3 hover:bg-blue-50 group transition-all rounded-xl border-l-2 border-transparent hover:border-[#1887FC]"
+                              className="w-full text-center py-3.5 bg-blue-50/50 text-[#1887FC] font-black text-[10px] uppercase tracking-[0.15em] hover:bg-blue-100/50 transition-colors"
                             >
-                              <p className={`text-sm font-bold transition-colors line-clamp-1 ${theme === 'dark' ? 'text-white/90 group-hover:text-[#1887FC]' : 'text-gray-800 group-hover:text-[#1887FC]'}`}>
-                                {post.title}
-                              </p>
-                              {post.date && (
-                                <p className="text-[10px] text-gray-400 font-medium mt-0.5">
-                                  {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </p>
-                              )}
+                              View All Articles
                             </button>
-                          ))
-                        ) : (
-                          <div className="px-4 py-3">
-                            <p className="text-xs text-gray-400 italic">No blog posts found</p>
-                          </div>
-                        )}
-                        {content.blogPosts.length > 3 && (
-                          <button
-                            onClick={() => {
-                              handleNavigation('/blog');
-                              setMobileMenuOpen(false);
-                              setMobileBlogDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-3 text-[#1887FC] font-bold text-xs uppercase tracking-wider hover:bg-blue-50 rounded-xl mt-1 border-t border-gray-50"
-                          >
-                            View All {content.blogPosts.length} Articles
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </motion.div>
                     )}
                   </div>
