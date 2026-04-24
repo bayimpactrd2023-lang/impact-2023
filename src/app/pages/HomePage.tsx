@@ -139,7 +139,7 @@ export const HomePage: React.FC = () => {
               <motion.img
                 src="/images/logos/impact.png"
                 alt="IMPACT R&D Logo"
-                className="w-full max-w-lg sm:max-w-xl lg:max-w-2xl h-auto mb-8"
+                className="w-full max-w-lg sm:max-w-xl lg:max-w-2xl h-auto mb-8 translate-y-12 -mb-4"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1, ease: "easeOut" }}
