@@ -11,7 +11,10 @@
  },
  "dependencies": {
   "@aws-sdk/client-s3": "^3.1019.0",
+<<<<<<< HEAD
   "@emailjs/browser": "^4.4.1",
+=======
+>>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
   "@emotion/react": "11.14.0",
   "@emotion/styled": "11.14.1",
   "@mui/icons-material": "7.3.5",

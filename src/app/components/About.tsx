@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { motion } from 'motion/react';
 import { useContent } from '@/app/context/ContentContext';
+<<<<<<< HEAD
 import { Target, Users, Lightbulb, Award, Globe, Star, Zap, Heart, BookOpen, Briefcase, Sparkles } from 'lucide-react';
 import { RichTextContent } from '@/app/components/RichTextContent';
 
@@ -9,6 +10,9 @@ const ICON_MAP: Record<string, FC<{ className?: string }>> = {
   Globe, Star, Zap, Heart, BookOpen, Briefcase, Sparkles,
   Target, Users, Lightbulb, Award,
 };
+=======
+import { Target, Users, Lightbulb, Award } from 'lucide-react';
+>>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
 
 export const About: FC = () => {
   const { content } = useContent();
@@ -36,6 +40,7 @@ export const About: FC = () => {
     },
   ];
 
+<<<<<<< HEAD
   const highlights = content.highlights ?? [];
 
   return (
@@ -43,6 +48,11 @@ export const About: FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* ── About header ─────────────────────────────────────────── */}
+=======
+  return (
+    <section id="about" className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-white via-blue-50/30 to-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+>>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -50,7 +60,11 @@ export const About: FC = () => {
           viewport={{ once: true }}
           className="text-center mb-10 sm:mb-12 md:mb-16"
         >
+<<<<<<< HEAD
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+=======
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 text-center">
+>>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             About IMPACT R&D
           </h2>
           <div className="w-16 sm:w-20 h-1 bg-gradient-to-r from-[#1887FC] to-[#4da3fd] mx-auto mb-4 sm:mb-6 rounded-full shadow-lg" />
@@ -59,7 +73,10 @@ export const About: FC = () => {
           </p>
         </motion.div>
 
+<<<<<<< HEAD
         {/* ── Values grid ──────────────────────────────────────────── */}
+=======
+>>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
           {values.map((value, index) => (
             <motion.div
@@ -70,7 +87,11 @@ export const About: FC = () => {
               viewport={{ once: true }}
               className="text-center p-5 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100/50 hover:shadow-xl hover:scale-105 transition-all duration-300 border border-blue-100/50"
             >
+<<<<<<< HEAD
               <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-[#1887FC] to-[#4da3fd] rounded-full mb-3 sm:mb-4 shadow-lg">
+=======
+              <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-[#1887FC] to-[#4da3fd] rounded-full mb-3 sm:mb-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+>>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                 <value.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1.5 sm:mb-2">{value.title}</h3>
@@ -78,6 +99,7 @@ export const About: FC = () => {
             </motion.div>
           ))}
         </div>
+<<<<<<< HEAD
 
         {/* ── Highlights ───────────────────────────────────────────── */}
         {highlights.length > 0 && (
@@ -161,6 +183,8 @@ export const About: FC = () => {
           </motion.div>
         )}
 
+=======
+>>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
       </div>
     </section>
   );
