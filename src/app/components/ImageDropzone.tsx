@@ -1,0 +1,182 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import { Upload, X, Loader2 } from 'lucide-react';
+import { isBase64Url } from '@/utils/storageUpload';
+import { getImageUrl } from '@/utils/r2Upload';
+import { toast } from 'sonner';
+import heic2any from 'heic2any';
+
+interface ImageDropzoneProps {
+  value?: string | File;
+  onChange: (value: string | File) => void;
+  label?: string;
+  className?: string;
+}
+
+export const ImageDropzone: React.FC<ImageDropzoneProps> = ({ 
+  value, 
+  onChange, 
+  label = 'Drop an image here',
+  className = ''
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Sync previewUrl with value prop when it changes externally
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    if (typeof value === 'string') {
+      setPreviewUrl(value);
+    } else if (value instanceof File) {
+      objectUrl = URL.createObjectURL(value);
+      setPreviewUrl(objectUrl);
+    } else {
+      setPreviewUrl('');
+    }
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [value]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const convertHeicToJpeg = async (file: File): Promise<File> => {
+    if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
+      try {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.8
+        });
+        
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        return new File([blob], file.name.replace(/\.heic$/i, '.jpg'), {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+      } catch (err) {
+        console.error('[ImageDropzone] HEIC conversion failed:', err);
+        throw new Error('Failed to convert HEIC image');
+      }
+    }
+    return file;
+  };
+
+  const processImageFile = useCallback(async (imageFile: File) => {
+    setIsUploading(true);
+    try {
+      const fileToProcess = await convertHeicToJpeg(imageFile);
+      onChange(fileToProcess);
+      toast.success(imageFile !== fileToProcess ? 'HEIC converted and selected' : 'Image selected');
+    } catch (err: any) {
+      console.error('[ImageDropzone] Selection failed:', err);
+      toast.error(err.message || 'Failed to select image');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [onChange]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => 
+      file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic')
+    );
+
+    if (imageFile) {
+      processImageFile(imageFile);
+    }
+  }, [processImageFile]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic'))) {
+      processImageFile(file);
+    }
+  }, [processImageFile]);
+
+  const handleClear = useCallback(() => {
+    setPreviewUrl('');
+    if (onChange && typeof onChange === 'function') {
+      onChange('');
+    }
+  }, [onChange]);
+
+  return (
+    <div className={className}>
+      {previewUrl ? (
+        <div className="relative">
+          <img 
+            src={getImageUrl(previewUrl)} 
+            alt="Preview" 
+            className="w-full h-48 object-cover rounded-lg border-2 border-gray-300"
+          />
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+            disabled={isUploading}
+          >
+            <X className="w-4 h-4" />
+          </button>
+          {/* Show indicator if this is old Base64 data */}
+          {isBase64Url(previewUrl) && (
+            <div className="absolute bottom-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-semibold">
+              ⚠️ Old Format - Re-upload to optimize
+            </div>
+          )}
+        </div>
+      ) : (
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            isUploading ? 'cursor-wait opacity-75' : 'cursor-pointer'
+          } ${
+            isDragging 
+              ? 'border-[#1887FC] bg-blue-50' 
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
+        >
+          <input
+            type="file"
+            accept="image/*,.heic"
+            onChange={handleFileSelect}
+            className="hidden"
+            id={`file-input-${label}`}
+            disabled={isUploading}
+          />
+          <label 
+            htmlFor={`file-input-${label}`}
+            className={`${isUploading ? 'cursor-wait' : 'cursor-pointer'} flex flex-col items-center`}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-10 h-10 text-[#1887FC] mb-2 animate-spin" />
+                <p className="text-sm font-medium text-gray-700 mb-1">Uploading & compressing...</p>
+                <p className="text-xs text-gray-500">Please wait</p>
+              </>
+            ) : (
+              <>
+                <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                <p className="text-sm font-medium text-gray-700 mb-1">{label}</p>
+                <p className="text-xs text-gray-500">or click to browse</p>
+              </>
+            )}
+          </label>
+        </div>
+      )}
+    </div>
+  );
+};
