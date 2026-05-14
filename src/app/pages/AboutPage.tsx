@@ -13,41 +13,21 @@ import { TeamMemberDetailModal } from "@/app/components/TeamMemberDetailModal";
 
 export const AboutPage: React.FC = () => {
   const { content, loadingStates, fetchAboutSection, fetchTeamMembers } = useContent();
-<<<<<<< HEAD
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
 
-=======
-  const [selectedTeamMember, setSelectedTeamMember] =
-    useState<TeamMember | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true);
-
-  // Fetch data when component mounts
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
   React.useEffect(() => {
     const loadPageData = async () => {
       setPageLoading(true);
       try {
-<<<<<<< HEAD
         await Promise.all([fetchAboutSection(), fetchTeamMembers()]);
-=======
-        await Promise.all([
-          fetchAboutSection(),
-          fetchTeamMembers(),
-        ]);
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
       } catch (error) {
         console.error('[AboutPage] Error fetching page data:', error);
       } finally {
         setPageLoading(false);
       }
     };
-<<<<<<< HEAD
-=======
-
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
     loadPageData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -57,7 +37,6 @@ export const AboutPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-<<<<<<< HEAD
   const isLoading = pageLoading || loadingStates.about || loadingStates.teamMembers;
   if (isLoading) return <PageSkeletonLoader message="Loading About Us..." />;
 
@@ -69,42 +48,12 @@ export const AboutPage: React.FC = () => {
       <SectionTheme theme="transparent">
         <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0">
-=======
-  // Show loading state on the page itself
-  const isLoading = pageLoading || loadingStates.about || loadingStates.teamMembers;
-  
-  if (isLoading) {
-    return <PageSkeletonLoader message="Loading About Us..." />;
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-blue-50/50">
-      <PageHeaderTheme
-        theme="transparent"
-        scrollThreshold={700}
-      />
-
-      {/* Hero Section - Match Home Page Style */}
-      <SectionTheme theme="transparent">
-        <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
-          {/* High-Quality Background Image with Overlay */}
-          <div className="absolute inset-0">
-            {/* Agricultural Research Image */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             <ImageWithFallback
               src="https://images.unsplash.com/photo-1656488497988-ca149c86dade?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=2000"
               alt="Agricultural Research"
               className="absolute inset-0 w-full h-full object-cover"
             />
-<<<<<<< HEAD
             <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
-=======
-
-            {/* Modern Gradient Overlay - Instagram-style */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
-
-            {/* Animated Gradient Accent */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             <div
               className="absolute inset-0"
               style={{
@@ -112,49 +61,18 @@ export const AboutPage: React.FC = () => {
                   radial-gradient(circle at 30% 50%, rgba(24,135,252,0.3) 0%, transparent 50%),
                   radial-gradient(circle at 70% 50%, rgba(59,130,246,0.2) 0%, transparent 50%)
                 `,
-<<<<<<< HEAD
                 animation: "gradientShift 10s ease-in-out infinite alternate",
               }}
             />
-=======
-                animation:
-                  "gradientShift 10s ease-in-out infinite alternate",
-              }}
-            />
-
-            {/* Floating Particles */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             {[...Array(10)].map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute w-2 h-2 bg-white/20 rounded-full"
-<<<<<<< HEAD
                 style={{ left: `${Math.random() * 100}%`, bottom: 0 }}
                 animate={{ y: [0, -500], x: [0, (Math.random() - 0.5) * 150], opacity: [0, 1, 1, 0] }}
                 transition={{ duration: 12 + Math.random() * 8, repeat: Infinity, delay: Math.random() * 5, ease: "linear" }}
               />
             ))}
-=======
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  bottom: 0,
-                }}
-                animate={{
-                  y: [0, -500],
-                  x: [0, (Math.random() - 0.5) * 150],
-                  opacity: [0, 1, 1, 0],
-                }}
-                transition={{
-                  duration: 12 + Math.random() * 8,
-                  repeat: Infinity,
-                  delay: Math.random() * 5,
-                  ease: "linear",
-                }}
-              />
-            ))}
-
-            {/* Futuristic Grid Overlay */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             <div
               className="absolute inset-0 opacity-5"
               style={{
@@ -167,30 +85,13 @@ export const AboutPage: React.FC = () => {
             />
           </div>
 
-<<<<<<< HEAD
-=======
-          {/* Content */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-<<<<<<< HEAD
               transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
               className="text-3xl sm:text-5xl font-bold text-white mb-2"
               style={{ textShadow: "0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)" }}
-=======
-              transition={{
-                delay: 0.2,
-                duration: 0.8,
-                ease: "easeOut",
-              }}
-              className="text-3xl sm:text-5xl font-bold text-white mb-2"
-              style={{
-                textShadow:
-                  "0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)",
-              }}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             >
               About IMPACT R&D
             </motion.h1>
@@ -199,13 +100,7 @@ export const AboutPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
               className="text-base sm:text-xl text-white/90 max-w-2xl mx-auto"
-<<<<<<< HEAD
               style={{ textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
-=======
-              style={{
-                textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-              }}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             >
               {content.heroSubtitle || "A DOST-certified Science Foundation dedicated to transformative research and sustainable community development"}
             </motion.p>
@@ -213,19 +108,12 @@ export const AboutPage: React.FC = () => {
         </section>
       </SectionTheme>
 
-<<<<<<< HEAD
       {/* ── Mission & Vision — white background, gray text ────────────── */}
-=======
-      {/* Mission & Vision - Light/White Background */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
       <SectionTheme theme="transparent">
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-2 gap-8">
-<<<<<<< HEAD
               {/* Mission */}
-=======
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -243,7 +131,6 @@ export const AboutPage: React.FC = () => {
                       >
                         <Target className="w-8 h-8 text-white" />
                       </motion.div>
-<<<<<<< HEAD
                       <h2 className="text-3xl font-bold text-gray-900">Our Mission</h2>
                     </div>
                     {/*
@@ -256,23 +143,12 @@ export const AboutPage: React.FC = () => {
                       <RichTextContent
                         text={content.aboutMission || "To conduct <span class='text-[#1887FC] font-bold'>innovative, research-driven work</span> that advances scientific knowledge and <span class='text-[#1887FC] font-bold'>amplifies societal impact</span> through evidence-based solutions, <span class='text-[#1887FC] font-bold'>collaborative partnerships</span>, and the strengths of a multidisciplinary team"}
                       />
-=======
-                      <h2 className="text-3xl font-bold text-gray-900">
-                        Our Mission
-                      </h2>
-                    </div>
-                    <div className="text-lg text-gray-700 leading-relaxed text-justify">
-                      <RichTextContent text={content.aboutMission || "To conduct <span class='text-[#1887FC] font-bold'>innovative, research-driven work</span> that advances scientific knowledge and <span class='text-[#1887FC] font-bold'>amplifies societal impact</span> through evidence-based solutions, <span class='text-[#1887FC] font-bold'>collaborative partnerships</span>, and the strengths of a multidisciplinary team"} />
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                     </div>
                   </CardContent>
                 </Card>
               </motion.div>
 
-<<<<<<< HEAD
               {/* Vision */}
-=======
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -290,21 +166,12 @@ export const AboutPage: React.FC = () => {
                       >
                         <Lightbulb className="w-8 h-8 text-white" />
                       </motion.div>
-<<<<<<< HEAD
                       <h2 className="text-3xl font-bold text-gray-900">Our Vision</h2>
                     </div>
                     <div className="text-lg leading-relaxed text-justify [&_*]:text-gray-700 [&_.text-\[\#1887FC\]]:text-[#1887FC] [&_[style*='color']]:![color:inherit]">
                       <RichTextContent
                         text={content.aboutVision || "To be one of the <span class='text-[#1887FC] font-bold'>research organizations in the Philippines</span> that strives to make science <span class='text-[#1887FC] font-bold'>more relevant, inclusive, and responsive</span> to community needs and <span class='text-[#1887FC] font-bold'>sustainable development</span>"}
                       />
-=======
-                      <h2 className="text-3xl font-bold text-gray-900">
-                        Our Vision
-                      </h2>
-                    </div>
-                    <div className="text-lg text-gray-700 leading-relaxed text-justify">
-                      <RichTextContent text={content.aboutVision || "To be one of the <span class='text-[#1887FC] font-bold'>research organizations in the Philippines</span> that strives to make science <span class='text-[#1887FC] font-bold'>more relevant, inclusive, and responsive</span> to community needs and <span class='text-[#1887FC] font-bold'>sustainable development</span>"} />
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                     </div>
                   </CardContent>
                 </Card>
@@ -314,11 +181,7 @@ export const AboutPage: React.FC = () => {
         </section>
       </SectionTheme>
 
-<<<<<<< HEAD
       {/* ── Our Story — dark background, white text ───────────────────── */}
-=======
-      {/* About Section - Dark Background */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
       <SectionTheme theme="transparent">
         <section className="py-20 bg-[#2a2a2a]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -337,7 +200,6 @@ export const AboutPage: React.FC = () => {
                 >
                   <BookOpen className="w-7 h-7 text-white" />
                 </motion.div>
-<<<<<<< HEAD
                 <h2 className="text-3xl font-bold text-white">Our Story</h2>
               </div>
 
@@ -363,15 +225,6 @@ export const AboutPage: React.FC = () => {
                   }
                 `}</style>
                 <RichTextContent
-=======
-                <h2 className="text-3xl font-bold text-white">
-                  Our Story
-                </h2>
-              </div>
-
-              <div className="space-y-6 text-gray-300 text-lg leading-relaxed text-justify">
-                <RichTextContent 
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                   text={content.aboutDescription || content.aboutText || "IMPACT R&D is a research organization dedicated to transforming scientific research into practical solutions."}
                   className="text-lg leading-relaxed text-justify"
                 />
@@ -381,11 +234,7 @@ export const AboutPage: React.FC = () => {
         </section>
       </SectionTheme>
 
-<<<<<<< HEAD
       {/* ── Board Members — white background ─────────────────────────── */}
-=======
-      {/* Team Section - Light/White Background */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
       <SectionTheme theme="transparent">
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -404,13 +253,7 @@ export const AboutPage: React.FC = () => {
                 >
                   <Users className="w-7 h-7 text-white" />
                 </motion.div>
-<<<<<<< HEAD
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Board Members</h2>
-=======
-                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
-                  Board Members
-                </h2>
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
               </div>
               <div className="w-20 h-1 bg-gradient-to-r from-[#1887FC] to-[#4da3fd] mx-auto rounded-full" />
             </motion.div>
@@ -418,22 +261,9 @@ export const AboutPage: React.FC = () => {
             <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
               {(() => {
                 const roleOrder = [
-<<<<<<< HEAD
                   "president", "vice president", "executive director", "director",
                   "secretary", "treasurer", "board member", "member",
                   "research associate", "research assistant",
-=======
-                  "president",
-                  "vice president",
-                  "executive director",
-                  "director",
-                  "secretary",
-                  "treasurer",
-                  "board member",
-                  "member",
-                  "research associate",
-                  "research assistant"
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                 ];
 
                 const sortedMembers = [...content.teamMembers].sort((a, b) => {
@@ -442,7 +272,6 @@ export const AboutPage: React.FC = () => {
                   const nameA = a.name?.toLowerCase() || "";
                   const nameB = b.name?.toLowerCase() || "";
 
-<<<<<<< HEAD
                   const isTBAA = nameA.includes("tba") || roleA.includes("tba");
                   const isTBAB = nameB.includes("tba") || roleB.includes("tba");
                   if (isTBAA && !isTBAB) return 1;
@@ -451,19 +280,6 @@ export const AboutPage: React.FC = () => {
 
                   const indexA = roleOrder.findIndex(r => roleA.includes(r));
                   const indexB = roleOrder.findIndex(r => roleB.includes(r));
-=======
-                  // Handle TBA (To Be Announced) - always at the bottom
-                  const isTBAA = nameA.includes("tba") || roleA.includes("tba");
-                  const isTBAB = nameB.includes("tba") || roleB.includes("tba");
-
-                  if (isTBAA && !isTBAB) return 1;
-                  if (!isTBAA && isTBAB) return -1;
-                  if (isTBAA && isTBAB) return 0;
-                  
-                  const indexA = roleOrder.findIndex(r => roleA.includes(r));
-                  const indexB = roleOrder.findIndex(r => roleB.includes(r));
-                  
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                   if (indexA === -1 && indexB === -1) return 0;
                   if (indexA === -1) return 1;
                   if (indexB === -1) return -1;
@@ -475,23 +291,12 @@ export const AboutPage: React.FC = () => {
                     key={member.id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-<<<<<<< HEAD
                     transition={{ delay: index * 0.1, duration: 0.6 }}
-=======
-                    transition={{
-                      delay: index * 0.1,
-                      duration: 0.6,
-                    }}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                     viewport={{ once: true }}
                     whileHover={{ y: -8 }}
                     onClick={() => handleTeamMemberClick(member)}
                     className={`cursor-pointer w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-2rem)] max-w-sm ${
-<<<<<<< HEAD
                       sortedMembers.length === 1 ? 'lg:w-full max-w-md' :
-=======
-                      sortedMembers.length === 1 ? 'lg:w-full max-w-md' : 
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                       sortedMembers.length === 2 && index < 2 ? 'lg:w-[calc(45%-1rem)]' : ''
                     }`}
                   >
@@ -507,17 +312,8 @@ export const AboutPage: React.FC = () => {
                           </div>
                         )}
                         <div className="text-center">
-<<<<<<< HEAD
                           <h3 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h3>
                           <p className="text-[#1887FC] font-semibold mb-4 uppercase tracking-wider text-sm">{member.role}</p>
-=======
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            {member.name}
-                          </h3>
-                          <p className="text-[#1887FC] font-semibold mb-4 uppercase tracking-wider text-sm">
-                            {member.role}
-                          </p>
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
                           <div className="text-gray-600 leading-relaxed line-clamp-3">
                             <RichTextContent text={member.description} />
                           </div>
@@ -532,10 +328,6 @@ export const AboutPage: React.FC = () => {
         </section>
       </SectionTheme>
 
-<<<<<<< HEAD
-=======
-      {/* Team Member Detail Modal */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
       <TeamMemberDetailModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

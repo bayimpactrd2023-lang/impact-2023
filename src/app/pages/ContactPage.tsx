@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-<<<<<<< HEAD
 import { MapPin, Phone, Mail, Send } from 'lucide-react';
 import emailjs from '@emailjs/browser';
-=======
-import { MapPin, Phone, Mail } from 'lucide-react';
-import { Card, CardContent } from '@/app/components/ui/card';
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
 import { PageHeaderTheme } from '@/app/components/PageHeaderTheme';
 import { SectionTheme } from '@/app/components/SectionTheme';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 
-<<<<<<< HEAD
 const EMAILJS_SERVICE_ID   = 'service_jm2lv6i';
 const EMAILJS_TEMPLATE_ID  = 'template_4h53oxj';  // notification email → you
 const EMAILJS_AUTOREPLY_ID = 'template_87aacar';   // auto-reply → sender
@@ -96,62 +90,20 @@ export const ContactPage: React.FC = () => {
       setSending(false);
     }
   };
-=======
-export const ContactPage: React.FC = () => {
-  const [isMapOpen, setIsMapOpen] = useState(false);
-  
-  // No loading state needed - this page doesn't fetch data
-  
-  const contactInfo = [
-    {
-      icon: Mail,
-      label: 'Email',
-      value: 'main@impactrd.org',
-      link: 'https://mail.google.com/mail/?view=cm&fs=1&to=main@impactrd.org',
-      clickable: true
-    },
-    {
-      icon: Phone,
-      label: 'Phone',
-      value: '(049) 547 7357',
-      link: 'tel:+63495477357',
-      clickable: true
-    },
-    {
-      icon: MapPin,
-      label: 'Address',
-      value: '47 Razburg Bldg., Manese St., San Agustin, Bay, Laguna',
-      link: '#',
-      clickable: false,
-      onClick: () => setIsMapOpen(true)
-    }
-  ];
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-blue-50/50">
       <PageHeaderTheme theme="transparent" scrollThreshold={700} />
-<<<<<<< HEAD
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <SectionTheme theme="transparent">
         <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0">
-=======
-      
-      {/* Hero Section - Match Home Page Style */}
-      <SectionTheme theme="transparent">
-        <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
-          {/* High-Quality Background Image with Overlay */}
-          <div className="absolute inset-0">
-            {/* Agricultural Research Image */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             <ImageWithFallback
               src="https://images.unsplash.com/photo-1656488497988-ca149c86dade?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=2000"
               alt="Agricultural Research"
               className="absolute inset-0 w-full h-full object-cover"
             />
-<<<<<<< HEAD
             <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
             <div
               className="absolute inset-0"
@@ -161,30 +113,10 @@ export const ContactPage: React.FC = () => {
                 animation: 'gradientShift 10s ease-in-out infinite alternate',
               }}
             />
-=======
-            
-            {/* Modern Gradient Overlay - Instagram-style */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1887FC]/20 via-blue-900/40 to-[#0b5ab8]/60" />
-            
-            {/* Animated Gradient Accent */}
-            <div 
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(circle at 30% 50%, rgba(24,135,252,0.3) 0%, transparent 50%),
-                  radial-gradient(circle at 70% 50%, rgba(59,130,246,0.2) 0%, transparent 50%)
-                `,
-                animation: 'gradientShift 10s ease-in-out infinite alternate'
-              }}
-            />
-            
-            {/* Floating Particles */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             {[...Array(10)].map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute w-2 h-2 bg-white/20 rounded-full"
-<<<<<<< HEAD
                 style={{ left: `${Math.random() * 100}%`, bottom: 0 }}
                 animate={{ y: [0, -500], x: [0, (Math.random() - 0.5) * 150], opacity: [0, 1, 1, 0] }}
                 transition={{ duration: 12 + Math.random() * 8, repeat: Infinity, delay: Math.random() * 5, ease: 'linear' }}
@@ -196,40 +128,10 @@ export const ContactPage: React.FC = () => {
                 backgroundImage:
                   'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
                 backgroundSize: '50px 50px',
-=======
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  bottom: 0,
-                }}
-                animate={{
-                  y: [0, -500],
-                  x: [0, (Math.random() - 0.5) * 150],
-                  opacity: [0, 1, 1, 0],
-                }}
-                transition={{
-                  duration: 12 + Math.random() * 8,
-                  repeat: Infinity,
-                  delay: Math.random() * 5,
-                  ease: "linear"
-                }}
-              />
-            ))}
-            
-            {/* Futuristic Grid Overlay */}
-            <div 
-              className="absolute inset-0 opacity-5"
-              style={{
-                backgroundImage: `
-                  linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-                `,
-                backgroundSize: '50px 50px'
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
               }}
             />
           </div>
 
-<<<<<<< HEAD
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
@@ -249,37 +151,10 @@ export const ContactPage: React.FC = () => {
             >
               Have questions or want to collaborate? We'd love to hear from you.
             </motion.p>
-=======
-          {/* Content */}
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-            >
-              <h1 
-                className="text-3xl sm:text-5xl font-bold text-white mb-2"
-                style={{
-                  textShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(24,135,252,0.3)',
-                }}
-              >
-                Get in Touch
-              </h1>
-              <p 
-                className="text-base sm:text-xl text-white/90"
-                style={{
-                  textShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                }}
-              >
-                Have questions or want to collaborate? We'd love to hear from you.
-              </p>
-            </motion.div>
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
           </div>
         </section>
       </SectionTheme>
 
-<<<<<<< HEAD
       {/* ── Split Contact Card ────────────────────────────────────────── */}
       <SectionTheme theme="light">
         <section className="py-20">
@@ -460,71 +335,12 @@ export const ContactPage: React.FC = () => {
                 </form>
               </motion.div>
 
-=======
-      {/* Contact Information */}
-      <SectionTheme theme="light">
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-16">
-              {contactInfo.map((info, index) => {
-                const Icon = info.icon;
-                return (
-                  <motion.div
-                    key={info.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.6 }}
-                    viewport={{ once: true }}
-                    whileHover={{ y: -5 }}
-                  >
-                    <Card 
-                      className={`h-full glass-card border-0 transition-all duration-300 text-center ${
-                        !info.clickable ? 'cursor-pointer hover:shadow-xl hover:border-[#1887FC]/30 border border-transparent' : ''
-                      }`}
-                      onClick={info.onClick}
-                    >
-                      <CardContent className="p-6 sm:p-8">
-                        <motion.div 
-                          className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-elegant"
-                          whileHover={{ rotate: 10, scale: 1.1 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Icon className="w-8 h-8 text-white" />
-                        </motion.div>
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{info.label}</h3>
-                        {info.clickable ? (
-                          <a 
-                            href={info.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm sm:text-base text-gray-600 hover:text-[#1887FC] transition-colors font-medium break-words"
-                          >
-                            {info.value}
-                          </a>
-                        ) : (
-                          <p className="text-sm sm:text-base text-gray-600 font-medium break-words">
-                            {info.value}
-                          </p>
-                        )}
-                        {!info.clickable && (
-                          <p className="text-xs text-[#1887FC] mt-2 font-semibold">Click to view map</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
             </div>
           </div>
         </section>
       </SectionTheme>
 
-<<<<<<< HEAD
       {/* ── Map Modal ─────────────────────────────────────────────────── */}
-=======
-      {/* Google Maps Modal */}
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
       <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
         <DialogContent className="max-w-4xl w-[95%] max-h-[90vh] p-0 overflow-hidden flex flex-col bg-white border-none shadow-2xl">
           <DialogHeader className="p-4 sm:p-6 pb-2 sm:pb-4 flex-shrink-0 bg-white">
@@ -542,7 +358,6 @@ export const ContactPage: React.FC = () => {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-<<<<<<< HEAD
               title="IMPACT R&D Location"
             />
           </div>
@@ -556,21 +371,6 @@ export const ContactPage: React.FC = () => {
             </button>
             <button
               type="button"
-=======
-              title="IMPACT R&D Location - Razburg Building"
-            />
-          </div>
-          <div className="p-4 sm:p-6 pt-3 sm:pt-4 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 bg-white flex-shrink-0">
-            <a
-              href="https://www.google.com/maps/dir/?api=1&destination=14.1810321,121.2827983&destination_place_id=ChIJG8rCRVdfvTMR0dcu9LTuvu4T"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-[#1887FC] to-[#3b82f6] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 text-center text-sm sm:text-base"
-            >
-              Get Directions
-            </a>
-            <button
->>>>>>> b51993d7f8ae96b3cf96478e5add33f8dc59597a
               onClick={() => setIsMapOpen(false)}
               className="px-4 sm:px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-300 text-sm sm:text-base"
             >
