@@ -16,6 +16,9 @@ A modern, production-ready website for IMPACT R&D - a Philippine non-profit orga
 # 1. Install dependencies
 npm install
 
+next is install (if you clone the repo for the first time)
+npm install @emailjs/browser
+
 # 2. Copy environment variables
 cp .env.example .env.local
 
