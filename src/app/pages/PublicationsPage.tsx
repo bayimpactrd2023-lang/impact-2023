@@ -164,18 +164,18 @@ export const PublicationsPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
                       {pagination.data.map((publication) => (
                         <div
                           key={publication.id}
                         >
-                          <Card className="hover:shadow-xl transition-all duration-300 border-0 shadow-md cursor-pointer"
+                          <Card className="hover:shadow-xl transition-all duration-300 border-0 shadow-md cursor-pointer h-full flex flex-col"
                                 onClick={() => {
                                   setSelectedPublication(publication);
                                   setIsModalOpen(true);
                                 }}
                           >
-                            <CardHeader>
+                            <CardHeader className="flex-1">
                               <CardTitle className="text-xl font-bold text-gray-900 hover:text-[#1887FC] transition-colors">
                                 {publication.title}
                               </CardTitle>
@@ -185,11 +185,11 @@ export const PublicationsPage: React.FC = () => {
                             </CardHeader>
                             <CardContent>
                               {publication.excerpt && (
-                                <div className="text-gray-700 mb-4 leading-relaxed">
+                                <div className="flex flex-col justify-end">
                                   <RichTextContent text={publication.excerpt} />
                                 </div>
                               )}
-                              <div className="flex gap-3 mt-4">
+                              <div className="flex gap-3 pt-6 flex-wrap">
                                 {publication.link && (
                                   <a
                                     href={publication.link}

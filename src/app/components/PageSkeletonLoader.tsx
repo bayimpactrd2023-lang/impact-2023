@@ -39,7 +39,7 @@ export const PageSkeletonLoader: React.FC<PageSkeletonLoaderProps> = ({
           </div>
 
           {/* Grid of Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-12">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden">
                 <Skeleton className="h-48 w-full" />

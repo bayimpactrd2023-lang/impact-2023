@@ -16,7 +16,7 @@ export const PartnersCarousel: React.FC = React.memo(() => {
     autoplay: content.partners.length > 1,
     autoplaySpeed: 0,
     cssEase: 'linear',
-    pauseOnHover: true,
+    pauseOnHover: false,
     arrows: false,
     swipe: true,
     touchMove: true,
@@ -177,7 +177,7 @@ const PartnerCard: React.FC<PartnerCardProps> = React.memo(({ partner, index }) 
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
       viewport={{ once: true, margin: "-30px" }}
       whileHover={{ y: -4, scale: 1.02 }}
-      className="bg-white rounded-[2rem] p-4 sm:p-6 flex flex-col items-center justify-center h-[200px] sm:h-[220px] md:h-[240px] w-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer select-none mx-auto max-w-[280px]"
+      className="bg-white rounded-[2rem] p-4 sm:p-6 flex flex-col items-center justify-center h-[200px] sm:h-[220px] md:h-[240px] w-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group select-none mx-auto max-w-[280px]"
     >
       <div className="w-full h-full flex flex-col items-center justify-center">
         <div className="w-full h-[60%] flex items-center justify-center relative mb-4">
